@@ -162,13 +162,11 @@ export const footerColumns = [
   { title: "For operators", links: ["List your boat", "Pricing", "Support"] },
 ];
 
-export const navLinks = [
-  "Home",
-  "Discover",
-  "Indonesia",
-  "Australia",
-  "Conservation",
-  "Partners",
+export const navLinks: { label: string; href: string }[] = [
+  { label: "Home", href: "/" },
+  { label: "Discover", href: "/discover" },
+  { label: "Conservation", href: "/conservation" },
+  { label: "Partners", href: "/#partners" },
 ];
 
 export const heroImage = "https://picsum.photos/seed/bluepass-hero/1600/900";

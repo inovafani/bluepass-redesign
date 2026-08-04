@@ -32,15 +32,16 @@ export function MaskLines({
       const targets = gsap.utils.toArray<HTMLElement>(".line-mask > span", ref.current);
       if (!targets.length) return;
 
-      if (reduced()) {
-        gsap.set(targets, { yPercent: 0, opacity: 1 });
-        return;
-      }
+      if (reduced()) return;
 
-      gsap.set(targets, { yPercent: 115, opacity: 0 });
-      gsap.to(targets, {
-        yPercent: 0,
-        opacity: 1,
+      /* `from` rather than a pre-`set` plus `to`: a from-tween renders its
+         start state immediately (so there's no flash) *and* ScrollTrigger
+         re-resolves it on refresh. The set/to pair could strand the lines
+         hidden forever if the trigger's start position was measured before
+         images and fonts settled — which is exactly what happened. */
+      gsap.from(targets, {
+        yPercent: 115,
+        opacity: 0,
         duration: 1.35,
         ease: "bp-out",
         stagger,
@@ -93,16 +94,12 @@ export function Words({
       const targets = gsap.utils.toArray<HTMLElement>(".word", ref.current);
       if (!targets.length) return;
 
-      if (reduced()) {
-        gsap.set(targets, { y: 0, opacity: 1, filter: "none" });
-        return;
-      }
+      if (reduced()) return;
 
-      gsap.set(targets, { y: 22, opacity: 0, filter: "blur(6px)" });
-      gsap.to(targets, {
-        y: 0,
-        opacity: 1,
-        filter: "blur(0px)",
+      gsap.from(targets, {
+        y: 22,
+        opacity: 0,
+        filter: "blur(6px)",
         duration: 1,
         ease: "bp-out",
         stagger: 0.022,

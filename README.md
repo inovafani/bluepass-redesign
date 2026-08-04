@@ -16,9 +16,25 @@ npm run build
 | --- | --- |
 | [app/tokens.css](app/tokens.css) | The design system's tokens, ported verbatim (colors, typography, spacing, radius, shadow) plus the `.ds-*` type classes |
 | [app/globals.css](app/globals.css) | Layout, responsive rules, and the CSS side of the motion primitives |
-| [lib/data.ts](lib/data.ts) | All copy and image seeds, lifted from the design's `renderVals()` |
+| [lib/data.ts](lib/data.ts) | Home copy and image seeds, lifted from the design's `renderVals()` |
+| [lib/discover.ts](lib/discover.ts) | Discover copy — regions, trips, steps, partners |
+| [lib/conservation.ts](lib/conservation.ts) | Conservation copy — promises, named partners, report lines |
 | [lib/gsap.ts](lib/gsap.ts) | Plugin registration + the two house eases (`bp-out`, `bp-inOut`) |
-| [components/](components/) | One file per section, plus `ui/` primitives |
+| [components/](components/) | One file per home section, plus `ui/` primitives and shared `Nav` / `SiteFooter` |
+| [components/discover/](components/discover/) | Discover sections — hero + search, region rail, trip grid, steps, partner marquee |
+
+## Routes
+
+| Route | Page |
+| --- | --- |
+| `/` | Home — the `.dc.html` design |
+| `/discover` | Discover — search, regions, filterable trip grid, how-it-works, partners |
+| `/conservation` | Conservation — the 5% promise, named partners, report anatomy |
+
+`Nav`, `SmoothScroll`, `Grain` and `KaiChat` live in [app/layout.tsx](app/layout.tsx) so they
+persist across routes; only the page body swaps. `SmoothScroll` resets Lenis and refreshes
+ScrollTrigger on every path change, since the new page's triggers must measure against the
+new layout rather than the old scroll position.
 
 ## Design-system fidelity
 
@@ -52,3 +68,12 @@ Lenis and the grain loop.
 | Partners | Slot-based carousel — one tween of x/scale/opacity/blur per card, autoplay with hover pause, drag/swipe, arrows, morphing dots. Slot pitch is derived from card width + scale + gutter so neighbours sit apart rather than overlapping |
 | Close | Footer columns stagger, wordmark letters rise from clip masks and its tracking tightens on scrub |
 | Ask Kai | Delayed overshoot entrance, pulsing presence dot, hover tilt |
+| Discover hero | Same photo-settle + masked headline, with the search bar and its fields rising in sequence |
+| Region rail | Drag-to-pan strip with a progress rule that tracks scroll position, cards stagger in, photo push-in on hover |
+| Trip grid | Filter pills reuse the nav's sliding indicator; changing a filter clears the current cards out before the new set staggers in |
+| How it works | Cards rise as the connecting rule draws left to right; icon paths draw themselves |
+| Partners | Seamless marquee that slows on hover rather than stopping dead |
+| Conservation hero | Glass panel wipes open, headline rises inside it, and the 5% counts up |
+| The promise | Cards stagger in, index rules draw outward, values rise from their own clips |
+| Partner evidence | Frames unmask upward over a parallaxed backdrop; hover lifts the card |
+| Report anatomy | Rows slide in as their dividers draw; icon paths draw themselves |

@@ -84,7 +84,7 @@ export default function ConservationSection() {
   );
 
   return (
-    <section ref={ref} className="section section--gap">
+    <section ref={ref} id="conservation" className="section section--gap">
       <ParallaxMedia src={volcanoImage} alt="" strength={16} />
       <div
         style={{

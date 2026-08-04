@@ -139,7 +139,7 @@ export default function PartnersSection() {
   }, []);
 
   return (
-    <section ref={ref} className="section section--gap shell" style={{ paddingTop: "clamp(64px,7vw,96px)", paddingBottom: 80 }}>
+    <section ref={ref} id="partners" className="section section--gap shell" style={{ paddingTop: "clamp(64px,7vw,96px)", paddingBottom: 80 }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <Words
           as="span"

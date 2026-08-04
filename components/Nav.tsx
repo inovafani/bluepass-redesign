@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { gsap, ScrollTrigger, useGSAP, reduced } from "@/lib/gsap";
 import { navLinks } from "@/lib/data";
@@ -10,9 +12,15 @@ export default function Nav() {
   const pillRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLSpanElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
+  const pathname = usePathname();
   const [hover, setHover] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
+
+  /* Section links (/#conservation) only count as current while on home. */
+  const active = Math.max(
+    0,
+    navLinks.findIndex((l) => l.href === pathname),
+  );
 
   useGSAP(
     () => {
@@ -31,13 +39,12 @@ export default function Nav() {
           .from(el, { yPercent: -100, duration: 1.1, ease: "bp-out" })
           .from(brand, { opacity: 0, x: -14, duration: 0.8 }, "-=0.6")
           .from(
-            pill ? Array.from(pill.querySelectorAll("button")) : [],
+            pill ? Array.from(pill.querySelectorAll("a")) : [],
             { opacity: 0, y: 10, duration: 0.6, stagger: 0.05 },
             "-=0.55",
           )
           .from(actions, { opacity: 0, x: 14, duration: 0.7 }, "-=0.6");
 
-        // the wave inside the logo mark draws itself
         if (wave) {
           const len = wave.getTotalLength();
           gsap.fromTo(
@@ -49,9 +56,6 @@ export default function Nav() {
       }
 
       /* ---- transparent over the hero, condensed once past it ---------
-         The bar owns no space of its own; it only materialises a surface
-         after the hero photo has scrolled out from under it.
-
          The surface is its own element: the hide/reveal tween below owns the
          nav's transform, and letting both tweens target the same element is
          what previously left the bar stuck opaque after scrolling back up. */
@@ -110,7 +114,7 @@ export default function Nav() {
     const pill = pillRef.current;
     const ind = indicatorRef.current;
     if (!pill || !ind) return;
-    const target = pill.querySelectorAll("button")[index] as HTMLElement | undefined;
+    const target = pill.querySelectorAll("a")[index] as HTMLElement | undefined;
     if (!target) return;
     gsap.to(ind, {
       x: target.offsetLeft - 5,
@@ -121,14 +125,16 @@ export default function Nav() {
     });
   };
 
-  useGSAP(() => {
-    const run = () => moveIndicator(active);
-    run();
-    document.fonts?.ready.then(run);
-    window.addEventListener("resize", run);
-    return () => window.removeEventListener("resize", run);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useGSAP(
+    () => {
+      const run = () => moveIndicator(active);
+      run();
+      document.fonts?.ready.then(run);
+      window.addEventListener("resize", run);
+      return () => window.removeEventListener("resize", run);
+    },
+    { dependencies: [active] },
+  );
 
   /* ---- mobile overlay menu ------------------------------------------- */
   useGSAP(
@@ -141,7 +147,11 @@ export default function Nav() {
         gsap.set(panel, { display: "flex" });
         gsap
           .timeline()
-          .fromTo(panel, { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 0.7, ease: "bp-inOut" })
+          .fromTo(
+            panel,
+            { clipPath: "inset(0 0 100% 0)" },
+            { clipPath: "inset(0 0 0% 0)", duration: 0.7, ease: "bp-inOut" },
+          )
           .fromTo(
             items,
             { yPercent: 120, opacity: 0 },
@@ -195,7 +205,11 @@ export default function Nav() {
           }}
         />
 
-        <div className="nav__brand" style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+        <Link
+          href="/"
+          className="nav__brand"
+          style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, textDecoration: "none" }}
+        >
           <span
             style={{
               width: 28,
@@ -221,7 +235,7 @@ export default function Nav() {
           <span className="ds-headline" style={{ fontSize: 19, letterSpacing: -0.4, whiteSpace: "nowrap" }}>
             Bluepass
           </span>
-        </div>
+        </Link>
 
         <div
           ref={pillRef}
@@ -234,7 +248,6 @@ export default function Nav() {
             position: "relative",
             alignItems: "center",
             gap: 2,
-            // translucent so the hero photo reads through the bar
             background: "rgba(26,26,24,0.42)",
             backdropFilter: "blur(14px)",
             padding: 5,
@@ -257,10 +270,9 @@ export default function Nav() {
             }}
           />
           {navLinks.map((link, i) => (
-            <button
-              key={link}
-              type="button"
-              onClick={() => setActive(i)}
+            <Link
+              key={link.href}
+              href={link.href}
               onPointerEnter={() => {
                 setHover(i);
                 moveIndicator(i);
@@ -268,8 +280,6 @@ export default function Nav() {
               style={{
                 position: "relative",
                 padding: "8px 14px",
-                border: "none",
-                background: "transparent",
                 borderRadius: "var(--radius-pill)",
                 color: linkColor(i),
                 fontFamily: "var(--font-body)",
@@ -277,12 +287,12 @@ export default function Nav() {
                 fontWeight: (hover ?? active) === i ? 600 : 500,
                 whiteSpace: "nowrap",
                 flex: "none",
-                cursor: "pointer",
+                textDecoration: "none",
                 transition: "color .3s ease",
               }}
             >
-              {link}
-            </button>
+              {link.label}
+            </Link>
           ))}
         </div>
 
@@ -324,18 +334,15 @@ export default function Nav() {
       </nav>
 
       <div ref={menuRef} className="nav__menu" style={{ display: "none" }}>
-        {navLinks.map((link, i) => (
-          <button
-            key={link}
-            type="button"
-            className="nav__menu-item ds-display-md"
-            onClick={() => {
-              setActive(i);
-              setOpen(false);
-            }}
+        {navLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="nav__menu-item"
+            onClick={() => setOpen(false)}
           >
-            {link}
-          </button>
+            {link.label}
+          </Link>
         ))}
       </div>
     </>

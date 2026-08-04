@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import { gsap, ScrollTrigger, reduced } from "@/lib/gsap";
 
@@ -10,6 +11,9 @@ import { gsap, ScrollTrigger, reduced } from "@/lib/gsap";
  * behind it. Skipped entirely under prefers-reduced-motion.
  */
 export default function SmoothScroll() {
+  const lenisRef = useRef<Lenis | null>(null);
+  const pathname = usePathname();
+
   useEffect(() => {
     if (reduced()) return;
 
@@ -19,6 +23,7 @@ export default function SmoothScroll() {
       wheelMultiplier: 1,
       touchMultiplier: 1.6,
     });
+    lenisRef.current = lenis;
 
     lenis.on("scroll", ScrollTrigger.update);
 
@@ -29,8 +34,29 @@ export default function SmoothScroll() {
     return () => {
       gsap.ticker.remove(raf);
       lenis.destroy();
+      lenisRef.current = null;
     };
   }, []);
+
+  /* A client-side route change swaps the whole page under a scroll position
+     Lenis and ScrollTrigger still believe in. Reset both, then let the new
+     page's triggers measure themselves against the real layout. */
+  useEffect(() => {
+    lenisRef.current?.scrollTo(0, { immediate: true });
+    window.scrollTo(0, 0);
+
+    /* Refresh once the layout has settled, then again after fonts and images
+       land — hero photos change page height enough to move every trigger. */
+    const refresh = () => ScrollTrigger.refresh();
+    const ids = [120, 700].map((d) => window.setTimeout(refresh, d));
+    document.fonts?.ready.then(refresh);
+    window.addEventListener("load", refresh);
+
+    return () => {
+      ids.forEach(window.clearTimeout);
+      window.removeEventListener("load", refresh);
+    };
+  }, [pathname]);
 
   return null;
 }
