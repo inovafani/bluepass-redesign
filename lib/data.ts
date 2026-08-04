@@ -38,7 +38,7 @@ export const boats: Boat[] = [
   {
     loc: "KOMODO",
     img: "boat-1",
-    imgSrc: "https://picsum.photos/seed/bluepass-boat-1/800/1000",
+    imgSrc: "/yachts/alexa/card.webp",
     name: "Alexa",
     guests: "Up to 2 guests",
     price: "$6,499",
@@ -48,7 +48,7 @@ export const boats: Boat[] = [
   {
     loc: "RAJA AMPAT",
     img: "boat-2",
-    imgSrc: "https://picsum.photos/seed/bluepass-boat-2/800/1000",
+    imgSrc: "/yachts/aliikai/card.webp",
     name: "Allikai",
     guests: "Up to 15 guests",
     price: "$690",
@@ -58,7 +58,7 @@ export const boats: Boat[] = [
   {
     loc: "KOMODO",
     img: "boat-3",
-    imgSrc: "https://picsum.photos/seed/bluepass-boat-3/800/1000",
+    imgSrc: "/yachts/alila-purnama/card.webp",
     name: "Alila Purnama",
     guests: "Up to 10 guests",
     price: "$3,000",
@@ -68,7 +68,7 @@ export const boats: Boat[] = [
   {
     loc: "RAJA AMPAT",
     img: "boat-4",
-    imgSrc: "https://picsum.photos/seed/bluepass-boat-4/800/1000",
+    imgSrc: "/yachts/amandira/card.webp",
     name: "Amandira",
     guests: "Up to 10 guests",
     price: "$3,180",
@@ -78,7 +78,7 @@ export const boats: Boat[] = [
   {
     loc: "KOMODO",
     img: "boat-5",
-    imgSrc: "https://picsum.photos/seed/bluepass-boat-5/800/1000",
+    imgSrc: "/yachts/anne-bonny/card.webp",
     name: "Anne Bonny",
     guests: "Up to 8 guests",
     price: "$1,483",
