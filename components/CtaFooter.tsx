@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
-import { sunsetImage } from "@/lib/data";
+import { ctaImage } from "@/lib/data";
 import ParallaxMedia from "./ui/ParallaxMedia";
 import { MaskLines, Rail } from "./ui/Text";
 import Button from "./ui/Button";
@@ -37,7 +37,7 @@ export default function CtaFooter() {
           overflow: "hidden",
         }}
       >
-        <ParallaxMedia src={sunsetImage} alt="" strength={20} />
+        <ParallaxMedia src={ctaImage} alt="" strength={20} />
         <div
           style={{
             position: "absolute",

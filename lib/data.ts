@@ -169,7 +169,8 @@ export const navLinks: { label: string; href: string }[] = [
   { label: "Partners", href: "/partners" },
 ];
 
-export const heroImage = "https://picsum.photos/seed/bluepass-hero/1600/900";
-export const reefImage = "https://picsum.photos/seed/bluepass-reef/1600/900";
-export const volcanoImage = "https://picsum.photos/seed/bluepass-volcano/1600/900";
-export const sunsetImage = "https://picsum.photos/seed/bluepass-sunset/1600/900";
+/* Full-bleed section photography, served from /public. */
+export const heroImage = "/australia-yacht.jpg";
+export const whyImage = "/sidney.jpg";
+export const conservationImage = "/great-barrier.jpg";
+export const ctaImage = "/gold-coast-3.jpg";

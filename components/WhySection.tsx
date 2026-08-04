@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
-import { whyCards, reefImage } from "@/lib/data";
+import { whyCards, whyImage } from "@/lib/data";
 import ParallaxMedia from "./ui/ParallaxMedia";
 import { MaskLines, Words, Rail } from "./ui/Text";
 
@@ -77,7 +77,7 @@ export default function WhySection() {
 
   return (
     <section ref={ref} className="section section--gap">
-      <ParallaxMedia src={reefImage} alt="" strength={16} />
+      <ParallaxMedia src={whyImage} alt="" strength={16} />
       <div
         style={{
           position: "absolute",

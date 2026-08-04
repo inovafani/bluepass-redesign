@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
-import { threeWays, volcanoImage } from "@/lib/data";
+import { threeWays, conservationImage } from "@/lib/data";
 import ParallaxMedia from "./ui/ParallaxMedia";
 import { MaskLines, Words, Rail } from "./ui/Text";
 
@@ -85,7 +85,7 @@ export default function ConservationSection() {
 
   return (
     <section ref={ref} id="conservation" className="section section--gap">
-      <ParallaxMedia src={volcanoImage} alt="" strength={16} />
+      <ParallaxMedia src={conservationImage} alt="" strength={16} />
       <div
         style={{
           position: "absolute",

@@ -79,7 +79,7 @@ export default function Hero() {
     >
       <ParallaxMedia
         src={heroImage}
-        alt="Aerial view of an island coastline — surf, sail and dive country"
+        alt="Aerial view of a marina and coastline at dusk — surf, sail and dive country"
         strength={18}
         intro
         priority
