@@ -1,6 +1,9 @@
 /**
- * Discover page content. Photography is picsum placeholder — swap the `img`
- * fields for real assets, the layout is sized for 4:5 (trips) and 4:3 (regions).
+ * Discover page content. Photography is served from /public — the layout is
+ * sized for 4:5 (trips) and 4:3 (regions), so `img` fields are cropped to fit.
+ *
+ * Ningaloo and South Australia have no location photography yet; both fall back
+ * to the nearest reef / open-coast frame we hold.
  */
 
 export type Category = "Dive" | "Sail & Yacht" | "Wildlife" | "Expedition";
@@ -23,12 +26,12 @@ export type Region = {
 };
 
 export const regions: Region[] = [
-  { slug: "great-barrier-reef", name: "Great Barrier Reef", trips: 1, img: "https://picsum.photos/seed/bp-region-gbr/900/700" },
-  { slug: "whitsundays", name: "Whitsundays", trips: 1, img: "https://picsum.photos/seed/bp-region-whit/900/700" },
-  { slug: "hervey-bay", name: "Hervey Bay", trips: 1, img: "https://picsum.photos/seed/bp-region-hervey/900/700" },
-  { slug: "ningaloo", name: "Ningaloo", trips: 1, img: "https://picsum.photos/seed/bp-region-ningaloo/900/700" },
-  { slug: "sydney-harbour", name: "Sydney Harbour", trips: 1, img: "https://picsum.photos/seed/bp-region-sydney/900/700" },
-  { slug: "south-australia", name: "South Australia", trips: 1, img: "https://picsum.photos/seed/bp-region-sa/900/700" },
+  { slug: "great-barrier-reef", name: "Great Barrier Reef", trips: 1, img: "/great-barrier.jpg" },
+  { slug: "whitsundays", name: "Whitsundays", trips: 1, img: "/whitsundays-2.jpg" },
+  { slug: "hervey-bay", name: "Hervey Bay", trips: 1, img: "/hervey-bay-2.jpg" },
+  { slug: "ningaloo", name: "Ningaloo", trips: 1, img: "/great-barrier-3.jpg" },
+  { slug: "sydney-harbour", name: "Sydney Harbour", trips: 1, img: "/sidney.jpg" },
+  { slug: "south-australia", name: "South Australia", trips: 1, img: "/gold-coast-2.jpg" },
 ];
 
 export type Trip = {
@@ -64,7 +67,7 @@ export const trips: Trip[] = [
     quote: "Cod Hole at 7am with nobody else on the site. The crew ran three dives before lunch.",
     price: 2190,
     eco: true,
-    img: "https://picsum.photos/seed/bp-trip-ribbon/1000/1250",
+    img: "/great-barrier-5.jpg",
   },
   {
     slug: "humpback-highway",
@@ -80,7 +83,7 @@ export const trips: Trip[] = [
     quote: "Our 8-year-old heard whales sing through the hydrophone for twenty minutes straight.",
     price: 890,
     eco: true,
-    img: "https://picsum.photos/seed/bp-trip-humpback/1000/1250",
+    img: "/hervey-bay-1.jpg",
   },
   {
     slug: "whitehaven-under-sail",
@@ -96,7 +99,7 @@ export const trips: Trip[] = [
     quote: "Hill Inlet at the tide turn from the bow, then dinner at anchor with nobody around.",
     price: 1150,
     eco: true,
-    img: "https://picsum.photos/seed/bp-trip-whitehaven/1000/1250",
+    img: "/whitsundays-3.jpg",
   },
   {
     slug: "harbour-nights",
@@ -112,7 +115,7 @@ export const trips: Trip[] = [
     quote: "Client night under the Bridge at golden hour. Not one phone came out all evening.",
     price: 395,
     eco: true,
-    img: "https://picsum.photos/seed/bp-trip-harbour/1000/1250",
+    img: "/australia-yacht.jpg",
   },
   {
     slug: "whale-shark-interception",
@@ -128,7 +131,7 @@ export const trips: Trip[] = [
     quote: "Three sharks in one morning. The spotter plane radioed in before we'd finished breakfast.",
     price: 2450,
     eco: true,
-    img: "https://picsum.photos/seed/bp-trip-whaleshark/1000/1250",
+    img: "/great-barrier-4.jpg",
   },
   {
     slug: "neptune-cage-week",
@@ -145,7 +148,7 @@ export const trips: Trip[] = [
     price: 3240,
     eco: true,
     scarcity: "Only 3 left",
-    img: "https://picsum.photos/seed/bp-trip-neptune/1000/1250",
+    img: "/gold-coast-3.jpg",
   },
 ];
 
@@ -183,7 +186,7 @@ export const partners = [
   "ECOCEAN",
 ];
 
-export const discoverHero = "https://picsum.photos/seed/bp-discover-hero/1800/1000";
+export const discoverHero = "/whitsundays-1.jpg";
 
 export const whenOptions = ["Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Flexible"];
 export const guestOptions = ["1 guest", "2 guests", "3 guests", "4 guests", "5+ guests"];
