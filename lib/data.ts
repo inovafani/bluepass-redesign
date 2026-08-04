@@ -166,7 +166,7 @@ export const navLinks: { label: string; href: string }[] = [
   { label: "Home", href: "/" },
   { label: "Discover", href: "/discover" },
   { label: "Conservation", href: "/conservation" },
-  { label: "Partners", href: "/#partners" },
+  { label: "Partners", href: "/partners" },
 ];
 
 export const heroImage = "https://picsum.photos/seed/bluepass-hero/1600/900";

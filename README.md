@@ -19,6 +19,7 @@ npm run build
 | [lib/data.ts](lib/data.ts) | Home copy and image seeds, lifted from the design's `renderVals()` |
 | [lib/discover.ts](lib/discover.ts) | Discover copy — regions, trips, steps, partners |
 | [lib/conservation.ts](lib/conservation.ts) | Conservation copy — promises, named partners, report lines |
+| [lib/partners.ts](lib/partners.ts) | Partners copy — stats, beats, moves, toolkit, creators |
 | [lib/gsap.ts](lib/gsap.ts) | Plugin registration + the two house eases (`bp-out`, `bp-inOut`) |
 | [components/](components/) | One file per home section, plus `ui/` primitives and shared `Nav` / `SiteFooter` |
 | [components/discover/](components/discover/) | Discover sections — hero + search, region rail, trip grid, steps, partner marquee |
@@ -30,6 +31,7 @@ npm run build
 | `/` | Home — the `.dc.html` design |
 | `/discover` | Discover — search, regions, filterable trip grid, how-it-works, partners |
 | `/conservation` | Conservation — the 5% promise, named partners, report anatomy |
+| `/partners` | Partners — the booking path, four moves, partner toolkit, creators |
 
 `Nav`, `SmoothScroll`, `Grain` and `KaiChat` live in [app/layout.tsx](app/layout.tsx) so they
 persist across routes; only the page body swaps. `SmoothScroll` resets Lenis and refreshes
@@ -77,3 +79,9 @@ Lenis and the grain loop.
 | The promise | Cards stagger in, index rules draw outward, values rise from their own clips |
 | Partner evidence | Frames unmask upward over a parallaxed backdrop; hover lifts the card |
 | Report anatomy | Rows slide in as their dividers draw; icon paths draw themselves |
+| Partners hero | Page-hero system plus a money-path strip: client pays → you earn → reef gets |
+| Four quiet moves | Cards descend as a stair while the diagonal connecting path draws through them |
+| Partner toolkit | The tracked link types itself in; the copy button actually copies |
+| Featured creators | Portrait cards whose bio expands from under the name on hover |
+| Reels proof | The home page's `ReelCarousel`, reused rather than rebuilt |
+| Partners close | Four ruled edges draw themselves around the panel — no photo, no box fill |
