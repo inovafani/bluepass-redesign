@@ -5,12 +5,13 @@
  * "as reporting comes online". Nothing here claims funds already moved, and no
  * totals are invented. Keep it that way; the whole argument is auditability.
  *
- * Photography is picsum placeholder — swap the `img` fields for real assets.
+ * Photography is served from /public. The partner cards crop to 9:11, so the
+ * subject needs to sit near the centre of the frame.
  */
 
-export const heroImage = "https://picsum.photos/seed/bp-cons-hero/1800/1100";
-export const partnersBackdrop = "https://picsum.photos/seed/bp-cons-islands/1800/1100";
-export const ctaImage = "https://picsum.photos/seed/bp-cons-cta/1800/1000";
+export const heroImage = "/reef-conservation3.jpg";
+export const partnersBackdrop = "/reef-conservation1.jpg";
+export const ctaImage = "/great-barrier-5.jpg";
 
 export type Promise_ = {
   n: string;
@@ -61,7 +62,7 @@ export const partners: Partner[] = [
     region: "Labuan Bajo",
     desc: "Reef restoration, local monitoring, and mooring education.",
     nextReport: "June 2026",
-    img: "https://picsum.photos/seed/bp-cons-komodo/900/1100",
+    img: "/reef-conservation2.jpg",
   },
   {
     slug: "raja-ampat-blue-water-trust",
@@ -69,7 +70,7 @@ export const partners: Partner[] = [
     region: "West Papua",
     desc: "Community reef patrols and coral nursery support.",
     nextReport: "June 2026",
-    img: "https://picsum.photos/seed/bp-cons-raja/900/1100",
+    img: "/great-barrier-3.jpg",
   },
   {
     slug: "bali-ocean-classroom",
@@ -77,7 +78,7 @@ export const partners: Partner[] = [
     region: "Bali",
     desc: "Youth ocean education and coastal waste reduction.",
     nextReport: "July 2026",
-    img: "https://picsum.photos/seed/bp-cons-bali/900/1100",
+    img: "/great-barrier-4.jpg",
   },
 ];
 
