@@ -3608,7 +3608,7 @@ html.is-scroll-locked body {
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   color: var(--color-ink);
   text-decoration: none;
 }
@@ -3616,22 +3616,29 @@ html.is-scroll-locked body {
   color: var(--color-ink);
   text-decoration: none;
 }
+/* Same treatment as the marketing nav: transparent inside, white ring outside. */
 .ashell__mark {
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--color-hairline);
-  background: rgba(10, 10, 9, 0.4);
-  backdrop-filter: blur(10px);
-  color: var(--color-ink);
+  flex: none;
 }
+.ashell__mark img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+/* Matched to the marketing nav's brand lockup so the mark reads the same size
+   on every page the visitor lands on. */
 .ashell__brand-text {
   color: var(--color-ink);
-  font-weight: 600;
-  letter-spacing: -0.2px;
+  font-size: 19px;
+  letter-spacing: -0.4px;
+  white-space: nowrap;
 }
 .ashell__aside-copy {
   position: relative;
@@ -3648,11 +3655,15 @@ html.is-scroll-locked body {
   line-height: 1.45;
 }
 
+/* The column centres itself, so this padding is really the minimum breathing
+   room — tying it to viewport height (not width) is what lets a short laptop
+   screen hold the whole sign-up without a scrollbar, while a tall screen still
+   gets the roomy original spacing. */
 .ashell__main {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: clamp(40px, 5vw, 72px) clamp(20px, 4.4vw, 64px);
+  padding: clamp(24px, 6svh, 72px) clamp(20px, 4.4vw, 64px);
   min-width: 0;
 }
 .ashell__form {
@@ -3661,16 +3672,47 @@ html.is-scroll-locked body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  /* Register stacks four fields; the gap tightens on short screens so the whole
+     form still clears the fold. */
+  gap: clamp(11px, 1.8svh, 16px);
 }
+/* The brand disc above the form. Sized to greet, not to dominate — it shares the
+   form's own left edge rather than centring, so the column still reads as one. */
+.ashell__badge {
+  display: block;
+  /* Shrinks with the viewport so it never costs the form its last field. */
+  width: clamp(64px, 9svh, 92px);
+  height: clamp(64px, 9svh, 92px);
+  border-radius: 50%;
+  overflow: hidden;
+  flex: none;
+  /* Centred over the form, with room to breathe — it is a welcome, not a
+     label sitting on top of the first field. The column's own gap stacks
+     on top of this. */
+  margin: 0 auto clamp(12px, 2.4svh, 22px);
+  border: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-2);
+}
+.ashell__badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* A greeting, not a system label — sentence case and normal tracking. Caps with
+   2.6px letter-spacing read as a form field header, which is the opposite of
+   welcoming. */
 .ashell__eyebrow {
-  color: var(--color-ink-muted);
-  text-transform: uppercase;
-  letter-spacing: 2.6px;
+  color: var(--color-ink);
+  letter-spacing: -0.2px;
+  /* Centred so it sits directly under the badge — the two read as one welcome
+     block before the eye drops into the left-aligned fields. */
+  text-align: center;
+  font-weight: 700;
 }
 .ashell__footer {
   max-width: 420px;
-  margin: 34px auto 0;
+  margin: clamp(16px, 3svh, 34px) auto 0;
   width: 100%;
   color: var(--color-ink-muted);
 }

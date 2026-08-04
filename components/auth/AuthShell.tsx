@@ -50,9 +50,11 @@ export default function AuthShell({
         { scale: 1, duration: 2.1, ease: "bp-out" },
       );
 
+      /* The eyebrow is a child of .ashell__form, so the stagger below already
+         animates it. Giving it a second .from() left both tweens fighting over
+         the same property and the text settled at opacity 0 — invisible. */
       gsap
         .timeline({ delay: 0.25 })
-        .from(".ashell__eyebrow", { opacity: 0, y: 16, duration: 0.8 }, 0)
         .from(".ashell__support", { opacity: 0, y: 18, duration: 0.9 }, 0.55)
         .from(
           ".ashell__form > *",
@@ -73,12 +75,9 @@ export default function AuthShell({
 
         <Link href="/" className="ashell__brand">
           <span className="ashell__mark" aria-hidden>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M3 15c2-3 4-3 6 0s4 3 6 0 4-3 6 0" />
-              <path d="M12 3c2.5 3.5 2.5 7 0 10-2.5-3-2.5-6.5 0-10z" />
-            </svg>
+            <Image src="/bluepass-logo-transparent.png" alt="" width={34} height={34} priority />
           </span>
-          <span className="ds-body-sm ashell__brand-text">Bluepass</span>
+          <span className="ds-headline ashell__brand-text">Bluepass</span>
         </Link>
 
         <div className="ashell__aside-copy">
@@ -98,7 +97,19 @@ export default function AuthShell({
 
       <main className="ashell__main">
         <div className="ashell__form">
-          <span className="ashell__eyebrow ds-caption">{eyebrow}</span>
+          {/* The brand mark greets the visitor before the fields do — the form
+              should feel like stepping into Bluepass, not filling in a utility. */}
+          <span className="ashell__badge" aria-hidden>
+            <Image
+              src="/bluepass-logo-full.png"
+              alt=""
+              width={112}
+              height={112}
+              priority
+              sizes="112px"
+            />
+          </span>
+          <span className="ashell__eyebrow ds-body-lg">{eyebrow}</span>
           {children}
         </div>
         {footer ? <div className="ashell__footer ds-body-sm">{footer}</div> : null}

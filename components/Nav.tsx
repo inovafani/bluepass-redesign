@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -40,7 +41,6 @@ export default function Nav() {
       const brand = el.querySelector(".nav__brand");
       const pill = pillRef.current;
       const actions = el.querySelector(".nav__actions");
-      const wave = el.querySelector<SVGPathElement>(".nav__wave");
 
       /* ---- entrance -------------------------------------------------- */
       if (!reduced()) {
@@ -54,15 +54,6 @@ export default function Nav() {
             "-=0.55",
           )
           .from(actions, { opacity: 0, x: 14, duration: 0.7 }, "-=0.6");
-
-        if (wave) {
-          const len = wave.getTotalLength();
-          gsap.fromTo(
-            wave,
-            { strokeDasharray: len, strokeDashoffset: len },
-            { strokeDashoffset: 0, duration: 1.4, ease: "bp-inOut", delay: 0.5 },
-          );
-        }
       }
 
       /* ---- transparent over the hero, condensed once past it ---------
@@ -116,7 +107,12 @@ export default function Nav() {
         });
       }
     },
-    { scope: ref },
+    /* `bare` matters here: this component never unmounts (it lives in the root
+       layout), it just renders null on the auth routes. Without it in the deps
+       the effect runs once at mount, and coming back from /login re-creates the
+       markup with no ScrollTriggers attached — the bar then sits there always
+       visible, never condensing and never hiding on scroll. */
+    { scope: ref, dependencies: [bare] },
   );
 
   /* ---- sliding pill indicator ---------------------------------------- */
@@ -143,7 +139,10 @@ export default function Nav() {
       window.addEventListener("resize", run);
       return () => window.removeEventListener("resize", run);
     },
-    { dependencies: [active] },
+    /* Same reason, plus its own: `active` is 0 on the auth routes *and* on home,
+       so returning from /login never changed it and the pill indicator was
+       never re-measured — which is why home lost its white bubble. */
+    { dependencies: [active, bare] },
   );
 
   /* ---- mobile overlay menu ------------------------------------------- */
@@ -222,27 +221,30 @@ export default function Nav() {
           className="nav__brand"
           style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, textDecoration: "none" }}
         >
+          {/* Transparent inside, ringed outside — same 38px circle as
+              .acct__circle at the other end of the bar, so the two read as a
+              matched pair rather than a mark and a button. */}
           <span
             style={{
-              width: 28,
-              height: 28,
+              position: "relative",
+              width: 38,
+              height: 38,
               borderRadius: "50%",
-              background: "var(--color-ink)",
+              border: "1px solid rgba(255,255,255,0.55)",
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
               flex: "none",
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                className="nav__wave"
-                d="M3 16c2-3 4-3 6 0s4 3 6 0 4-3 6 0"
-                stroke="#0a0a09"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-              />
-            </svg>
+            <Image
+              src="/bluepass-logo-transparent.png"
+              alt=""
+              width={24}
+              height={24}
+              priority
+              style={{ width: 24, height: 24, objectFit: "contain" }}
+            />
           </span>
           <span className="ds-headline" style={{ fontSize: 19, letterSpacing: -0.4, whiteSpace: "nowrap" }}>
             Bluepass
