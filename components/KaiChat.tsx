@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import KaiPanel from "./KaiPanel";
 
@@ -8,6 +8,16 @@ import KaiPanel from "./KaiPanel";
 export default function KaiChat() {
   const ref = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+
+  /* Anything on the page can open the panel by dispatching `kai:open` — the hero's
+     "Ask Kai" CTA does. An event rather than lifted state because the pill lives in
+     the root layout while the callers are page sections, with no shared parent to
+     thread a prop through. Same event name bluepass-app's widget listens for. */
+  useEffect(() => {
+    const openPanel = () => setOpen(true);
+    window.addEventListener("kai:open", openPanel);
+    return () => window.removeEventListener("kai:open", openPanel);
+  }, []);
 
   useGSAP(
     () => {

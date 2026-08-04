@@ -270,6 +270,20 @@ html.lenis body {
   }
 }
 
+/* Only the WhatsApp half of the hero note is a link — the underline marks where
+   the sentence stops describing and starts offering. */
+.hero__note-link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+  transition: color 0.3s ease, text-decoration-color 0.3s ease;
+}
+.hero__note-link:hover {
+  color: var(--color-ink);
+  text-decoration-color: var(--color-ink);
+}
+
 /* Footer ------------------------------------------------------------------ */
 .footer__link {
   color: var(--color-ink-muted) !important;

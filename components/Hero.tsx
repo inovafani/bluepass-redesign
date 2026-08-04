@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import { heroImage } from "@/lib/data";
@@ -8,9 +9,11 @@ import { MaskLines, Rail } from "./ui/Text";
 import Button from "./ui/Button";
 
 const SCRIM = 0.6; // heroScrimStrength default from the design's prop schema
+const WHATSAPP_HREF = "https://wa.me/628213143343";
 
 export default function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const router = useRouter();
 
   useGSAP(
     () => {
@@ -37,7 +40,12 @@ export default function Hero() {
       /* ---- scroll-out: content lifts and dissolves ------------------- */
       gsap
         .timeline({
-          scrollTrigger: { trigger: el, start: "top top", end: "bottom top", scrub: 0.6 },
+          scrollTrigger: {
+            trigger: el,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.6,
+          },
         })
         .to(".hero__content", { y: -110, opacity: 0, ease: "none" }, 0);
     },
@@ -94,7 +102,11 @@ export default function Hero() {
       >
         <span
           className="hero__eyebrow ds-caption"
-          style={{ color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: 3 }}
+          style={{
+            color: "rgba(255,255,255,0.7)",
+            textTransform: "uppercase",
+            letterSpacing: 3,
+          }}
         >
           Surf · Sail · Dive
         </span>
@@ -112,20 +124,47 @@ export default function Hero() {
           className="hero__copy ds-body-lg"
           style={{ color: "rgba(255,255,255,0.75)", maxWidth: 560 }}
         >
-          Vetted operators for surf, sail and dive — at the same price as booking direct.
+          Vetted operators for surf, sail and dive — at the same price as
+          booking direct.
         </p>
 
-        <div className="hero__ctas" style={{ display: "flex", gap: 12, marginTop: 6, flexWrap: "wrap", justifyContent: "center" }}>
-          <Button variant="primary" large>
+        <div
+          className="hero__ctas"
+          style={{
+            display: "flex",
+            gap: 12,
+            marginTop: 6,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          <Button variant="primary" large onClick={() => router.push("/discover")}>
             Explore trips
           </Button>
-          <Button variant="translucent" large>
+          {/* The pill lives in the root layout, so this asks for it by event
+              rather than reaching across the tree. */}
+          <Button
+            variant="translucent"
+            large
+            onClick={() => window.dispatchEvent(new Event("kai:open"))}
+          >
             Ask Kai →
           </Button>
         </div>
 
-        <span className="hero__note ds-micro" style={{ color: "rgba(255,255,255,0.55)", marginTop: 6 }}>
-          Live now in Komodo &amp; Raja Ampat — continue on WhatsApp
+        <span
+          className="hero__note ds-micro"
+          style={{ color: "rgba(255,255,255,0.55)", marginTop: 6 }}
+        >
+          Live now in Australia —{" "}
+          <a
+            className="hero__note-link"
+            href={WHATSAPP_HREF}
+            target="_blank"
+            rel="noreferrer"
+          >
+            continue on WhatsApp
+          </a>
         </span>
       </div>
 
