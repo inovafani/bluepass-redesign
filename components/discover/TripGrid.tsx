@@ -1,14 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
-import { trips, categories, categoryIcon, type Category } from "@/lib/discover";
+import {
+  trips,
+  regions,
+  categories,
+  categoryIcon,
+  ALL_REGIONS,
+  type Trip,
+} from "@/lib/discover";
 import Button from "../ui/Button";
 import { MaskLines } from "../ui/Text";
+import { useDiscover, RESULTS_ID, type CategoryFilter } from "./DiscoverState";
 
-type Filter = "All" | Category;
-const filters: Filter[] = ["All", ...categories];
+const filters: CategoryFilter[] = ["All", ...categories];
 
 const aud = (n: number) => "A$" + n.toLocaleString("en-AU");
 
@@ -16,10 +23,20 @@ export default function TripGrid() {
   const ref = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLSpanElement>(null);
-  const [filter, setFilter] = useState<Filter>("All");
-  const [saved, setSaved] = useState<Record<string, boolean>>({});
+  const {
+    region,
+    category,
+    results,
+    saved,
+    setCategory,
+    pickRegion,
+    clearFilters,
+    setOpenTrip,
+    toggleSaved,
+  } = useDiscover();
 
-  const visible = filter === "All" ? trips : trips.filter((t) => t.category === filter);
+  const filtered = region !== ALL_REGIONS || category !== "All";
+  const others = regions.filter((r) => r.name !== region);
 
   /* ---- filter pill indicator, same language as the top nav ------------ */
   const moveIndicator = (index: number) => {
@@ -39,23 +56,27 @@ export default function TripGrid() {
 
   useGSAP(
     () => {
-      const run = () => moveIndicator(filters.indexOf(filter));
+      const run = () => moveIndicator(filters.indexOf(category));
       run();
       document.fonts?.ready.then(run);
       window.addEventListener("resize", run);
       return () => window.removeEventListener("resize", run);
     },
-    { dependencies: [filter] },
+    { dependencies: [category] },
   );
 
   /* Cards clear out before the set changes, so the grid never pops. */
-  const changeFilter = (next: Filter) => {
-    if (next === filter) return;
+  const changeFilter = (next: CategoryFilter) => {
+    if (next === category) return;
     if (reduced()) {
-      setFilter(next);
+      setCategory(next);
       return;
     }
     const cards = gsap.utils.toArray<HTMLElement>(".trip", ref.current);
+    if (!cards.length) {
+      setCategory(next);
+      return;
+    }
     gsap.to(cards, {
       opacity: 0,
       y: 16,
@@ -63,7 +84,7 @@ export default function TripGrid() {
       duration: 0.3,
       stagger: 0.025,
       ease: "power2.in",
-      onComplete: () => setFilter(next),
+      onComplete: () => setCategory(next),
     });
   };
 
@@ -93,6 +114,10 @@ export default function TripGrid() {
         },
       );
 
+      /* The empty state arrives the same way a card would, so a filter that
+         finds nothing still feels like a result rather than a dead end. */
+      gsap.from(".tempty", { opacity: 0, y: 34, duration: 0.9, ease: "bp-out" });
+
       cards.forEach((card) => {
         const img = card.querySelector(".trip__img");
         const cta = card.querySelector(".trip__cta");
@@ -108,12 +133,12 @@ export default function TripGrid() {
         });
       });
     },
-    { scope: ref, dependencies: [filter] },
+    { scope: ref, dependencies: [region, category] },
   );
 
-  const toggleSave = (slug: string, e: React.MouseEvent<HTMLButtonElement>) => {
+  const onSave = (slug: string, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    setSaved((s) => ({ ...s, [slug]: !s[slug] }));
+    toggleSaved(slug);
     if (!reduced()) {
       gsap.fromTo(
         e.currentTarget,
@@ -123,26 +148,35 @@ export default function TripGrid() {
     }
   };
 
+  const open = (t: Trip) => setOpenTrip(t);
+
   return (
-    <section ref={ref} className="section shell" style={{ paddingTop: 72, paddingBottom: "clamp(64px,7vw,96px)" }}>
+    <section
+      ref={ref}
+      id={RESULTS_ID}
+      className="section shell"
+      style={{ paddingTop: 72, paddingBottom: "clamp(64px,7vw,96px)" }}
+    >
       <div className="tgrid__head">
         <div>
-          <MaskLines lines={["Across Australia"]} className="ds-display-md" />
-          <span className="ds-body-sm" style={{ color: "var(--color-ink-muted)", marginTop: 8, display: "block" }}>
-            {visible.length} vetted {visible.length === 1 ? "trip" : "trips"}
-            {filter !== "All" ? ` · ${filter}` : ""}
+          {/* Keyed so the mask replays when the region changes — the heading is
+              the confirmation that a region card did something. */}
+          <MaskLines key={region} lines={[region]} className="ds-display-md" />
+          <span className="ds-body-sm tgrid__count">
+            {results.length} vetted {results.length === 1 ? "trip" : "trips"}
+            {category !== "All" ? ` · ${category}` : ""}
           </span>
         </div>
 
-        <div ref={pillRef} className="tfilters">
+        <div ref={pillRef} className="tfilters" role="group" aria-label="Filter trips by category">
           <span ref={indicatorRef} className="tfilters__ind" aria-hidden />
           {filters.map((f) => (
             <button
               key={f}
               type="button"
               onClick={() => changeFilter(f)}
-              aria-pressed={filter === f}
-              className={filter === f ? "is-active" : ""}
+              aria-pressed={category === f}
+              className={category === f ? "is-active" : ""}
             >
               {f}
             </button>
@@ -150,9 +184,62 @@ export default function TripGrid() {
         </div>
       </div>
 
-      <div className="tgrid">
-        {visible.map((t) => (
-          <article key={t.slug} className="trip">
+      {filtered ? (
+        <div className="tactive" aria-live="polite">
+          <span className="ds-micro tactive__label">Filtered by</span>
+          {region !== ALL_REGIONS ? (
+            <button type="button" className="tpill" onClick={() => clearFilters()}>
+              {region}
+              <i aria-hidden>×</i>
+              <span className="sr-only">— clear region filter</span>
+            </button>
+          ) : null}
+          {category !== "All" ? (
+            <button type="button" className="tpill" onClick={() => changeFilter("All")}>
+              {category}
+              <i aria-hidden>×</i>
+              <span className="sr-only">— clear category filter</span>
+            </button>
+          ) : null}
+          <button type="button" className="tactive__clear ds-micro" onClick={clearFilters}>
+            Clear all
+          </button>
+        </div>
+      ) : null}
+
+      {results.length === 0 ? (
+        <div className="tempty">
+          <span className="tempty__ring" aria-hidden>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M15 9l-4.2 1.8L9 15l4.2-1.8z" />
+            </svg>
+          </span>
+          <h3 className="ds-display-md tempty__title">Nothing on this heading yet</h3>
+          <p className="ds-body tempty__copy">
+            No {category !== "All" ? category.toLowerCase() : ""} trips run out of{" "}
+            {region === ALL_REGIONS ? "these waters" : region} this season. Widen the search, or ask
+            Kai — we hold departures that never make the grid.
+          </p>
+          <div className="tempty__acts">
+            <Button variant="primary" onClick={clearFilters}>
+              Show all {trips.length} trips
+            </Button>
+            <Button variant="translucent" onClick={() => changeFilter("All")}>
+              Ask Kai →
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className={`tgrid ${results.length > 0 && results.length <= 2 ? "tgrid--few" : ""}`}>
+        {results.map((t) => (
+          <article
+            key={t.slug}
+            className="trip"
+            onClick={() => open(t)}
+            aria-labelledby={`trip-${t.slug}`}
+          >
             <div className="trip__frame">
               <span className="trip__img">
                 <Image
@@ -185,7 +272,7 @@ export default function TripGrid() {
                 className={`trip__save ${saved[t.slug] ? "is-saved" : ""}`}
                 aria-label={saved[t.slug] ? `Remove ${t.name} from saved` : `Save ${t.name}`}
                 aria-pressed={!!saved[t.slug]}
-                onClick={(e) => toggleSave(t.slug, e)}
+                onClick={(e) => onSave(t.slug, e)}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 20s-7-4.4-7-9.3A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.7c0 4.9-7 9.3-7 9.3z" />
@@ -205,7 +292,9 @@ export default function TripGrid() {
                   </svg>
                   {t.rating} <span className="trip__reviews">({t.reviews})</span>
                 </span>
-                <h3 className="ds-display-md trip__name">{t.name}</h3>
+                <h3 id={`trip-${t.slug}`} className="ds-display-md trip__name">
+                  {t.name}
+                </h3>
               </div>
             </div>
 
@@ -238,13 +327,26 @@ export default function TripGrid() {
                   <div className="ds-micro trip__rate">Operator&apos;s rate — never a markup</div>
                 </div>
                 <span className="trip__cta">
-                  <Button variant="translucent">View trip</Button>
+                  <Button variant="translucent" magnetic={false} onClick={() => open(t)}>
+                    View trip
+                  </Button>
                 </span>
               </div>
             </div>
           </article>
         ))}
       </div>
+
+      {region !== ALL_REGIONS ? (
+        <div className="thop">
+          <span className="ds-micro thop__label">Try another region</span>
+          {others.map((r) => (
+            <button key={r.slug} type="button" onClick={() => pickRegion(r.name)}>
+              {r.name}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }

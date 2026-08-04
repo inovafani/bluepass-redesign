@@ -4,13 +4,21 @@ import Image from "next/image";
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import { regions } from "@/lib/discover";
+import { useDiscover } from "./DiscoverState";
 
 /**
  * The region strip. Drag-to-pan with a progress rule underneath rather than a
  * native scrollbar — it reads as part of the layout instead of chrome.
+ *
+ * Each card is a toggle on the results below. When one is picked the rail dims
+ * the rest, so the strip doubles as the readout of what is filtered — there is
+ * no separate "you are here" chrome to keep in sync.
  */
 export default function RegionRail() {
   const ref = useRef<HTMLDivElement>(null);
+  const { region, pickRegion } = useDiscover();
+  /* A drag across the strip must not land as a click on a card. */
+  const draggedRef = useRef(false);
 
   useGSAP(
     () => {
@@ -36,13 +44,16 @@ export default function RegionRail() {
       let startScroll = 0;
       const onDown = (e: PointerEvent) => {
         down = true;
+        draggedRef.current = false;
         startX = e.clientX;
         startScroll = track.scrollLeft;
         track.classList.add("is-dragging");
       };
       const onMove = (e: PointerEvent) => {
         if (!down) return;
-        track.scrollLeft = startScroll - (e.clientX - startX);
+        const dx = e.clientX - startX;
+        if (Math.abs(dx) > 6) draggedRef.current = true;
+        track.scrollLeft = startScroll - dx;
       };
       const onUp = () => {
         down = false;
@@ -84,25 +95,60 @@ export default function RegionRail() {
     { scope: ref },
   );
 
+  /* The selected card gets a ring that draws itself rather than snapping on. */
+  useGSAP(
+    () => {
+      if (reduced()) return;
+      const active = ref.current?.querySelector(".rregion.is-active");
+      if (!active) return;
+      gsap.fromTo(
+        active.querySelector(".rregion__ring"),
+        { opacity: 0, scale: 1.04 },
+        { opacity: 1, scale: 1, duration: 0.7, ease: "bp-out" },
+      );
+    },
+    { scope: ref, dependencies: [region] },
+  );
+
+  const anyActive = regions.some((r) => r.name === region);
+
   return (
-    <div ref={ref} className="rrail shell">
-      <div className="rrail__track">
-        {regions.map((r) => (
-          <button key={r.slug} type="button" className="rregion">
-            <span className="rregion__frame">
-              <span className="rregion__img">
-                <Image src={r.img} alt="" fill sizes="260px" style={{ objectFit: "cover" }} />
+    <div ref={ref} className={`rrail shell ${anyActive ? "has-active" : ""}`}>
+      <div className="rrail__track" role="group" aria-label="Filter trips by region">
+        {regions.map((r) => {
+          const active = r.name === region;
+          return (
+            <button
+              key={r.slug}
+              type="button"
+              className={`rregion ${active ? "is-active" : ""}`}
+              aria-pressed={active}
+              onClick={() => {
+                if (draggedRef.current) return;
+                pickRegion(r.name);
+              }}
+            >
+              <span className="rregion__frame">
+                <span className="rregion__img">
+                  <Image src={r.img} alt="" fill sizes="260px" style={{ objectFit: "cover" }} />
+                </span>
+                <span className="rregion__scrim" />
+                <span className="rregion__ring" aria-hidden />
+                <span className="rregion__tick" aria-hidden>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </span>
               </span>
-              <span className="rregion__scrim" />
-            </span>
-            <span className="rregion__meta">
-              <span className="ds-body-sm rregion__name">{r.name}</span>
-              <span className="ds-micro rregion__count">
-                {r.trips} {r.trips === 1 ? "trip" : "trips"}
+              <span className="rregion__meta">
+                <span className="ds-body-sm rregion__name">{r.name}</span>
+                <span className="ds-micro rregion__count">
+                  {active ? "Showing" : `${r.trips} ${r.trips === 1 ? "trip" : "trips"}`}
+                </span>
               </span>
-            </span>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
       <div className="rrail__bar" aria-hidden>
         <span className="rrail__thumb" />

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import { gsap, ScrollTrigger, reduced } from "@/lib/gsap";
+import { setLenis } from "@/lib/lenis";
 
 /**
  * Drives the page off Lenis and hands ScrollTrigger the same clock, so scrubbed
@@ -24,6 +25,7 @@ export default function SmoothScroll() {
       touchMultiplier: 1.6,
     });
     lenisRef.current = lenis;
+    setLenis(lenis);
 
     lenis.on("scroll", ScrollTrigger.update);
 
@@ -35,6 +37,7 @@ export default function SmoothScroll() {
       gsap.ticker.remove(raf);
       lenis.destroy();
       lenisRef.current = null;
+      setLenis(null);
     };
   }, []);
 

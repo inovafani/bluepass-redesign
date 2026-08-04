@@ -876,6 +876,60 @@ html.lenis body {
 }
 .rregion__count {
   color: rgba(255, 255, 255, 0.6);
+  transition: color 0.35s ease;
+}
+
+/* Selected region ---------------------------------------------------------- */
+/* Picking one region dims the others, so the strip itself reports the filter
+   and no separate "you are here" chrome has to stay in sync. */
+.rrail.has-active .rregion {
+  opacity: 0.42;
+  transition: opacity 0.5s ease;
+}
+.rrail.has-active .rregion.is-active,
+.rrail.has-active .rregion:hover,
+.rrail.has-active .rregion:focus-visible {
+  opacity: 1;
+}
+.rregion__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid #ffffff;
+  opacity: 0;
+  pointer-events: none;
+}
+.rregion.is-active .rregion__ring {
+  opacity: 1;
+}
+.rregion__tick {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: var(--color-on-primary);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.rregion.is-active .rregion__tick {
+  opacity: 1;
+  transform: scale(1);
+}
+.rregion.is-active .rregion__count {
+  color: #ffffff;
+}
+.rregion:focus-visible {
+  outline: none;
+}
+.rregion:focus-visible .rregion__frame {
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
 .rrail__bar {
   position: relative;
@@ -951,12 +1005,175 @@ html.lenis body {
   font-weight: 600;
 }
 
+.tgrid__count {
+  color: var(--color-ink-muted);
+  margin-top: 10px;
+  display: block;
+}
+
+/* Active-filter readout ---------------------------------------------------- */
+.tactive {
+  max-width: 1360px;
+  margin: 26px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tactive__label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  margin-right: 2px;
+}
+.tpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface-1);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--type-body-sm-size);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.35s ease, background 0.35s ease;
+}
+.tpill i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-hairline);
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+.tpill:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: var(--color-surface-2);
+}
+.tpill:hover i {
+  background: #ffffff;
+  color: var(--color-on-primary);
+}
+.tactive__clear {
+  margin-left: 4px;
+  border: none;
+  background: none;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: var(--font-body);
+  transition: color 0.3s ease;
+}
+.tactive__clear:hover {
+  color: var(--color-ink);
+}
+
+/* No results --------------------------------------------------------------- */
+.tempty {
+  max-width: 640px;
+  margin: 56px auto 8px;
+  padding: 44px 32px 40px;
+  text-align: center;
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--radius-xxl);
+  background: linear-gradient(180deg, var(--color-surface-1) 0%, rgba(26, 26, 24, 0) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.tempty__ring {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid var(--color-hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink-muted);
+}
+.tempty__title {
+  margin-top: 22px;
+  font-size: clamp(26px, 3vw, 32px);
+}
+.tempty__copy {
+  color: var(--color-ink-muted);
+  margin-top: 12px;
+  line-height: 1.55;
+  max-width: 440px;
+}
+.tempty__acts {
+  display: flex;
+  gap: 10px;
+  margin-top: 26px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .tgrid {
   max-width: 1360px;
   margin: 40px auto 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+}
+.tgrid:empty {
+  margin: 0;
+}
+/* Every region holds a single trip, so a region filter almost always lands on
+   one card. Left in a three-up grid it reads as a loading state — centring it
+   at a larger size makes the result look deliberate. */
+.tgrid--few {
+  grid-template-columns: repeat(2, minmax(0, 430px));
+  justify-content: center;
+}
+
+/* Hop to another region without scrolling back to the rail. */
+.thop {
+  max-width: 1360px;
+  margin: 46px auto 0;
+  padding-top: 30px;
+  border-top: 1px solid var(--color-hairline-soft);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.thop__label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  margin-right: 4px;
+}
+.thop button {
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-hairline);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: var(--font-body);
+  font-size: var(--type-body-sm-size);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.thop button:hover {
+  color: var(--color-on-primary);
+  background: #ffffff;
+  border-color: #ffffff;
+}
+@media (max-width: 900px) {
+  .tgrid--few {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 @media (max-width: 1180px) {
   .tgrid {
@@ -976,6 +1193,7 @@ html.lenis body {
   border-radius: var(--radius-xl);
   overflow: hidden;
   will-change: transform;
+  cursor: pointer;
 }
 .trip__frame {
   position: relative;
@@ -1025,6 +1243,10 @@ html.lenis body {
   border-radius: 50%;
   background: var(--color-semantic-success);
   flex: none;
+}
+.chip--warn {
+  border-color: rgba(255, 122, 48, 0.45);
+  color: #ffc9a8;
 }
 .trip__save {
   position: absolute;
@@ -1141,6 +1363,567 @@ html.lenis body {
 .trip__rate {
   color: var(--color-ink-muted);
   margin-top: 3px;
+}
+
+/* ==========================================================================
+   Trip sheet — what "View trip" opens
+   ========================================================================== */
+
+/* Sits above Ask Kai (100) and below the grain (200), so the film grain still
+   falls over the sheet and it reads as part of the same picture. */
+.tsheet {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.tsheet__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgba(6, 6, 5, 0.72);
+  backdrop-filter: blur(18px);
+  cursor: pointer;
+}
+.tsheet__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(1120px, 100%);
+  height: min(94svh, 100%);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-bottom: none;
+  border-radius: var(--radius-xxl) var(--radius-xxl) 0 0;
+  overflow: hidden;
+  box-shadow: 0 -30px 80px rgba(0, 0, 0, 0.55);
+  will-change: transform;
+}
+.tsheet__scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-hairline) transparent;
+}
+.tsheet__scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.tsheet__scroll::-webkit-scrollbar-thumb {
+  background: var(--color-hairline);
+  border-radius: 100px;
+}
+
+/* Photo header ------------------------------------------------------------- */
+.tsheet__hero {
+  position: relative;
+  /* `width: 100%` is load-bearing: with `aspect-ratio` and an auto width, the
+     `max-height` clamp resolves by shrinking the *width* to keep the ratio, and
+     the photo stops reaching the right edge of the panel. */
+  width: 100%;
+  aspect-ratio: 16 / 8;
+  min-height: 300px;
+  max-height: 52svh;
+  overflow: hidden;
+  background: var(--color-surface-1);
+}
+.tsheet__photo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  will-change: transform;
+}
+.tsheet__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 9, 0.55) 0%,
+    rgba(10, 10, 9, 0.1) 42%,
+    rgba(10, 10, 9, 0.95) 100%
+  );
+}
+.tsheet__hero-top {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tsheet__chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tsheet__hero-acts {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+.tsheet__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 9, 0.55);
+  border: 1px solid var(--color-hairline);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.35s ease, color 0.35s ease, transform 0.35s ease;
+}
+.tsheet__icon:hover {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-on-primary);
+  transform: scale(1.06);
+}
+.tsheet__icon.is-saved {
+  background: #ffffff;
+  color: var(--color-on-primary);
+}
+.tsheet__icon.is-saved svg {
+  fill: currentColor;
+}
+.tsheet__hero-foot {
+  position: absolute;
+  left: clamp(20px, 3.4vw, 40px);
+  right: clamp(20px, 3.4vw, 40px);
+  bottom: clamp(18px, 2.6vw, 30px);
+}
+.tsheet__loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.75);
+}
+.tsheet__title {
+  margin-top: 6px;
+  font-size: clamp(34px, 5vw, 62px);
+  letter-spacing: clamp(-3.1px, -0.25vw, -1.6px);
+}
+
+/* Body layout -------------------------------------------------------------- */
+.tsheet__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+  gap: clamp(28px, 3.4vw, 52px);
+  padding: clamp(28px, 3.4vw, 44px) clamp(20px, 3.4vw, 40px) 56px;
+  align-items: start;
+}
+.tsheet__main {
+  min-width: 0;
+}
+.tsheet__summary {
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.5;
+}
+
+.tsheet__facts {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--color-hairline-soft);
+  border-top: 1px solid var(--color-hairline-soft);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+.tsheet__fact {
+  background: var(--color-canvas);
+  padding: 16px 14px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.tsheet__fact:not(:first-child) {
+  padding-left: 16px;
+}
+.tsheet__fact-k {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+}
+.tsheet__fact-v {
+  color: var(--color-ink);
+}
+
+.tsheet__block {
+  margin-top: 38px;
+}
+.tsheet__label {
+  display: block;
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 2.2px;
+}
+.tsheet__list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tsheet__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--color-hairline-soft);
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.45;
+}
+.tsheet__list li:first-child {
+  border-top: 1px solid var(--color-hairline-soft);
+}
+.tsheet__list svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--color-semantic-success);
+}
+
+/* Itinerary — the label column doubles as the rule the rows hang off. */
+.tsheet__days {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+.tsheet__day {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 18px;
+  padding: 20px 0;
+  border-top: 1px solid var(--color-hairline-soft);
+  position: relative;
+}
+.tsheet__day:last-child {
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+.tsheet__day-label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  padding-top: 3px;
+}
+.tsheet__day-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.tsheet__day-title {
+  color: #ffffff;
+  font-size: 19px;
+}
+.tsheet__day-desc {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+.tsheet__incl {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tsheet__incl-chip {
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface-1);
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.2px;
+}
+
+.tsheet__quote {
+  margin: 40px 0 0;
+  padding: 0 0 0 22px;
+  border-left: 1px solid var(--color-hairline);
+}
+.tsheet__quote p {
+  color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
+  line-height: 1.4;
+}
+.tsheet__quote footer {
+  margin-top: 12px;
+  color: var(--color-ink-muted);
+  letter-spacing: 0.4px;
+}
+
+/* Booking column ----------------------------------------------------------- */
+.tsheet__side {
+  position: sticky;
+  top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.tsheet__card {
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-1);
+  padding: 22px;
+}
+.tsheet__price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.tsheet__price .ds-display-md {
+  font-size: 34px;
+  letter-spacing: -1.4px;
+}
+.tsheet__price .ds-micro {
+  color: var(--color-ink-muted);
+}
+.tsheet__rate {
+  color: var(--color-ink-muted);
+  margin-top: 5px;
+}
+.tsheet__deps {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-hairline-soft);
+}
+.tsheet__dep-row {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.tsheet__dep {
+  padding: 8px 13px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-hairline);
+  background: transparent;
+  color: var(--color-ink-muted);
+  font-family: var(--font-body);
+  font-size: var(--type-micro-size);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+}
+.tsheet__dep:hover {
+  color: var(--color-ink);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.tsheet__dep.is-active {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--color-on-primary);
+  font-weight: 600;
+}
+.tsheet__acts {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.tsheet__acts .btn-magnet,
+.tsheet__acts .btn {
+  width: 100%;
+}
+.tsheet__note {
+  display: block;
+  margin-top: 13px;
+  color: var(--color-ink-muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* The 5% card — the sheet's argument, so it gets the accent treatment. */
+.tsheet__give {
+  background: linear-gradient(
+    165deg,
+    rgba(34, 197, 94, 0.11) 0%,
+    rgba(26, 26, 24, 0.9) 55%,
+    var(--color-surface-1) 100%
+  );
+  border-color: rgba(34, 197, 94, 0.22);
+}
+.tsheet__give-line {
+  margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tsheet__give-value {
+  color: var(--color-semantic-success);
+  font-size: 34px;
+  letter-spacing: -1.4px;
+  font-variant-numeric: tabular-nums;
+}
+.tsheet__give-line .ds-body-sm {
+  color: var(--color-ink-muted);
+}
+.tsheet__give-copy {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.5;
+}
+.tsheet__bar {
+  margin-top: 20px;
+  display: flex;
+  gap: 3px;
+  height: 7px;
+}
+.tsheet__seg {
+  height: 100%;
+  border-radius: 100px;
+  flex: none;
+}
+.tsheet__seg--1 {
+  background: var(--color-semantic-success);
+}
+.tsheet__seg--2 {
+  background: #7ee0a5;
+}
+.tsheet__seg--3 {
+  background: rgba(255, 255, 255, 0.42);
+}
+.tsheet__legend {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tsheet__legend li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 0;
+  color: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid var(--color-hairline-soft);
+}
+.tsheet__legend li:first-child {
+  border-top: none;
+}
+.tsheet__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.tsheet__legend-name {
+  color: rgba(255, 255, 255, 0.86);
+  flex: 1;
+}
+.tsheet__legend-val {
+  color: var(--color-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tsheet__op {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.tsheet__op-ring {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: rgba(255, 255, 255, 0.8);
+}
+.tsheet__op-name {
+  color: #ffffff;
+  display: block;
+}
+.tsheet__op-note {
+  color: var(--color-ink-muted);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* Mobile dock -------------------------------------------------------------- */
+.tsheet__dock {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--color-hairline);
+  background: rgba(10, 10, 9, 0.92);
+  backdrop-filter: blur(16px);
+}
+.tsheet__dock-give {
+  color: var(--color-semantic-success);
+  margin-top: 3px;
+  display: block;
+}
+
+@media (max-width: 1000px) {
+  .tsheet__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* The booking column leads on narrow screens — the fare and the 5% are what
+     the visitor came to check. */
+  .tsheet__side {
+    position: static;
+    order: -1;
+  }
+  .tsheet__facts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tsheet__fact:nth-child(odd) {
+    padding-left: 0;
+  }
+  .tsheet__fact:nth-child(even) {
+    padding-left: 16px;
+  }
+}
+
+@media (max-width: 620px) {
+  .tsheet__panel {
+    height: 100%;
+    border-radius: 0;
+    border: none;
+  }
+  .tsheet__hero {
+    aspect-ratio: 4 / 3;
+    max-height: 44svh;
+  }
+  .tsheet__day {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .tsheet__dock {
+    display: flex;
+  }
+}
+
+/* Utilities ---------------------------------------------------------------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* Belt-and-braces with lenis.stop() for the sheet — covers reduced-motion
+   visitors, who never get a Lenis instance to stop. */
+html.is-scroll-locked,
+html.is-scroll-locked body {
+  overflow: hidden;
 }
 
 /* How it works ------------------------------------------------------------ */

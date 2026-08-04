@@ -2,10 +2,11 @@
 
 import { useRef, useState } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
-import { discoverHero, regions, whenOptions, guestOptions } from "@/lib/discover";
+import { discoverHero, regions, whenOptions, guestOptions, ALL_REGIONS } from "@/lib/discover";
 import ParallaxMedia from "../ui/ParallaxMedia";
 import { MaskLines, Rail } from "../ui/Text";
 import Button from "../ui/Button";
+import { useDiscover } from "./DiscoverState";
 
 /** A field in the search bar. Native <select> keeps it keyboard- and mobile-native. */
 function Field({
@@ -47,7 +48,9 @@ function Field({
 
 export default function DiscoverHero() {
   const ref = useRef<HTMLElement>(null);
-  const [region, setRegion] = useState("All Australia");
+  /* Region is shared with the rail and the grid; when/guests stay local until
+     there is a real availability API to send them to. */
+  const { region, setRegion, goToResults } = useDiscover();
   const [when, setWhen] = useState(whenOptions[0]);
   const [guests, setGuests] = useState(guestOptions[1]);
 
@@ -116,7 +119,7 @@ export default function DiscoverHero() {
           <Field
             label="Region"
             icon="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11zM12 10a1 1 0 1 0 .01 0"
-            options={["All Australia", ...regions.map((r) => r.name)]}
+            options={[ALL_REGIONS, ...regions.map((r) => r.name)]}
             value={region}
             onChange={setRegion}
           />
@@ -137,7 +140,7 @@ export default function DiscoverHero() {
             onChange={setGuests}
           />
           <span className="dsearch__submit">
-            <Button variant="primary" large magnetic={false}>
+            <Button variant="primary" large magnetic={false} onClick={goToResults}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <circle cx="11" cy="11" r="6.5" />
                 <path d="M16 16l4.5 4.5" />
