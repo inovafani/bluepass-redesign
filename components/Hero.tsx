@@ -21,13 +21,10 @@ export default function Hero() {
       const copy = el.querySelector(".hero__copy");
       const ctas = el.querySelector(".hero__ctas");
       const note = el.querySelector(".hero__note");
-      const scrim = el.querySelector(".hero__scrim");
-      const cue = el.querySelector(".hero__cue-line");
 
       /* ---- load ------------------------------------------------------ */
       const tl = gsap.timeline({ delay: 0.25 });
-      tl.from(scrim, { opacity: 0, duration: 1.6, ease: "power2.out" }, 0)
-        .from(eyebrow, { opacity: 0, y: 20, duration: 1 }, 0.45)
+      tl.from(eyebrow, { opacity: 0, y: 20, duration: 1 }, 0.45)
         // headline handles itself (MaskLines mode="load", delay 0.7)
         .from(copy, { opacity: 0, y: 26, duration: 1.1 }, 1.35)
         .from(
@@ -37,31 +34,12 @@ export default function Hero() {
         )
         .from(note, { opacity: 0, duration: 1 }, 1.75);
 
-      /* ---- the scroll cue keeps drawing itself downward -------------- */
-      if (cue) {
-        gsap.fromTo(
-          cue,
-          { scaleY: 0, transformOrigin: "top" },
-          {
-            scaleY: 1,
-            duration: 1.4,
-            ease: "power2.inOut",
-            repeat: -1,
-            repeatDelay: 0.15,
-            yoyo: false,
-            onRepeat: () => gsap.set(cue, { transformOrigin: "top" }),
-          },
-        );
-      }
-
       /* ---- scroll-out: content lifts and dissolves ------------------- */
       gsap
         .timeline({
           scrollTrigger: { trigger: el, start: "top top", end: "bottom top", scrub: 0.6 },
         })
-        .to(".hero__content", { y: -110, opacity: 0, ease: "none" }, 0)
-        .to(".hero__cue", { opacity: 0, ease: "none", duration: 0.2 }, 0)
-        .fromTo(".hero__dim", { opacity: 0 }, { opacity: 0.5, ease: "none" }, 0);
+        .to(".hero__content", { y: -110, opacity: 0, ease: "none" }, 0);
     },
     { scope: ref },
   );
@@ -84,6 +62,11 @@ export default function Hero() {
         intro
         priority
       />
+      {/* One static scrim, exactly as the Discover/Conservation/Partners heroes
+          do it. The home hero used to stack a second full-bleed layer here (an
+          animated dim) plus a centre scroll cue on its own compositing layer;
+          under the nav's backdrop-filter those extra layers left a vertical
+          seam across the pill that the other pages never showed. */}
       <div
         className="hero__scrim"
         style={{
@@ -94,7 +77,6 @@ export default function Hero() {
           ).toFixed(2)}) 40%, rgba(10,10,9,${SCRIM}) 100%)`,
         }}
       />
-      <div className="hero__dim" style={{ position: "absolute", inset: 0, background: "#0a0a09", opacity: 0 }} />
 
       <div
         className="hero__content"
@@ -145,25 +127,6 @@ export default function Hero() {
         <span className="hero__note ds-micro" style={{ color: "rgba(255,255,255,0.55)", marginTop: 6 }}>
           Live now in Komodo &amp; Raja Ampat — continue on WhatsApp
         </span>
-      </div>
-
-      <div
-        className="hero__cue"
-        style={{
-          position: "absolute",
-          left: "50%",
-          bottom: 28,
-          zIndex: 2,
-          width: 1,
-          height: 52,
-          background: "rgba(255,255,255,0.14)",
-          overflow: "hidden",
-        }}
-      >
-        <span
-          className="hero__cue-line"
-          style={{ display: "block", width: "100%", height: "100%", background: "rgba(255,255,255,0.85)" }}
-        />
       </div>
 
       <Rail label="The promise" />

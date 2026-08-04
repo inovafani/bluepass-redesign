@@ -5,6 +5,8 @@ import SmoothScroll from "@/components/SmoothScroll";
 import Grain from "@/components/Grain";
 import Nav from "@/components/Nav";
 import KaiChat from "@/components/KaiChat";
+import SessionProvider from "@/components/auth/SessionProvider";
+import FlashNotice from "@/components/auth/FlashNotice";
 
 /* The design system specifies GT Walsheim for display type and substitutes
  * Geist (see the DS readme's font caveat); Inter carries all body copy. */
@@ -42,12 +44,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${geist.variable} ${inter.variable}`}>
       <body>
-        {/* Chrome that persists across routes — only the page body swaps. */}
+        {/* Chrome that persists across routes — only the page body swaps.
+            The session wraps all of it: the nav and the Kai panel both need to
+            know who is signed in, and one `/api/auth/me` serves both. */}
         <SmoothScroll />
         <Grain />
-        <Nav />
-        {children}
-        <KaiChat />
+        <SessionProvider>
+          <Nav />
+          <FlashNotice />
+          {children}
+          <KaiChat />
+        </SessionProvider>
       </body>
     </html>
   );

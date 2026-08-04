@@ -1,0 +1,775 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OperatorStatus {
+  GHOST
+  CLAIMED
+  ACTIVE
+  SUSPENDED
+}
+
+enum PmsPlatform {
+  REZDY
+  FAREHARBOR
+  BOKUN
+  NATIVE
+}
+
+enum CertLevel {
+  NONE
+  OW
+  AOW
+  RESCUE
+  DIVEMASTER
+  INSTRUCTOR
+}
+
+enum BookingStatus {
+  QUOTE_DRAFTED
+  OPERATOR_NOTIFIED
+  OPERATOR_ACCEPTED
+  OPERATOR_DECLINED
+  COUNTER_REQUESTED
+  AUTO_DECLINED
+  PMS_HOLD_PLACED
+  AWAITING_PAYMENT
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+  REFUNDED
+}
+
+enum ActorType {
+  TRAVELLER
+  OPERATOR
+  SYSTEM
+  KAI
+}
+
+enum TransferStatus {
+  QUEUED
+  SENT
+  CONFIRMED
+  FAILED
+}
+
+enum SignupRole {
+  OPERATOR
+  CREATOR
+}
+
+enum BluePassAccountRole {
+  TRAVELLER
+  CREATOR
+  OPERATOR
+  ADMIN
+}
+
+enum ApplicationStatus {
+  PENDING_REVIEW
+  APPROVED
+  DECLINED
+  LIVE
+}
+
+enum OperatorClaimStatus {
+  PENDING_REVIEW
+  APPROVED
+  DECLINED
+}
+
+enum OperatorLeadStatus {
+  IMPORTED
+  CLAIM_LINK_REQUESTED
+  CLAIM_SUBMITTED
+  APPROVED
+  LIVE
+  DECLINED
+  MANUAL_REVIEW
+}
+
+enum OperatorPmsReadinessStatus {
+  NEEDS_CREDENTIALS
+  CREDENTIALS_SUBMITTED
+  CONNECTED
+  SYNCED
+  MANUAL_REVIEW
+}
+
+enum KaiChannel {
+  WEB      @map("web")
+  WHATSAPP @map("whatsapp")
+}
+
+enum KaiSessionStatus {
+  OPEN    @map("open")
+  HANDOFF @map("handoff")
+  CLOSED  @map("closed")
+}
+
+enum KaiMessageRole {
+  USER      @map("user")
+  ASSISTANT @map("assistant")
+  SYSTEM    @map("system")
+}
+
+enum BookingInquiryStatus {
+  DRAFT
+  READY_TO_DISPATCH
+  OPERATOR_PENDING
+  OPERATOR_ACCEPTED
+  OPERATOR_DECLINED
+  COUNTER_OFFERED
+  EXPIRED
+}
+
+enum WhatsAppOutboundStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum ReferralPartnerRole {
+  CREATOR
+  OPERATOR
+  DIVE_SHOP
+  GROUP
+  TRAVELLER
+}
+
+model Operator {
+  id           String                @id @default(cuid())
+  name         String
+  status       OperatorStatus        @default(GHOST)
+  whatsappE164 String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  trips        Trip[]
+  bookings     Booking[]
+  integrations OperatorIntegration[]
+  bookingInquiries BookingInquiry[]
+  whatsappOutboundMessages WhatsAppOutboundMessage[]
+}
+
+model ReferralPartner {
+  id        String              @id @default(cuid())
+  role      ReferralPartnerRole
+  name      String
+  handle    String?
+  email     String?
+  phone     String?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  links     ReferralLink[]
+  clicks    ReferralClick[]
+  kaiSessions KaiSession[]
+  bookingInquiries BookingInquiry[]
+  creatorProfiles CreatorProfile[]
+  operatorProfiles OperatorProfile[]
+
+  @@index([role])
+  @@index([handle])
+  @@index([email])
+}
+
+model ReferralLink {
+  id        String          @id @default(cuid())
+  partnerId String
+  code      String          @unique
+  label     String?
+  targetPath String?
+  active    Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  partner   ReferralPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  clicks    ReferralClick[]
+  kaiSessions KaiSession[]
+  bookingInquiries BookingInquiry[]
+
+  @@index([partnerId])
+  @@index([active])
+}
+
+model ReferralClick {
+  id        String           @id @default(cuid())
+  referralLinkId String?
+  referralPartnerId String?
+  code      String
+  landingPath String?
+  referrer  String?
+  userAgent String?
+  createdAt DateTime         @default(now())
+  referralLink ReferralLink? @relation(fields: [referralLinkId], references: [id], onDelete: SetNull)
+  referralPartner ReferralPartner? @relation(fields: [referralPartnerId], references: [id], onDelete: SetNull)
+
+  @@index([referralLinkId])
+  @@index([referralPartnerId])
+  @@index([code])
+  @@index([createdAt])
+}
+
+model Trip {
+  id          String     @id @default(cuid())
+  operatorId  String
+  externalId  String?
+  title       String
+  description String?
+  location    String?
+  imageUrl    String?
+  currency    String     @default("USD")
+  priceCents  Int
+  minCert     CertLevel  @default(NONE)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  operator    Operator   @relation(fields: [operatorId], references: [id])
+  bookings    Booking[]
+
+  @@index([operatorId])
+  @@unique([operatorId, externalId])
+}
+
+model Traveller {
+  id           String       @id @default(cuid())
+  whatsappE164 String       @unique
+  email        String?      @unique
+  emailVerifiedAt DateTime?
+  passwordHash String?
+  displayName  String?
+  account      BluePassAccount?
+  certLevel    CertLevel    @default(NONE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  bookings     Booking[]
+  kaiSessions  KaiSession[]
+  sessions     TravellerSession[]
+  emailVerificationTokens TravellerEmailVerificationToken[]
+
+  @@index([email])
+}
+
+model BluePassAccount {
+  id              String                @id @default(cuid())
+  email           String                @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String
+  displayName     String?
+  phone           String?
+  roles           BluePassAccountRole[] @default([TRAVELLER])
+  travellerId     String?               @unique
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  traveller       Traveller?            @relation(fields: [travellerId], references: [id], onDelete: SetNull)
+  sessions        BluePassAccountSession[]
+  emailVerificationTokens BluePassAccountEmailVerificationToken[]
+  passwordResetTokens BluePassAccountPasswordResetToken[]
+  creatorProfile  CreatorProfile?
+  operatorProfile OperatorProfile?
+  operatorClaims   OperatorClaim[]
+  commissionEntries CommissionLedgerEntry[]
+
+  @@index([email])
+  @@index([travellerId])
+}
+
+model BluePassAccountSession {
+  id        String          @id @default(cuid())
+  accountId String
+  tokenHash String          @unique
+  expiresAt DateTime
+  createdAt DateTime        @default(now())
+  account   BluePassAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([expiresAt])
+}
+
+model BluePassAccountEmailVerificationToken {
+  id        String          @id @default(cuid())
+  accountId String
+  tokenHash String          @unique
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime        @default(now())
+  account   BluePassAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model BluePassAccountPasswordResetToken {
+  id        String          @id @default(cuid())
+  accountId String
+  tokenHash String          @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime        @default(now())
+  account   BluePassAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([expiresAt])
+}
+
+model CreatorProfile {
+  id          String            @id @default(cuid())
+  accountId   String            @unique
+  referralPartnerId String?     @unique
+  status      ApplicationStatus @default(PENDING_REVIEW)
+  handle      String?
+  audienceUrl String?
+  instagramUrl String?
+  youtubeUrl  String?
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  account     BluePassAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  referralPartner ReferralPartner? @relation(fields: [referralPartnerId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([handle])
+  @@index([referralPartnerId])
+}
+
+// Phase 1 foundation for real commission payouts (see kai's src/core/bluepass/ledger.ts and the
+// "Real commission payment collection" plan) - starts manual/admin-driven for every operator
+// regardless of region; STRIPE_CONNECT becomes usable once Phase 2's Stripe Connect onboarding
+// ships for AU operators specifically (Indonesia's cross-border support is unconfirmed with Stripe).
+enum OperatorPayoutMethod {
+  MANUAL_BANK_TRANSFER
+  STRIPE_CONNECT
+}
+
+model OperatorProfile {
+  id          String            @id @default(cuid())
+  accountId   String            @unique
+  referralPartnerId String?     @unique
+  status      ApplicationStatus @default(PENDING_REVIEW)
+  companyName String?
+  whatsappE164 String?
+  websiteUrl  String?
+  claimedOperatorSlug String?
+  claimedYachtSlugs   String[]          @default([])
+  claimedAt           DateTime?
+  notes       String?
+  // ISO 3166-1 alpha-2 (e.g. "AU", "ID") - drives payout routing once Phase 2 Stripe Connect
+  // ships; not yet collected anywhere in the onboarding flow, so expect this to be null for
+  // existing operators until a follow-up backfill/onboarding-form step is built.
+  country             String?
+  payoutMethod        OperatorPayoutMethod @default(MANUAL_BANK_TRANSFER)
+  // Same encrypt-at-rest convention as OperatorIntegration.encryptedCredentials
+  // (lib/services/booking/adapters/credentials.ts's encryptCredentials/decryptCredentials) - this
+  // is real bank account data, never stored as plain JSON.
+  encryptedPayoutDetails String?
+  payoutContactEmail    String?
+  // Created by kai (which holds BluePass's own Stripe secret key) via the admin bridge when the
+  // operator starts Connect onboarding; bluepass-app never talks to Stripe's account-creation API
+  // directly. stripeChargesEnabled/stripePayoutsEnabled/stripeOnboardedAt are updated by this
+  // app's own account.updated webhook (a separate Stripe webhook endpoint, own signing secret).
+  stripeConnectAccountId String?  @unique
+  stripeChargesEnabled   Boolean  @default(false)
+  stripePayoutsEnabled   Boolean  @default(false)
+  stripeOnboardedAt      DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  account     BluePassAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  referralPartner ReferralPartner? @relation(fields: [referralPartnerId], references: [id], onDelete: SetNull)
+  pmsReadiness OperatorPmsReadiness?
+  listings    OperatorListing[]
+
+  @@index([status])
+  @@index([companyName])
+  @@index([claimedOperatorSlug])
+  @@index([referralPartnerId])
+}
+
+enum OperatorListingStatus {
+  DRAFT
+  LIVE
+  ARCHIVED
+}
+
+// A listing an operator authors and publishes themselves, once approved (OperatorProfile.status
+// = APPROVED) - no admin review gate before going live, matching how most self-service
+// marketplaces work (publish first, moderate reactively). Admins can only take an already-live
+// listing down (ARCHIVED) and bring it back, via archivedAt/archivedBy/archivedReason.
+// Deliberately hangs off OperatorProfile (the account-linked entity real claim/approval flows
+// actually populate) rather than the legacy Operator/Trip/Booking tables, which are only ever
+// touched by the Bokun PMS-sync adapter and have no bridge from an approved claim today.
+// category/region are free strings (matching OperatorLead's existing pattern) rather than enums,
+// so an Australian region (e.g. "Great Barrier Reef") needs no schema change to be listed
+// alongside "Komodo"/"Raja Ampat".
+model OperatorListing {
+  id                String                 @id @default(cuid())
+  operatorProfileId String
+  title             String
+  slug              String                 @unique
+  category          String
+  region            String
+  description       String
+  heroImageUrl      String?
+  maxGuests         Int?
+  priceSignal       String?
+  currency          String                 @default("AUD")
+  status            OperatorListingStatus  @default(DRAFT)
+  publishedAt       DateTime?
+  archivedAt        DateTime?
+  archivedBy        String?
+  archivedReason    String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  operatorProfile OperatorProfile @relation(fields: [operatorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([operatorProfileId])
+  @@index([status])
+  @@index([region])
+}
+
+model OperatorLead {
+  id          String             @id @default(cuid())
+  slug        String             @unique
+  name        String
+  category    String?
+  region      String?
+  email       String?
+  phone       String?
+  claimUrl    String?
+  websiteUrl  String?
+  source      String             @default("csv")
+  status      OperatorLeadStatus @default(IMPORTED)
+  lastOutreachAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  claimTokens OperatorClaimToken[]
+  outreachEvents OperatorOutreachEvent[]
+
+  @@index([status])
+  @@index([email])
+  @@index([region])
+}
+
+model OperatorClaimToken {
+  id          String       @id @default(cuid())
+  operatorLeadId String
+  tokenHash   String       @unique
+  email       String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime     @default(now())
+  operatorLead OperatorLead @relation(fields: [operatorLeadId], references: [id], onDelete: Cascade)
+
+  @@index([operatorLeadId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model OperatorOutreachEvent {
+  id          String        @id @default(cuid())
+  operatorLeadId String?
+  operatorSlug String
+  type        String
+  message     String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  operatorLead OperatorLead? @relation(fields: [operatorLeadId], references: [id], onDelete: SetNull)
+
+  @@index([operatorLeadId])
+  @@index([operatorSlug])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model OperatorClaim {
+  id              String              @id @default(cuid())
+  operatorSlug    String
+  operatorName    String
+  yachtSlugs      String[]            @default([])
+  accountId       String
+  status          OperatorClaimStatus @default(PENDING_REVIEW)
+  claimantName    String
+  claimantEmail   String
+  claimantPhone   String?
+  claimantRole    String?
+  websiteUrl      String?
+  proofUrl        String?
+  notes           String?
+  reviewedAt      DateTime?
+  reviewedBy      String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  account         BluePassAccount     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([operatorSlug])
+  @@index([accountId])
+  @@index([status])
+}
+
+model OperatorPmsReadiness {
+  id          String                    @id @default(cuid())
+  operatorProfileId String              @unique
+  platform    PmsPlatform
+  status      OperatorPmsReadinessStatus @default(NEEDS_CREDENTIALS)
+  contactEmail String?
+  contactWhatsapp String?
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  operatorProfile OperatorProfile       @relation(fields: [operatorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([platform])
+}
+
+model CommissionLedgerEntry {
+  id               String           @id @default(cuid())
+  bookingInquiryId String?
+  accountId        String?
+  referralPartnerId String?
+  role             BluePassAccountRole?
+  kind             String
+  amountCents      Int
+  currency         String           @default("USD")
+  status           String           @default("ESTIMATED")
+  metadata         Json?
+  createdAt        DateTime         @default(now())
+  account          BluePassAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([bookingInquiryId])
+  @@index([accountId])
+  @@index([referralPartnerId])
+  @@index([status])
+}
+
+model TravellerEmailVerificationToken {
+  id          String    @id @default(cuid())
+  travellerId String
+  tokenHash   String    @unique
+  email       String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  traveller   Traveller @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  @@index([travellerId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model TravellerSession {
+  id        String    @id @default(cuid())
+  travellerId String
+  tokenHash String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  traveller Traveller @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  @@index([travellerId])
+  @@index([expiresAt])
+}
+
+model Booking {
+  id                     String                 @id @default(cuid())
+  operatorId             String
+  tripId                 String
+  travellerId            String
+  status                 BookingStatus          @default(QUOTE_DRAFTED)
+  totalCents             Int
+  currency               String                 @default("USD")
+  creatorAttributionCode String?
+  pmsPlatform            PmsPlatform            @default(NATIVE)
+  pmsHoldId              String?
+  pmsHoldExpiresAt       DateTime?
+  paymentLinkUrl         String?
+  confirmedAt            DateTime?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  operator               Operator               @relation(fields: [operatorId], references: [id])
+  trip                   Trip                   @relation(fields: [tripId], references: [id])
+  traveller              Traveller              @relation(fields: [travellerId], references: [id])
+  events                 BookingEvent[]
+  conservationTransfer   ConservationTransfer?
+  bookingInquiry         BookingInquiry?
+
+  @@index([operatorId, status])
+  @@index([travellerId])
+  @@index([tripId])
+}
+
+model BookingEvent {
+  id         String        @id @default(cuid())
+  bookingId  String
+  fromStatus BookingStatus?
+  toStatus   BookingStatus
+  actorType  ActorType
+  payload    Json?
+  createdAt  DateTime      @default(now())
+  booking    Booking       @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId, createdAt])
+}
+
+model KaiSession {
+  id             String           @id @default(cuid())
+  channel        KaiChannel
+  externalUserId String?
+  travellerId    String?
+  travellerPhone String?
+  referralLinkId String?
+  referralPartnerId String?
+  referralCode   String?
+  referralRole   ReferralPartnerRole?
+  status         KaiSessionStatus @default(OPEN)
+  slots          Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  traveller      Traveller?       @relation(fields: [travellerId], references: [id])
+  referralLink   ReferralLink?    @relation(fields: [referralLinkId], references: [id])
+  referralPartner ReferralPartner? @relation(fields: [referralPartnerId], references: [id])
+  messages       KaiMessage[]
+
+  @@index([channel, status])
+  @@index([externalUserId])
+  @@index([travellerId])
+  @@index([travellerPhone])
+  @@index([referralLinkId])
+  @@index([referralPartnerId])
+  @@index([referralCode])
+}
+
+model KaiMessage {
+  id        String         @id @default(cuid())
+  sessionId String
+  channel   KaiChannel
+  role      KaiMessageRole
+  content   String
+  metadata  Json?
+  createdAt DateTime       @default(now())
+  session   KaiSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([channel, createdAt])
+}
+
+model BookingInquiry {
+  id                  String                 @id @default(cuid())
+  sourceChannel       KaiChannel
+  kaiSessionId        String?
+  selectedYachtSlug   String?
+  selectedYachtName   String?
+  travellerName       String?
+  travellerEmail      String?
+  travellerPhone      String?
+  destination         String?
+  tripType            String?
+  dateWindow          String?
+  guests              Int?
+  certificationLevel  String?
+  budget              String?
+  interests           Json?
+  notes               String?
+  referralLinkId      String?
+  referralPartnerId   String?
+  referralCode        String?
+  referralRole        ReferralPartnerRole?
+  bookingId           String?                @unique
+  status              BookingInquiryStatus  @default(DRAFT)
+  operatorId          String?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  booking             Booking?               @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  operator            Operator?              @relation(fields: [operatorId], references: [id])
+  referralLink        ReferralLink?          @relation(fields: [referralLinkId], references: [id])
+  referralPartner     ReferralPartner?       @relation(fields: [referralPartnerId], references: [id])
+  outboundMessages    WhatsAppOutboundMessage[]
+  events              BookingInquiryEvent[]
+
+  @@index([bookingId])
+  @@index([kaiSessionId, status])
+  @@index([selectedYachtSlug])
+  @@index([operatorId, status])
+  @@index([referralLinkId])
+  @@index([referralPartnerId])
+  @@index([referralCode])
+  @@index([createdAt])
+}
+
+model BookingInquiryEvent {
+  id               String               @id @default(cuid())
+  bookingInquiryId String
+  fromStatus       BookingInquiryStatus?
+  toStatus         BookingInquiryStatus
+  actorType        ActorType
+  payload          Json?
+  createdAt        DateTime             @default(now())
+  bookingInquiry   BookingInquiry       @relation(fields: [bookingInquiryId], references: [id], onDelete: Cascade)
+
+  @@index([bookingInquiryId, createdAt])
+}
+
+model WhatsAppOutboundMessage {
+  id                String                 @id @default(cuid())
+  bookingInquiryId  String
+  operatorId        String?
+  channel           KaiChannel             @default(WHATSAPP)
+  recipientPhone    String
+  templateName      String
+  providerMessageId String?
+  status            WhatsAppOutboundStatus @default(QUEUED)
+  sentAt            DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  metadata          Json?
+  bookingInquiry    BookingInquiry         @relation(fields: [bookingInquiryId], references: [id], onDelete: Cascade)
+  operator          Operator?              @relation(fields: [operatorId], references: [id])
+
+  @@index([bookingInquiryId])
+  @@index([recipientPhone, status, sentAt])
+  @@index([operatorId, status])
+}
+
+model ConservationTransfer {
+  id          String         @id @default(cuid())
+  bookingId   String         @unique
+  amountCents Int
+  currency    String         @default("USD")
+  status      TransferStatus @default(QUEUED)
+  payload     Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  booking     Booking        @relation(fields: [bookingId], references: [id])
+}
+
+model OperatorIntegration {
+  id                   String      @id @default(cuid())
+  operatorId           String
+  platform             PmsPlatform
+  encryptedCredentials String
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  operator             Operator    @relation(fields: [operatorId], references: [id])
+
+  @@unique([operatorId, platform])
+}
+
+model SignupLead {
+  id        String     @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  roles     SignupRole[] @default([])
+  instagramUrl String?
+  youtubeUrl  String?
+  websiteUrl  String?
+  createdAt DateTime   @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}

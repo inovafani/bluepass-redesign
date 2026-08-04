@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { gsap, ScrollTrigger, useGSAP, reduced } from "@/lib/gsap";
 import { navLinks } from "@/lib/data";
 import Button from "./ui/Button";
+import AccountMenu from "./auth/AccountMenu";
+import { useSession } from "./auth/SessionProvider";
 
 export default function Nav() {
   const ref = useRef<HTMLElement>(null);
@@ -13,6 +15,14 @@ export default function Nav() {
   const indicatorRef = useRef<HTMLSpanElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
+  const { traveller, signOut } = useSession();
+
+  /* The auth pages carry their own brand mark inside the poster panel and have
+     no use for a marketing nav — leaving it up stacked two Bluepass marks in
+     the same corner and offered "Join Bluepass" to someone already on
+     /register. */
+  const bare = ["/login", "/register", "/reset-password"].includes(pathname);
   const [hover, setHover] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -173,6 +183,8 @@ export default function Nav() {
   const linkColor = (i: number) =>
     (hover ?? active) === i ? "var(--color-on-primary)" : "var(--color-ink-muted)";
 
+  if (bare) return null;
+
   return (
     <>
       <nav
@@ -189,7 +201,7 @@ export default function Nav() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 clamp(20px, 4.4vw, 64px)",
+          padding: "0 var(--page-gutter)",
           willChange: "transform",
         }}
       >
@@ -300,26 +312,14 @@ export default function Nav() {
           className="nav__actions"
           style={{ display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap", flexShrink: 0 }}
         >
-          <Button variant="primary">Join Bluepass →</Button>
-          <span
-            className="nav__avatar"
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
-              background: "rgba(26,26,24,0.42)",
-              backdropFilter: "blur(14px)",
-              border: "1px solid var(--color-hairline-soft)",
-              alignItems: "center",
-              justifyContent: "center",
-              flex: "none",
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-ink)" strokeWidth="1.8">
-              <circle cx="12" cy="8" r="3.2" />
-              <path d="M5 20c1.5-4 4.5-6 7-6s5.5 2 7 6" strokeLinecap="round" />
-            </svg>
-          </span>
+          {/* Signed in, "Join Bluepass" has nothing left to offer — the account
+              menu takes over that slot. */}
+          {traveller ? null : (
+            <Button variant="primary" onClick={() => router.push("/register")}>
+              Join Bluepass →
+            </Button>
+          )}
+          <AccountMenu />
           <button
             type="button"
             className="nav__burger"
@@ -344,6 +344,42 @@ export default function Nav() {
             {link.label}
           </Link>
         ))}
+
+        {/* Below 560px the avatar is hidden, so the burger menu is the only way
+            to reach the account at all. */}
+        <div className="nav__menu-acct">
+          {traveller ? (
+            <>
+              <span className="ds-micro nav__menu-who">
+                Signed in as {traveller.name ?? traveller.email}
+              </span>
+              <button
+                type="button"
+                className="nav__menu-link ds-body"
+                onClick={async () => {
+                  await signOut();
+                  setOpen(false);
+                  router.push("/");
+                }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="nav__menu-link ds-body" onClick={() => setOpen(false)}>
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="nav__menu-link nav__menu-link--go ds-body"
+                onClick={() => setOpen(false)}
+              >
+                Join Bluepass →
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </>
   );

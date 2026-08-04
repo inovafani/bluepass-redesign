@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
+import KaiPanel from "./KaiPanel";
 
 /** The floating "Ask Kai" pill — `showFloatingChat` in the design, default on. */
 export default function KaiChat() {
   const ref = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
 
   useGSAP(
     () => {
@@ -52,19 +54,33 @@ export default function KaiChat() {
   );
 
   return (
-    <button ref={ref} type="button" className="kai" style={{ opacity: 0 }}>
-      <span className="kai__avatar">
+    <>
+      {/* The pill steps aside while the panel is up — on desktop the panel sits
+          in the same corner, and two things fighting for it reads as a bug. */}
+      <button
+        ref={ref}
+        type="button"
+        className={`kai ${open ? "is-hidden" : ""}`}
+        style={{ opacity: 0 }}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+      >
+        <span className="kai__avatar">
         K
         <span className="kai__dot" />
       </span>
-      <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.2, textAlign: "left" }}>
-        <span className="ds-body-sm" style={{ color: "var(--color-ink)" }}>
-          Ask Kai
+        <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.2, textAlign: "left" }}>
+          <span className="ds-body-sm" style={{ color: "var(--color-ink)" }}>
+            Ask Kai
+          </span>
+          <span className="ds-micro" style={{ color: "var(--color-ink-muted)" }}>
+            Chat on bluepass.co
+          </span>
         </span>
-        <span className="ds-micro" style={{ color: "var(--color-ink-muted)" }}>
-          Chat on bluepass.co
-        </span>
-      </span>
-    </button>
+      </button>
+
+      <KaiPanel open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }
