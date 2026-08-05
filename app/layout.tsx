@@ -34,6 +34,15 @@ export const metadata: Metadata = {
       "Vetted operators for surf, sail and dive — at the same price as booking direct.",
     type: "website",
   },
+  /* The icons live in `public/`, not as `app/` file conventions, so that these
+     declarations are the only ones emitted. The .ico holds 16, 32 and 48px
+     entries; the convention advertises just the first one it reads, and a tab
+     asking for 32 would upscale the 16 rather than use the entry already in the
+     file. `sizes="any"` lets the browser pick from inside the .ico itself. */
+  icons: {
+    icon: [{ url: "/favicon.ico", sizes: "any", type: "image/x-icon" }],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
