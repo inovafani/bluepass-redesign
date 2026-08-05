@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import { threeWays, conservationImage } from "@/lib/data";
@@ -250,10 +251,14 @@ export default function ConservationSection() {
               </div>
             ))}
 
-            <a href="#" className="link-arrow ds-body-sm" style={{ marginTop: 20, display: "inline-flex", alignSelf: "flex-start" }}>
+            <Link
+              href="/conservation"
+              className="link-arrow ds-body-sm"
+              style={{ marginTop: 20, display: "inline-flex", alignSelf: "flex-start" }}
+            >
               <span>See exactly where it goes</span>
               <i aria-hidden>→</i>
-            </a>
+            </Link>
           </div>
         </div>
       </div>
