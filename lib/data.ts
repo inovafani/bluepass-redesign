@@ -162,11 +162,15 @@ export const footerColumns = [
   { title: "For operators", links: ["List your boat", "Pricing", "Support"] },
 ];
 
+/* Discover comes first and is where "/" lands. Explore sits last on its own
+   /explore route: it opens on the boat grid rather than a hero now, so it reads
+   as a destination alongside the others instead of the landing page they all
+   hang off. */
 export const navLinks: { label: string; href: string }[] = [
-  { label: "Home", href: "/" },
   { label: "Discover", href: "/discover" },
   { label: "Conservation", href: "/conservation" },
   { label: "Partners", href: "/partners" },
+  { label: "Explore", href: "/explore" },
 ];
 
 /* Full-bleed section photography, served from /public. */

@@ -78,6 +78,13 @@ html.lenis body {
   padding-bottom: clamp(64px, 7vw, 96px);
 }
 
+/* For a page whose first block is an ordinary section rather than a full-bleed
+   hero. The nav is fixed and 76px tall, and `.pad-y` alone bottoms out below
+   that, so the first eyebrow would slide under the bar on narrow viewports. */
+.page--nav-offset {
+  padding-top: 76px;
+}
+
 /* The vertical hairline label on the right edge of every block. Centred in the
    section rather than pinned to its top, where the fixed nav would sit over it. */
 .rail {

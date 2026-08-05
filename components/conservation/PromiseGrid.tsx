@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
-import { promises } from "@/lib/conservation";
+import { partners, promises } from "@/lib/conservation";
 import { MaskLines, Words } from "../ui/Text";
 
 /**
@@ -164,7 +164,9 @@ export default function PromiseGrid() {
                   {/* 03 — the rule, with the names on it */}
                   {p.n === "03" ? (
                     <div className="cprom__reveal cnames">
-                      {["Komodo Reef Fund", "Raja Ampat Blue Water Trust", "Bali Ocean Classroom"].map((n) => (
+                      {/* Read off the partner list rather than repeated here —
+                          the two copies had already drifted apart once. */}
+                      {partners.map(({ name: n }) => (
                         <span key={n} className="cname ds-micro">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M5 13l4 4L19 7" />

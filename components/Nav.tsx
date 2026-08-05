@@ -27,7 +27,9 @@ export default function Nav() {
   const [hover, setHover] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
 
-  /* Section links (/#conservation) only count as current while on home. */
+  /* Section links (/#conservation) only count as current while on that page.
+     An unrecognised route falls back to index 0 — Discover, which is also where
+     "/" redirects, so the pill matches wherever a stray URL actually lands. */
   const active = Math.max(
     0,
     navLinks.findIndex((l) => l.href === pathname),
