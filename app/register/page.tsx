@@ -5,6 +5,7 @@ import { useState } from "react";
 import AuthShell from "@/components/auth/AuthShell";
 import Field from "@/components/auth/Field";
 import Notice, { type NoticeTone } from "@/components/auth/Notice";
+import PhoneField from "@/components/auth/PhoneField";
 import Button from "@/components/ui/Button";
 import { PASSWORD_MIN, register, resendVerification } from "@/lib/auth-client";
 
@@ -29,10 +30,12 @@ export default function RegisterPage() {
   const [notice, setNotice] = useState<{ tone: NoticeTone; text: string } | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
 
+  // `phone` is E.164 straight from PhoneField, or "" while it is incomplete —
+  // the length floor is `registerTravellerSchema.phone.min(6)`.
   const valid =
     name.trim().length >= 2 &&
     email.trim().length > 3 &&
-    phone.trim().length >= 6 &&
+    phone.length >= 6 &&
     password.length >= PASSWORD_MIN;
 
   const onSubmit = async () => {
@@ -142,13 +145,10 @@ export default function RegisterPage() {
         required
         disabled={busy}
       />
-      <Field
+      <PhoneField
         label="WhatsApp number"
-        type="tel"
         value={phone}
         onChange={setPhone}
-        placeholder="+61 400 000 000"
-        autoComplete="tel"
         hint="How Kai reaches you"
         required
         disabled={busy}

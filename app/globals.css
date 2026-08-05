@@ -3826,6 +3826,162 @@ html.is-scroll-locked body {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* Phone field with country picker ------------------------------------------ */
+/* AuthShell staggers `.ashell__form > *` with GSAP, which leaves an inline
+   transform on every field. A transform creates a stacking context, so the
+   panel's own z-index is trapped inside this field and the password well and
+   submit button — later siblings — paint straight over the open list. Raising
+   the whole field is what lifts the panel out; scoped to `.is-open` so a closed
+   field keeps the natural order. */
+.aphone {
+  position: relative;
+}
+.aphone.is-open {
+  z-index: 30;
+}
+.aphone__stack {
+  position: relative;
+}
+.aphone__well {
+  padding-left: 0;
+}
+.aphone__country {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 11px 14px 14px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.aphone__country:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+}
+.aphone__country:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.aphone__flag {
+  font-size: 17px;
+  line-height: 1;
+  /* Emoji flags come from the system font — keep them off the body stack so
+     they don't inherit its letter-spacing and split the two indicators. */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  letter-spacing: normal;
+}
+.aphone__dial {
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.aphone__chevron {
+  color: var(--color-ink-muted);
+  transition: transform 0.25s ease;
+}
+.aphone__chevron.is-open {
+  transform: rotate(180deg);
+}
+.aphone__divider {
+  flex: none;
+  width: 1px;
+  align-self: stretch;
+  margin: 9px 0;
+  background: var(--color-hairline);
+}
+.aphone__input {
+  padding-left: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.aphone__preview {
+  color: var(--color-ink-muted);
+  opacity: 0.75;
+}
+
+.aphone__panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 274px;
+  overflow: hidden;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+}
+.aphone__search {
+  flex: none;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid var(--color-hairline);
+  background: transparent;
+  outline: none;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+}
+.aphone__search::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+}
+.aphone__list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.aphone__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.aphone__option:hover,
+.aphone__option:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+  outline: none;
+}
+.aphone__option.is-selected {
+  background: var(--color-accent-blue-soft);
+}
+.aphone__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aphone__optdial {
+  flex: none;
+  color: var(--color-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.aphone__empty {
+  padding: 14px 10px;
+  color: var(--color-ink-muted);
+  text-align: center;
+}
+
 /* Actions, notices, small links ------------------------------------------- */
 .aactions {
   margin-top: 6px;
