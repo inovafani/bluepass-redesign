@@ -90,7 +90,7 @@ export default function ConservationHero() {
         </p>
 
         <div className="phero__ctas">
-          <Link href="/discover" style={{ textDecoration: "none" }}>
+          <Link href="/" style={{ textDecoration: "none" }}>
             <Button variant="primary" large>
               Find a trip
             </Button>

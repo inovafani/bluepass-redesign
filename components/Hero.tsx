@@ -138,7 +138,7 @@ export default function Hero() {
             justifyContent: "center",
           }}
         >
-          <Button variant="primary" large onClick={() => router.push("/discover")}>
+          <Button variant="primary" large onClick={() => router.push("/")}>
             Explore trips
           </Button>
           {/* The pill lives in the root layout, so this asks for it by event

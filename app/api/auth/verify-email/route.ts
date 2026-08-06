@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const redirectPath =
     nextPath && isSafeNextPath(nextPath)
       ? nextPath
-      : "/discover?emailVerified=1";
+      : "/?emailVerified=1";
 
   return NextResponse.redirect(new URL(redirectPath, request.url));
 }

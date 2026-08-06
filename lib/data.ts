@@ -29,61 +29,74 @@ export type Boat = {
   imgSrc: string;
   name: string;
   guests: string;
-  price: string;
-  unit: string;
+  /* Optional because two of these operators publish no rate card. An absent
+     price renders as "Price on request" — the alternative is inventing a number
+     for a real business on a page that looks like a booking. */
+  price?: string;
+  unit?: string;
   sub: string;
 };
 
+/**
+ * The five boats on the Explore grid — Australian operators.
+ *
+ * Capacities and rates are transcribed from each operator's own public listing,
+ * not estimated. Sources, checked 6 Aug 2026:
+ *   Alani     yotspace.com/luxury-charter-yacht/alani
+ *   Yolo      gcboatcharters.com.au/yolo
+ *   Serrano   floatspace.com/boat/serrano
+ *   Yot Club  yotclub.com.au/about        (capacity only — no public rate)
+ *   Sailing in Paradise  sailinginparadise.com.au/our-boats  (capacity only)
+ *
+ * These are live third-party prices and they move; re-check before treating the
+ * grid as bookable rather than illustrative.
+ */
 export const boats: Boat[] = [
   {
-    loc: "KOMODO",
+    loc: "HAMILTON ISLAND",
     img: "boat-1",
-    imgSrc: "/yachts/alexa/card.webp",
-    name: "Alexa",
-    guests: "Up to 2 guests",
-    price: "$6,499",
-    unit: "/ night",
-    sub: "Couples-only · 1 cabin yacht",
+    imgSrc: "/yachts/alani/card.webp",
+    name: "Alani",
+    guests: "Up to 35 guests",
+    price: "$3,600",
+    unit: "/ sunset · 2 hours",
+    sub: "or $10,800 / full day · 6 hours",
   },
   {
-    loc: "RAJA AMPAT",
+    loc: "GOLD COAST",
     img: "boat-2",
-    imgSrc: "/yachts/aliikai/card.webp",
-    name: "Allikai",
-    guests: "Up to 15 guests",
-    price: "$690",
-    unit: "/ cabin · night",
-    sub: "or charter $9,650 / night · whole yacht",
+    imgSrc: "/yachts/yolo/card.webp",
+    name: "Yolo",
+    guests: "Up to 36 guests",
+    price: "$700",
+    unit: "/ hour",
+    sub: "13.5m catamaran · whole boat",
   },
   {
-    loc: "KOMODO",
+    loc: "GOLD COAST",
     img: "boat-3",
-    imgSrc: "/yachts/alila-purnama/card.webp",
-    name: "Alila Purnama",
-    guests: "Up to 10 guests",
-    price: "$3,000",
-    unit: "/ cabin · night",
-    sub: "or charter $15,000 / night · whole yacht",
+    imgSrc: "/yachts/yot-club/card.webp",
+    name: "Yot Club",
+    guests: "Up to 400 guests",
+    sub: "Superyacht venue · Gold Coast & Brisbane",
   },
   {
-    loc: "RAJA AMPAT",
+    loc: "GOLD COAST",
     img: "boat-4",
-    imgSrc: "/yachts/amandira/card.webp",
-    name: "Amandira",
-    guests: "Up to 10 guests",
-    price: "$3,180",
-    unit: "/ cabin · night",
-    sub: "or charter $15,900 / night · whole yacht",
+    imgSrc: "/yachts/sailing-in-paradise/card.webp",
+    name: "Sailing in Paradise",
+    guests: "Up to 42 guests",
+    sub: "Sailing catamaran · Marina Mirage",
   },
   {
-    loc: "KOMODO",
+    loc: "GOLD COAST",
     img: "boat-5",
-    imgSrc: "/yachts/anne-bonny/card.webp",
-    name: "Anne Bonny",
-    guests: "Up to 8 guests",
-    price: "$1,483",
-    unit: "/ night",
-    sub: "or charter $4,450 / night · whole yacht",
+    imgSrc: "/yachts/serrano/card.webp",
+    name: "Serrano",
+    guests: "Up to 20 guests",
+    price: "$420",
+    unit: "/ hour",
+    sub: "Sailing catamaran · whole boat",
   },
 ];
 
@@ -162,12 +175,12 @@ export const footerColumns = [
   { title: "For operators", links: ["List your boat", "Pricing", "Support"] },
 ];
 
-/* Discover comes first and is where "/" lands. Explore sits last on its own
-   /explore route: it opens on the boat grid rather than a hero now, so it reads
-   as a destination alongside the others instead of the landing page they all
-   hang off. */
+/* Discover is the landing page and sits at "/" itself — the label carries the
+   name so the URL doesn't have to. Explore sits last on its own /explore route:
+   it opens on the boat grid rather than a hero now, so it reads as a destination
+   alongside the others instead of the landing page they all hang off. */
 export const navLinks: { label: string; href: string }[] = [
-  { label: "Discover", href: "/discover" },
+  { label: "Discover", href: "/" },
   { label: "Conservation", href: "/conservation" },
   { label: "Partners", href: "/partners" },
   { label: "Explore", href: "/explore" },

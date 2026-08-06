@@ -176,12 +176,22 @@ export default function ExploreSection() {
               </div>
               <div style={{ borderTop: "1px solid var(--color-hairline-soft)", margin: "12px 0" }} />
               <div className="boat__price" style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span className="ds-body-sm" style={{ color: "var(--color-ink)", fontWeight: 700 }}>
-                  from {boat.price}
-                </span>
-                <span className="ds-micro" style={{ color: "var(--color-ink-muted)" }}>
-                  {boat.unit}
-                </span>
+                {/* Some operators publish no rate card. Saying so is better than
+                    printing a number nobody can hold them to. */}
+                {boat.price ? (
+                  <>
+                    <span className="ds-body-sm" style={{ color: "var(--color-ink)", fontWeight: 700 }}>
+                      from {boat.price}
+                    </span>
+                    <span className="ds-micro" style={{ color: "var(--color-ink-muted)" }}>
+                      {boat.unit}
+                    </span>
+                  </>
+                ) : (
+                  <span className="ds-body-sm" style={{ color: "var(--color-ink)", fontWeight: 700 }}>
+                    Price on request
+                  </span>
+                )}
               </div>
               <div className="ds-micro" style={{ color: "var(--color-ink-muted)", marginTop: 4 }}>
                 {boat.sub}
@@ -193,7 +203,7 @@ export default function ExploreSection() {
       </div>
 
       <div className="boats__cta" style={{ display: "flex", justifyContent: "center", marginTop: 44 }}>
-        <Button variant="translucent" large onClick={() => router.push("/discover")}>
+        <Button variant="translucent" large onClick={() => router.push("/")}>
           Explore all trips
         </Button>
       </div>

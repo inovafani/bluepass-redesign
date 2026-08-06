@@ -67,7 +67,7 @@ export default function LoginPage() {
     /* The cookie is set — pull the session before navigating so the nav is
        already showing the signed-in state when the next page paints. */
     await refresh();
-    router.push("/discover");
+    router.push("/");
     router.refresh();
   };
 

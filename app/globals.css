@@ -284,7 +284,9 @@ html.lenis body {
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-color: rgba(255, 255, 255, 0.35);
-  transition: color 0.3s ease, text-decoration-color 0.3s ease;
+  transition:
+    color 0.3s ease,
+    text-decoration-color 0.3s ease;
 }
 .hero__note-link:hover {
   color: var(--color-ink);
@@ -427,7 +429,11 @@ html.lenis body {
   right: 0;
   bottom: 0;
   height: 130px;
-  background: linear-gradient(180deg, rgba(10, 10, 9, 0) 0%, rgba(10, 10, 9, 0.8) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 9, 0) 0%,
+    rgba(10, 10, 9, 0.8) 100%
+  );
   pointer-events: none;
   z-index: 1;
 }
@@ -451,7 +457,10 @@ html.lenis body {
   justify-content: center;
   cursor: pointer;
   flex: none;
-  transition: background 0.4s ease, border-color 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    background 0.4s ease,
+    border-color 0.4s ease,
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .reels__arrow:hover {
   background: var(--color-surface-1);
@@ -464,7 +473,9 @@ html.lenis body {
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: width 0.55s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
+  transition:
+    width 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.4s ease;
 }
 @media (max-width: 860px) {
   .reels__viewport {
@@ -885,7 +896,11 @@ html.lenis body {
 .rregion__scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 9, 0) 35%, rgba(10, 10, 9, 0.82) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 9, 0) 35%,
+    rgba(10, 10, 9, 0.82) 100%
+  );
 }
 .rregion__meta {
   position: absolute;
@@ -943,7 +958,9 @@ html.lenis body {
   color: var(--color-on-primary);
   opacity: 0;
   transform: scale(0.6);
-  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+  transition:
+    opacity 0.35s ease,
+    transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 .rregion.is-active .rregion__tick {
   opacity: 1;
@@ -1066,7 +1083,9 @@ html.lenis body {
   font-size: var(--type-body-sm-size);
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.35s ease, background 0.35s ease;
+  transition:
+    border-color 0.35s ease,
+    background 0.35s ease;
 }
 .tpill i {
   display: flex;
@@ -1079,7 +1098,9 @@ html.lenis body {
   font-style: normal;
   font-size: 13px;
   line-height: 1;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 .tpill:hover {
   border-color: rgba(255, 255, 255, 0.28);
@@ -1112,7 +1133,11 @@ html.lenis body {
   text-align: center;
   border: 1px solid var(--color-hairline-soft);
   border-radius: var(--radius-xxl);
-  background: linear-gradient(180deg, var(--color-surface-1) 0%, rgba(26, 26, 24, 0) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--color-surface-1) 0%,
+    rgba(26, 26, 24, 0) 100%
+  );
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1190,7 +1215,10 @@ html.lenis body {
   font-size: var(--type-body-sm-size);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+  transition:
+    color 0.3s ease,
+    border-color 0.3s ease,
+    background 0.3s ease;
 }
 .thop button:hover {
   color: var(--color-on-primary);
@@ -1237,7 +1265,12 @@ html.lenis body {
 .trip__shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 9, 0.45) 0%, rgba(10, 10, 9, 0) 38%, rgba(10, 10, 9, 0.88) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 9, 0.45) 0%,
+    rgba(10, 10, 9, 0) 38%,
+    rgba(10, 10, 9, 0.88) 100%
+  );
 }
 .trip__chips {
   position: absolute;
@@ -1290,7 +1323,9 @@ html.lenis body {
   backdrop-filter: blur(10px);
   color: #ffffff;
   cursor: pointer;
-  transition: background 0.35s ease, color 0.35s ease;
+  transition:
+    background 0.35s ease,
+    color 0.35s ease;
 }
 .trip__save:hover {
   background: rgba(255, 255, 255, 0.92);
@@ -1505,7 +1540,10 @@ html.lenis body {
   backdrop-filter: blur(10px);
   color: #ffffff;
   cursor: pointer;
-  transition: background 0.35s ease, color 0.35s ease, transform 0.35s ease;
+  transition:
+    background 0.35s ease,
+    color 0.35s ease,
+    transform 0.35s ease;
 }
 .tsheet__icon:hover {
   background: rgba(255, 255, 255, 0.92);
@@ -1736,7 +1774,10 @@ html.lenis body {
   font-size: var(--type-micro-size);
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease,
+    background 0.3s ease;
 }
 .tsheet__dep:hover {
   color: var(--color-ink);
@@ -2038,8 +2079,20 @@ html.is-scroll-locked body {
   position: relative;
   width: 100%;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 9%,
+    #000 91%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 9%,
+    #000 91%,
+    transparent
+  );
 }
 .pmarquee__track {
   display: flex;
@@ -2140,7 +2193,9 @@ html.is-scroll-locked body {
   border-radius: var(--radius-xl);
   background: rgba(255, 255, 255, 0.03);
   overflow: hidden;
-  transition: border-color 0.45s ease, background 0.45s ease;
+  transition:
+    border-color 0.45s ease,
+    background 0.45s ease;
 }
 .cprom.is-open {
   border-color: var(--color-hairline);
@@ -2188,7 +2243,9 @@ html.is-scroll-locked body {
 .cprom__chev {
   color: var(--color-ink-muted);
   display: flex;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s ease;
+  transition:
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.4s ease;
 }
 .cprom.is-open .cprom__chev {
   transform: rotate(180deg);
@@ -2446,7 +2503,12 @@ html.is-scroll-locked body {
 .cpartner__shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 9, 0.4) 0%, rgba(10, 10, 9, 0) 30%, rgba(10, 10, 9, 0.5) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 9, 0.4) 0%,
+    rgba(10, 10, 9, 0) 30%,
+    rgba(10, 10, 9, 0.5) 100%
+  );
 }
 .cpartner__chip {
   position: absolute;
@@ -2525,7 +2587,11 @@ html.is-scroll-locked body {
   position: relative;
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-xl);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.025) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.055) 0%,
+    rgba(255, 255, 255, 0.025) 100%
+  );
   overflow: hidden;
   box-shadow: var(--shadow-2);
 }
@@ -2538,7 +2604,12 @@ html.is-scroll-locked body {
   height: 42px;
   pointer-events: none;
   z-index: 2;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
 }
 .cdoc__bar {
   display: flex;
@@ -2670,17 +2741,24 @@ html.is-scroll-locked body {
   align-items: center;
 }
 /* The rate itself, at poster scale, sitting behind the line. */
+/* The Y here must stay 0, not -50%.
+   ConservationCta scrubs this element with `yPercent: 8 → -8`, and GSAP owns the
+   whole Y axis once that tween attaches — a -50% written here is simply replaced,
+   so the numeral would sit centred before the tween engaged and drop to the foot
+   of the band after. Chrome and Edge disagreed on the page purely on timing.
+   Y:0 is the midpoint of the scrub range, so both states now land in the same
+   place: the numeral hangs from the middle and bleeds off the bottom edge. */
 .ccta__mark {
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 46%;
+  transform: translate(-50%, 0);
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(180px, 26vw, 400px);
+  font-size: clamp(234px, 34vw, 480px);
   line-height: 0.8;
   letter-spacing: -0.06em;
-  color: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.12);
   pointer-events: none;
   user-select: none;
   z-index: 1;
@@ -3064,7 +3142,11 @@ html.is-scroll-locked body {
 .ptool {
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-xl);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.025) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.055) 0%,
+    rgba(255, 255, 255, 0.025) 100%
+  );
   overflow: hidden;
   box-shadow: var(--shadow-2);
 }
@@ -3133,7 +3215,9 @@ html.is-scroll-locked body {
   color: var(--color-ink);
   cursor: pointer;
   flex: none;
-  transition: background 0.35s ease, border-color 0.35s ease;
+  transition:
+    background 0.35s ease,
+    border-color 0.35s ease;
 }
 .ptool__copy:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -3239,7 +3323,12 @@ html.is-scroll-locked body {
 .pcreator__shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 9, 0.4) 0%, rgba(10, 10, 9, 0) 34%, rgba(10, 10, 9, 0.92) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 9, 0.4) 0%,
+    rgba(10, 10, 9, 0) 34%,
+    rgba(10, 10, 9, 0.92) 100%
+  );
 }
 .pcreator__handle {
   position: absolute;
@@ -3427,7 +3516,10 @@ html.is-scroll-locked body {
   padding: 0;
   cursor: pointer;
   color: var(--color-ink);
-  transition: border-color 0.35s ease, background 0.35s ease, transform 0.35s ease;
+  transition:
+    border-color 0.35s ease,
+    background 0.35s ease,
+    transform 0.35s ease;
 }
 .acct__circle--link,
 .acct__circle--on {
@@ -3533,7 +3625,9 @@ html.is-scroll-locked body {
   text-align: left;
   text-decoration: none;
   font-family: var(--font-body);
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 .acct__row:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -3788,7 +3882,10 @@ html.is-scroll-locked body {
   background: var(--color-surface-1);
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-md);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    background 0.3s ease;
 }
 .afield__well:focus-within {
   border-color: rgba(255, 255, 255, 0.34);
@@ -3826,7 +3923,9 @@ html.is-scroll-locked body {
   border-radius: var(--radius-sm);
   color: var(--color-ink-muted);
   cursor: pointer;
-  transition: color 0.3s ease, background 0.3s ease;
+  transition:
+    color 0.3s ease,
+    background 0.3s ease;
 }
 .afield__reveal:hover {
   color: var(--color-ink);
@@ -3879,7 +3978,8 @@ html.is-scroll-locked body {
   line-height: 1;
   /* Emoji flags come from the system font — keep them off the body stack so
      they don't inherit its letter-spacing and split the two indicators. */
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-family:
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   letter-spacing: normal;
 }
 .aphone__dial {
@@ -4136,7 +4236,9 @@ html.is-scroll-locked body {
   border-radius: 50%;
   color: var(--color-ink-muted);
   cursor: pointer;
-  transition: color 0.3s ease, background 0.3s ease;
+  transition:
+    color 0.3s ease,
+    background 0.3s ease;
 }
 .aflash__close:hover {
   color: var(--color-ink);
@@ -4264,7 +4366,10 @@ html.is-scroll-locked body {
   background: none;
   color: var(--color-ink-muted);
   cursor: pointer;
-  transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  transition:
+    color 0.3s ease,
+    background 0.3s ease,
+    border-color 0.3s ease;
 }
 .kpanel__icon:hover {
   color: var(--color-ink);
@@ -4406,7 +4511,11 @@ html.is-scroll-locked body {
   font-size: var(--type-micro-size);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  transition:
+    color 0.3s ease,
+    background 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s ease;
 }
 .kchip:hover {
   color: var(--color-on-primary);
@@ -4435,7 +4544,9 @@ html.is-scroll-locked body {
   font-family: var(--font-body);
   resize: none;
   outline: none;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 .kpanel__input::placeholder {
   color: rgba(255, 255, 255, 0.32);
@@ -4456,7 +4567,9 @@ html.is-scroll-locked body {
   background: var(--color-inverse-canvas);
   color: var(--color-on-primary);
   cursor: pointer;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 .kpanel__send:hover:not(:disabled) {
   transform: scale(1.06);
@@ -4492,7 +4605,9 @@ html.is-scroll-locked body {
   border: 1px solid var(--color-hairline-soft);
   text-decoration: none;
   color: inherit;
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease;
 }
 .kmatch:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -4587,7 +4702,9 @@ html.is-scroll-locked body {
   font-family: var(--font-body);
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 .kform__go:hover:not(:disabled),
 .kpay__go:hover:not(:disabled) {

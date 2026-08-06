@@ -63,7 +63,7 @@ export default function ConservationCta() {
           moving through the marketplace.
         </p>
         <span className="ccta__btn">
-          <Link href="/discover" style={{ textDecoration: "none" }}>
+          <Link href="/" style={{ textDecoration: "none" }}>
             <Button variant="primary" large>
               Find a trip that funds the reef →
             </Button>

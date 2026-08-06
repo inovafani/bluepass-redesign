@@ -131,7 +131,7 @@ export default function AccountMenu() {
           <span className="acct__badge ds-micro">{roleLabel}</span>
 
           <div className="acct__rows">
-            <Link href="/discover" className="acct__row ds-body-sm" role="menuitem" onClick={() => setOpen(false)}>
+            <Link href="/" className="acct__row ds-body-sm" role="menuitem" onClick={() => setOpen(false)}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M15 9l-4.2 1.8L9 15l4.2-1.8z" />
