@@ -2,7 +2,13 @@
 
 import { useRef, useState } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
-import { discoverHero, regions, whenOptions, guestOptions, ALL_REGIONS } from "@/lib/discover";
+import {
+  discoverHero,
+  regions,
+  whenOptions,
+  guestOptions,
+  ALL_REGIONS,
+} from "@/lib/discover";
 import ParallaxMedia from "../ui/ParallaxMedia";
 import { MaskLines, Rail } from "../ui/Text";
 import Button from "../ui/Button";
@@ -25,20 +31,43 @@ function Field({
   return (
     <label className="dfield">
       <span className="dfield__label ds-micro">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d={icon} />
         </svg>
         {label}
       </span>
       <span className="dfield__control">
-        <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={label}
+        >
           {options.map((o) => (
             <option key={o} value={o}>
               {o}
             </option>
           ))}
         </select>
-        <svg className="dfield__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          className="dfield__chev"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M6 9l6 6 6-6" />
         </svg>
       </span>
@@ -76,7 +105,14 @@ export default function DiscoverHero() {
 
       /* Content lifts away as the page scrolls, same signature as the home hero. */
       gsap
-        .timeline({ scrollTrigger: { trigger: el, start: "top top", end: "bottom top", scrub: 0.6 } })
+        .timeline({
+          scrollTrigger: {
+            trigger: el,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.6,
+          },
+        })
         .to(".phero__content", { y: -90, opacity: 0, ease: "none" }, 0);
     },
     { scope: ref },
@@ -110,9 +146,9 @@ export default function DiscoverHero() {
         />
 
         <p className="phero__copy ds-body-lg">
-          Whale watching, yacht charters, dive boats and expeditions across the Australian coast — at
-          the operator&apos;s own rate, never a markup. 5% of every booking funds the waters your
-          guests visit.
+          Whale watching, yacht charters, dive boats and expeditions across the
+          Australian coast. 5% of every booking funds the waters your guests
+          visit.
         </p>
 
         <div className="dsearch">
@@ -140,8 +176,21 @@ export default function DiscoverHero() {
             onChange={setGuests}
           />
           <span className="dsearch__submit">
-            <Button variant="primary" large magnetic={false} onClick={goToResults}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <Button
+              variant="primary"
+              large
+              magnetic={false}
+              onClick={goToResults}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
                 <circle cx="11" cy="11" r="6.5" />
                 <path d="M16 16l4.5 4.5" />
               </svg>
