@@ -72,34 +72,41 @@ const SESSION_KEY = "bp_kai_session";
 const LOG_KEY = "bp_kai_log";
 /** The route accepts at most 12 items of context. */
 const CONTEXT_MAX = 12;
+/** Same real contact link as Hero.tsx's CTA - kai-conversation-flow-notes.md finding #17: the old
+ * error copy offered WhatsApp with no link at all. */
+const WHATSAPP_HREF = "https://wa.me/628213143343";
 /** Tenant flag: when set, the payment step is a hosted checkout redirect, not a card form. */
 const HOSTED_CHECKOUT_FEATURE = "bluepass_stripe_pms_checkout";
 
 /* Names no region, so it never goes stale as operators come and go. Shown at once,
-   then replaced by buildOpener() as soon as the live catalog's regions land. */
-const OPENER =
-  "Hey, I’m Kai — Bluepass’s marine travel concierge. I match you with vetted surf, sail and dive operators, and every booking gives 5% back to reef conservation. Where are you headed?";
+   then replaced by buildOpener() as soon as the live catalog's regions land.
+   kai-conversation-flow-notes.md's greeting rewrite: the panel header already says
+   "Kai · Bluepass concierge" and the visitor just clicked a button labelled "Ask
+   Kai", so the old self-description was the third impression, not the first. The
+   5% line is already on the hero, every trip tile, and the "How booking works"
+   section - repeating it here was the fourth. It now surfaces once, attached to a
+   real price, from Kai's own grounded reply (see buildBluePassValueReply /
+   buildBluePassConservationReply in Kai core) - not as a greeting preamble. */
+const OPENER = "Hi, I'm Kai. Where do you want to go?";
 
 /**
  * Narrates whatever regions the catalog actually has today — the same source of
  * truth Kai's own reply engine uses — rather than a hardcoded destination list
- * that silently goes stale the moment a new region's operators go live.
+ * that silently goes stale the moment a new region's operators go live. A
+ * "Somewhere else" chip always rides alongside the real regions: per
+ * kai-conversation-flow-notes.md finding #2, Kai must never make the one region it
+ * can actually transact today read like the only option that exists.
  */
 function buildOpener(regions: string[]): { content: string; suggested: Suggested[] } {
-  if (regions.length === 0) return { content: OPENER, suggested: [] };
-
-  const shortlist = regions.slice(0, 4);
-  const destinations =
-    shortlist.length === 1
-      ? shortlist[0]
-      : `${shortlist.slice(0, -1).join(", ")} or ${shortlist[shortlist.length - 1]}`;
+  const shortlist = regions.slice(0, 3);
+  const regionChips: Suggested[] = shortlist.map((region) => ({
+    label: `${region} · live availability`,
+    message: `I'm looking for a trip in ${region}`,
+  }));
 
   return {
-    content: `Hey, I’m Kai — Bluepass’s marine travel concierge. I match you with vetted surf, sail and dive operators, and every booking gives 5% back to reef conservation. Where are you headed: ${destinations}?`,
-    suggested: shortlist.map((region) => ({
-      label: `Find a ${region} trip`,
-      message: `I'm looking for a trip in ${region}`,
-    })),
+    content: OPENER,
+    suggested: [...regionChips, { label: "Somewhere else", message: "Somewhere else - what do you have?" }],
   };
 }
 
@@ -374,10 +381,12 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
       if (!res.ok || !data.reply) {
         /* The most likely cause is the Kai Core bridge being unreachable, which
            is a deployment/config state — say so plainly instead of pretending
-           Kai answered. */
+           Kai answered. kai-conversation-flow-notes.md finding #17: the old copy
+           said "booking brain" (an internal module name, meaningless to a
+           traveller) and offered WhatsApp with no actual link to tap or copy. */
         push(
           "system",
-          "Kai can’t reach the booking brain right now. Nothing you typed was lost — try again in a moment, or reach us on WhatsApp.",
+          `I'm having trouble reaching availability right now. Nothing you typed was lost — try again, or message us on WhatsApp: ${WHATSAPP_HREF}`,
         );
         return;
       }
@@ -828,7 +837,10 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
             className="kpanel__input ds-body-sm"
             rows={1}
             value={draft}
-            placeholder="Where do you want to dive?"
+            // kai-conversation-flow-notes.md finding #12: the greeting promises surf, sail
+            // *and* dive, but this narrowed the ask to diving only. Also teaches the input
+            // format by example, per the greeting rewrite's own placeholder proposal.
+            placeholder='Try "Gold Coast, 2 people, Saturday"'
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
