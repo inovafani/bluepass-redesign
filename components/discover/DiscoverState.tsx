@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { scrollToEl } from "@/lib/lenis";
-import { ALL_REGIONS, trips, type Category, type Trip } from "@/lib/discover";
+import { ALL_REGIONS, trips as staticTrips, type Category, type Trip } from "@/lib/discover";
 
 export type CategoryFilter = "All" | Category;
 
@@ -18,6 +18,8 @@ type Ctx = {
   /** Selected region name, or ALL_REGIONS. */
   region: string;
   category: CategoryFilter;
+  /** Every trip in scope, unfiltered - the curated 6 plus any real synced listings. */
+  allTrips: Trip[];
   /** Trips left after both filters. */
   results: Trip[];
   /** The trip whose sheet is open, if any. */
@@ -46,15 +48,26 @@ export function useDiscover() {
   return ctx;
 }
 
-/** Trips per region, so the rail can show a live count against each card. */
+/** Trips per region, so the rail can show a live count against each card. Uses the static/curated set only. */
 export const countForRegion = (region: string, category: CategoryFilter) =>
-  trips.filter(
+  staticTrips.filter(
     (t) =>
       (region === ALL_REGIONS || t.region === region) &&
       (category === "All" || t.category === category),
   ).length;
 
-export default function DiscoverState({ children }: { children: ReactNode }) {
+export default function DiscoverState({
+  children,
+  trips = staticTrips,
+}: {
+  children: ReactNode;
+  /**
+   * The full trip set to filter/display. Defaults to the static curated 6 so any
+   * caller that doesn't pass this prop keeps behaving exactly as before. The real
+   * page passes the curated trips plus real synced OperatorListing rows.
+   */
+  trips?: Trip[];
+}) {
   const [region, setRegionState] = useState(ALL_REGIONS);
   const [category, setCategoryState] = useState<CategoryFilter>("All");
   const [openTrip, setOpenTrip] = useState<Trip | null>(null);
@@ -70,6 +83,7 @@ export default function DiscoverState({ children }: { children: ReactNode }) {
     const c = q.get("category");
     if (r && trips.some((t) => t.region === r)) setRegionState(r);
     if (c && trips.some((t) => t.category === c)) setCategoryState(c as Category);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ---- and keep it there, so a filtered view is shareable -------------- */
@@ -91,7 +105,7 @@ export default function DiscoverState({ children }: { children: ReactNode }) {
           (region === ALL_REGIONS || t.region === region) &&
           (category === "All" || t.category === category),
       ),
-    [region, category],
+    [trips, region, category],
   );
 
   const goToResults = useCallback(() => {
@@ -134,6 +148,7 @@ export default function DiscoverState({ children }: { children: ReactNode }) {
     () => ({
       region,
       category,
+      allTrips: trips,
       results,
       openTrip,
       saved,
@@ -148,6 +163,7 @@ export default function DiscoverState({ children }: { children: ReactNode }) {
     [
       region,
       category,
+      trips,
       results,
       openTrip,
       saved,

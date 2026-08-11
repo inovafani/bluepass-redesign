@@ -263,11 +263,15 @@ export default function TripSheet() {
                   <circle cx="12" cy="10" r="1.6" />
                 </svg>
                 {trip.region}
-                <span className="trip__dot">·</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 3.5l2.4 5.2 5.6.7-4.1 3.9 1 5.6-4.9-2.8-4.9 2.8 1-5.6L4 9.4l5.6-.7z" />
-                </svg>
-                {trip.rating} <span className="trip__reviews">({trip.reviews} reviews)</span>
+                {trip.rating != null ? (
+                  <>
+                    <span className="trip__dot">·</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 3.5l2.4 5.2 5.6.7-4.1 3.9 1 5.6-4.9-2.8-4.9 2.8 1-5.6L4 9.4l5.6-.7z" />
+                    </svg>
+                    {trip.rating} <span className="trip__reviews">({trip.reviews} reviews)</span>
+                  </>
+                ) : null}
               </span>
               <MaskLines
                 as="h2"
@@ -298,50 +302,58 @@ export default function TripSheet() {
                 ))}
               </div>
 
-              <section className="tsheet__block">
-                <h3 className="ds-caption tsheet__label">Why this one</h3>
-                <ul className="tsheet__list">
-                  {trip.highlights.map((h) => (
-                    <li key={h} className="tsheet__row ds-body">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                      <span>{h}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              {trip.highlights.length > 0 ? (
+                <section className="tsheet__block">
+                  <h3 className="ds-caption tsheet__label">Why this one</h3>
+                  <ul className="tsheet__list">
+                    {trip.highlights.map((h) => (
+                      <li key={h} className="tsheet__row ds-body">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
 
-              <section className="tsheet__block">
-                <h3 className="ds-caption tsheet__label">The shape of it</h3>
-                <ol className="tsheet__days">
-                  {trip.itinerary.map((d) => (
-                    <li key={d.label} className="tsheet__row tsheet__day">
-                      <span className="ds-micro tsheet__day-label">{d.label}</span>
-                      <span className="tsheet__day-main">
-                        <span className="ds-headline tsheet__day-title">{d.title}</span>
-                        <span className="ds-body-sm tsheet__day-desc">{d.desc}</span>
+              {trip.itinerary.length > 0 ? (
+                <section className="tsheet__block">
+                  <h3 className="ds-caption tsheet__label">The shape of it</h3>
+                  <ol className="tsheet__days">
+                    {trip.itinerary.map((d) => (
+                      <li key={d.label} className="tsheet__row tsheet__day">
+                        <span className="ds-micro tsheet__day-label">{d.label}</span>
+                        <span className="tsheet__day-main">
+                          <span className="ds-headline tsheet__day-title">{d.title}</span>
+                          <span className="ds-body-sm tsheet__day-desc">{d.desc}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
+
+              {trip.includes.length > 0 ? (
+                <section className="tsheet__block">
+                  <h3 className="ds-caption tsheet__label">Included</h3>
+                  <div className="tsheet__incl">
+                    {trip.includes.map((i) => (
+                      <span key={i} className="tsheet__incl-chip ds-micro">
+                        {i}
                       </span>
-                    </li>
-                  ))}
-                </ol>
-              </section>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
 
-              <section className="tsheet__block">
-                <h3 className="ds-caption tsheet__label">Included</h3>
-                <div className="tsheet__incl">
-                  {trip.includes.map((i) => (
-                    <span key={i} className="tsheet__incl-chip ds-micro">
-                      {i}
-                    </span>
-                  ))}
-                </div>
-              </section>
-
-              <blockquote className="tsheet__quote">
-                <p className="ds-subhead">“{trip.quote}”</p>
-                <footer className="ds-micro">{trip.quoteBy}</footer>
-              </blockquote>
+              {trip.quote ? (
+                <blockquote className="tsheet__quote">
+                  <p className="ds-subhead">“{trip.quote}”</p>
+                  <footer className="ds-micro">{trip.quoteBy}</footer>
+                </blockquote>
+              ) : null}
             </div>
 
             {/* ---- booking column ------------------------------------- */}
@@ -355,22 +367,24 @@ export default function TripSheet() {
                   Operator&apos;s rate — never a markup
                 </div>
 
-                <div className="tsheet__deps">
-                  <span className="ds-micro tsheet__label">Next departures</span>
-                  <div className="tsheet__dep-row">
-                    {trip.departures.map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        className={`tsheet__dep ${departure === d ? "is-active" : ""}`}
-                        aria-pressed={departure === d}
-                        onClick={() => setDeparture(d)}
-                      >
-                        {d}
-                      </button>
-                    ))}
+                {trip.departures.length > 0 ? (
+                  <div className="tsheet__deps">
+                    <span className="ds-micro tsheet__label">Next departures</span>
+                    <div className="tsheet__dep-row">
+                      {trip.departures.map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          className={`tsheet__dep ${departure === d ? "is-active" : ""}`}
+                          aria-pressed={departure === d}
+                          onClick={() => setDeparture(d)}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
                 <div className="tsheet__acts">
                   <Button variant="primary" large magnetic={false}>
@@ -430,7 +444,7 @@ export default function TripSheet() {
                 </span>
                 <div>
                   <span className="ds-body-sm tsheet__op-name">{trip.operator}</span>
-                  <p className="ds-micro tsheet__op-note">{trip.operatorNote}</p>
+                  {trip.operatorNote ? <p className="ds-micro tsheet__op-note">{trip.operatorNote}</p> : null}
                 </div>
               </div>
             </aside>

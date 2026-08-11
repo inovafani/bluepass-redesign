@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import {
-  trips,
   regions,
   categories,
   categoryIcon,
@@ -26,6 +25,7 @@ export default function TripGrid() {
   const {
     region,
     category,
+    allTrips,
     results,
     saved,
     setCategory,
@@ -223,7 +223,7 @@ export default function TripGrid() {
           </p>
           <div className="tempty__acts">
             <Button variant="primary" onClick={clearFilters}>
-              Show all {trips.length} trips
+              Show all {allTrips.length} trips
             </Button>
             <Button variant="translucent" onClick={() => changeFilter("All")}>
               Ask Kai →
@@ -286,11 +286,15 @@ export default function TripGrid() {
                     <circle cx="12" cy="10" r="1.6" />
                   </svg>
                   {t.region}
-                  <span className="trip__dot">·</span>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3.5l2.4 5.2 5.6.7-4.1 3.9 1 5.6-4.9-2.8-4.9 2.8 1-5.6L4 9.4l5.6-.7z" />
-                  </svg>
-                  {t.rating} <span className="trip__reviews">({t.reviews})</span>
+                  {t.rating != null ? (
+                    <>
+                      <span className="trip__dot">·</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3.5l2.4 5.2 5.6.7-4.1 3.9 1 5.6-4.9-2.8-4.9 2.8 1-5.6L4 9.4l5.6-.7z" />
+                      </svg>
+                      {t.rating} <span className="trip__reviews">({t.reviews})</span>
+                    </>
+                  ) : null}
                 </span>
                 <h3 id={`trip-${t.slug}`} className="ds-display-md trip__name">
                   {t.name}
@@ -314,7 +318,7 @@ export default function TripGrid() {
                 </span>
               </div>
 
-              <p className="trip__quote ds-body-sm">“{t.quote}”</p>
+              {t.quote ? <p className="trip__quote ds-body-sm">“{t.quote}”</p> : null}
 
               {t.scarcity ? <span className="trip__scarcity ds-micro">{t.scarcity}</span> : null}
 
