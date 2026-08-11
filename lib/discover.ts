@@ -57,15 +57,22 @@ export type Trip = {
   name: string;
   category: Category;
   region: string;
-  rating: number;
-  reviews: number;
+  /**
+   * `rating`/`reviews`/`quote`/`quoteBy` are optional so a real, freshly-synced
+   * operator (e.g. from Rezdy) can render honestly with no star rating and no
+   * testimonial rather than a fabricated one - see TripGrid/TripSheet, which
+   * hide each block when the field is absent instead of showing a fake value.
+   * The 6 curated trips below set all of these, so nothing changes for them.
+   */
+  rating?: number;
+  reviews?: number;
   operator: string;
   duration: string;
   detail: string;
   impact: string;
-  quote: string;
+  quote?: string;
   /** Attribution for `quote`, shown in the sheet's pull-quote. */
-  quoteBy: string;
+  quoteBy?: string;
   price: number;
   eco: boolean;
   scarcity?: string;
@@ -73,14 +80,15 @@ export type Trip = {
 
   /* ---- sheet-only content ---------------------------------------------- */
   summary: string;
-  /** Short "why this one" lines — 4 reads best in the two-column layout. */
+  /** Short "why this one" lines — 4 reads best in the two-column layout. Section hides if empty. */
   highlights: string[];
+  /** Day-by-day shape of the trip. Section hides if empty - never fabricate a real itinerary. */
   itinerary: TripDay[];
   includes: string[];
-  /** Next open departures, in the same window as `whenOptions`. */
+  /** Next open departures, in the same window as `whenOptions`. Block hides if empty. */
   departures: string[];
-  /** Why this operator is on the platform. */
-  operatorNote: string;
+  /** Why this operator is on the platform. Optional - omit rather than invent a claim. */
+  operatorNote?: string;
   impactSplit: ImpactSplit;
   /** Named recipient of the 5%, shown against the computed figure. */
   fundsPartner: string;

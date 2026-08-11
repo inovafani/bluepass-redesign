@@ -5,10 +5,18 @@
 // creator share only applies when a referral is attached, in which case BluePass's own platform fee
 // is smaller (5% vs 10%) so the operator's 82% net never depends on whether a referral happened to
 // be attached. No dollar cap.
+//
+// Australia moved to a 20%/80% split on 2026-08-05 (confirmed by Tony), mirroring the same change in
+// kai's ledger.ts - the extra 2% lands entirely in the platform-fee bucket (7%/12% vs 5%/10%).
+// Indonesia is unchanged; the *_PCT constants above stay the Indonesia/default numbers exactly as
+// they were, so this addition is additive only. See splitBooking() in unit-economics.ts for how the
+// market-aware AU variants below are applied - opt-in only, same convention as ledger.ts.
 export const CONSERVATION_PCT = 0.05;
 export const PARTNER_COMMISSION_PCT = 0.05;
 export const PAYMENT_PROCESSING_PCT = 0.03;
 export const PLATFORM_FEE_PCT_REFERRED = 0.05;
 export const PLATFORM_FEE_PCT_UNREFERRED = 0.1;
+export const AU_PLATFORM_FEE_PCT_REFERRED = 0.07;
+export const AU_PLATFORM_FEE_PCT_UNREFERRED = 0.12;
 export const STRIPE_PERCENT_FEE = 0.029;
 export const STRIPE_FIXED_FEE_USD = 0.3;
