@@ -7,9 +7,9 @@ import PartnersSection from "@/components/PartnersSection";
 import CtaFooter from "@/components/CtaFooter";
 
 export const metadata: Metadata = {
-  title: "Explore — Bluepass",
+  title: "Explore | Bluepass",
   description:
-    "A small network of vetted ocean operators — booked at the price you see, with a fixed 5% of every fare going back to the water.",
+    "A small network of vetted ocean operators, booked at the price you see, with a fixed 5% of every fare going back to the water.",
 };
 
 /**
@@ -25,9 +25,9 @@ export const metadata: Metadata = {
  * tags below, and dropping `page--nav-offset` from <main>.
  *
  * That class only exists because Hero is gone: it used to run full-bleed under
- * the transparent nav and supply its own top space. ExploreSection's `pad-y`
- * bottoms out at 64px, which is less than the 76px nav, so the eyebrow would
- * otherwise sit behind the bar on narrow viewports.
+ * the transparent nav and supply its own top space. ExploreSection trims its own
+ * top padding (`boats--lead`) to well under the 76px nav, so without this offset
+ * the display line would sit behind the bar.
  */
 export default function ExplorePage() {
   return (

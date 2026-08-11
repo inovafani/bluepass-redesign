@@ -116,7 +116,7 @@ export default function LoginPage() {
       headline={mode === "signin" ? ["Back to the", "water."] : ["Let’s get you", "back in."]}
       support={
         mode === "signin"
-          ? "Your saved trips, your enquiries, and every booking’s 5% — all where you left them."
+          ? "Your saved trips, your enquiries, and every booking’s 5%, all where you left them."
           : "We’ll email you a link. It expires shortly, so use it while it’s warm."
       }
       image="/whitsundays-1.jpg"

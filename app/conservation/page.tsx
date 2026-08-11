@@ -7,7 +7,7 @@ import ConservationCta from "@/components/conservation/ConservationCta";
 import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Conservation — Bluepass",
+  title: "Conservation | Bluepass",
   description:
     "5% of every Bluepass booking goes back to the ocean. Named partners, dated reports, and a public record of where booking contributions go.",
 };

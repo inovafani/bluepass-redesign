@@ -9,7 +9,7 @@ import PartnersCta from "@/components/partners/PartnersCta";
 import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Partners — Bluepass",
+  title: "Partners | Bluepass",
   description:
     "Send your divers to Indonesia's best operators. They pay the operator's own rate, you earn on every booking, and 5% of every fare funds reef conservation.",
 };

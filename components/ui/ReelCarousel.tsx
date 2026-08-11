@@ -159,7 +159,7 @@ export default function ReelCarousel() {
                 type="button"
                 className="reel"
                 onClick={() => setIndex(i)}
-                aria-label={`${card.name} — ${card.caption}`}
+                aria-label={`${card.name}: ${card.caption}`}
               >
                 <Image src={card.imgSrc} alt="" fill sizes="300px" style={{ objectFit: "cover" }} />
 

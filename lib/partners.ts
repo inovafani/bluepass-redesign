@@ -69,7 +69,7 @@ export const moves = [
   {
     n: "04",
     kicker: "Prove",
-    title: "You earn — the reef wins",
+    title: "You earn, the reef wins",
     desc: "You receive referral commission, and every booking funds reef work you can show clients.",
     iconD: "M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z",
   },

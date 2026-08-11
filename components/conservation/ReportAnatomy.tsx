@@ -63,7 +63,7 @@ export default function ReportAnatomy() {
           />
           <Words
             className="ds-body csplit__support"
-            text="Every line ties to a named partner and a booking month. This is the shape each note will take — the fields stay blank until the first one publishes."
+            text="Every line ties to a named partner and a booking month. This is the shape each note will take. The fields stay blank until the first one publishes."
           />
           <div className="csplit__marks">
             {reportLines.map((r) => (

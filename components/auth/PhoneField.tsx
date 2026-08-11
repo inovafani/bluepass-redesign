@@ -235,7 +235,7 @@ export default function PhoneField({
       <span id={`${id}-preview`} className="ds-micro aphone__preview">
         {national.length >= NATIONAL_MIN_DIGITS
           ? `Kai will message +${country.dial}${national}`
-          : `${country.name} — enter your number without the leading 0`}
+          : `${country.name}: enter your number without the leading 0`}
       </span>
     </div>
   );

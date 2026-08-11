@@ -116,13 +116,13 @@ export const trips: Trip[] = [
     highlights: [
       "Cod Hole and Steve's Bommie before the day boats arrive",
       "Two night dives, both from the back deck",
-      "Nitrox included — no surcharge on any dive",
+      "Nitrox included, no surcharge on any dive",
       "Maximum 16 divers with four guides in the water",
     ],
     itinerary: [
       { label: "Day 01", title: "Cairns → outer ribbons", desc: "Afternoon steam out, check dive at dusk, briefing over dinner." },
       { label: "Day 02", title: "Ribbon Reef No. 10", desc: "Four dives including Cod Hole at first light, then a night dive." },
-      { label: "Day 03", title: "Steve's Bommie & Pixie Pinnacle", desc: "Four dives on the pinnacles — the deepest water of the trip." },
+      { label: "Day 03", title: "Steve's Bommie & Pixie Pinnacle", desc: "Four dives on the pinnacles, the deepest water of the trip." },
       { label: "Day 04", title: "Inner reef → Cairns", desc: "Two shallow dives over coral gardens, alongside by mid-afternoon." },
     ],
     includes: ["All 14 dives", "Nitrox fills", "Tanks & weights", "All meals aboard", "Twin-share cabin"],
@@ -154,11 +154,11 @@ export const trips: Trip[] = [
       "Six in-water or alongside encounters across three days",
       "Hydrophone piped through the deck speakers",
       "Fluke-ID photos you take are logged to the research catalogue",
-      "Family-rated — the calmest whale water in Australia",
+      "Family-rated, the calmest whale water in Australia",
     ],
     itinerary: [
       { label: "Day 01", title: "Platypus Bay", desc: "Slow drift along the western shore where mothers and calves rest." },
-      { label: "Day 02", title: "The full bay", desc: "Whichever pods are singing — the skipper follows the hydrophone." },
+      { label: "Day 02", title: "The full bay", desc: "Whichever pods are singing, the skipper follows the hydrophone." },
       { label: "Day 03", title: "Morning run → Urangan", desc: "Dawn encounter, then back to the marina before lunch." },
     ],
     includes: ["All encounters", "Wetsuit & mask hire", "Lunch and morning tea", "Hydrophone sessions", "Marine-biologist guide"],
@@ -187,10 +187,10 @@ export const trips: Trip[] = [
     summary:
       "Three days under sail through the Whitsunday passage, timed so you reach Hill Inlet on the turning tide and Whitehaven at the hour the day-trippers leave. Five anchorages, no marina nights, and a boat small enough to take the quiet bays.",
     highlights: [
-      "Hill Inlet on the tide turn — the sandbanks at their sharpest",
+      "Hill Inlet on the tide turn, the sandbanks at their sharpest",
       "Whitehaven Beach after the last day boat has gone",
       "Snorkel stops at Blue Pearl and Manta Ray Bay",
-      "Sail her yourself, or don't — the crew is easy either way",
+      "Sail her yourself, or don't. The crew is easy either way",
     ],
     itinerary: [
       { label: "Day 01", title: "Airlie Beach → Nara Inlet", desc: "Afternoon sail across the passage, anchor for the night." },
@@ -221,9 +221,9 @@ export const trips: Trip[] = [
     eco: true,
     img: "/australia-yacht.jpg",
     summary:
-      "Five hours on the harbour from late afternoon into dark — out through the heads if the swell allows, back under the Bridge as the city comes on. A working yacht with a chef aboard, not a party boat.",
+      "Five hours on the harbour from late afternoon into dark, out through the heads if the swell allows, back under the Bridge as the city comes on. A working yacht with a chef aboard, not a party boat.",
     highlights: [
-      "Boards at Rushcutters Bay, 4pm — golden hour on the water",
+      "Boards at Rushcutters Bay, 4pm, golden hour on the water",
       "Chef aboard; menu set the week before with you",
       "Twelve guests maximum, whole-boat charter available",
       "Seagrass restoration briefing from the skipper, if you want it",
@@ -263,7 +263,7 @@ export const trips: Trip[] = [
       "Five days on the Ningaloo coast with a spotter plane overhead and a boat that repositions to whatever the pilot finds. Ten in-water swims across the week, plus the fringing reef fifty metres off the beach for everything in between.",
     highlights: [
       "Spotter plane on station every morning of the trip",
-      "Ten swims — the operator rebooks you free if the count falls short",
+      "Ten swims, the operator rebooks you free if the count falls short",
       "Manta cleaning stations most afternoons",
       "Every ID photo goes to the ECOCEAN library under your name",
     ],
@@ -299,7 +299,7 @@ export const trips: Trip[] = [
     summary:
       "Four days at the Neptune Islands in the only water in Australia where you can meet a white shark. Surface cage and ocean-floor cage, nine drops across the week, and a researcher aboard tagging as you watch.",
     highlights: [
-      "Both cages — surface and the 20-metre ocean floor cage",
+      "Both cages, surface and the 20-metre ocean floor cage",
       "Tagging work runs alongside every drop",
       "No chumming: the sharks come to the sea-lion colony, not to bait",
       "Twelve guests, two dive supervisors, one researcher",
@@ -328,7 +328,7 @@ export const steps = [
   {
     n: "02",
     title: "Pay the operator's rate",
-    desc: "Same price as booking direct — always. Our commission comes from the operator's side, never yours.",
+    desc: "Same price as booking direct, always. Our commission comes from the operator's side, never yours.",
     iconD: "M20 12l-8 8-9-9V4h7zM7 7a1 1 0 1 0 0.01 0",
   },
   {

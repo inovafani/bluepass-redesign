@@ -65,7 +65,7 @@ export default function Hero() {
     >
       <ParallaxMedia
         src={heroImage}
-        alt="Aerial view of a marina and coastline at dusk — surf, sail and dive country"
+        alt="Aerial view of a marina and coastline at dusk, surf, sail and dive country"
         strength={18}
         intro
         priority
@@ -124,7 +124,7 @@ export default function Hero() {
           className="hero__copy ds-body-lg"
           style={{ color: "rgba(255,255,255,0.75)", maxWidth: 560 }}
         >
-          Vetted operators for surf, sail and dive — at the same price as
+          Vetted operators for surf, sail and dive, at the same price as
           booking direct.
         </p>
 
@@ -156,7 +156,7 @@ export default function Hero() {
           className="hero__note ds-micro"
           style={{ color: "rgba(255,255,255,0.55)", marginTop: 6 }}
         >
-          Live now in Australia —{" "}
+          Live now in Australia:{" "}
           <a
             className="hero__note-link"
             href={WHATSAPP_HREF}

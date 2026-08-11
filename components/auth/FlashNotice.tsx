@@ -16,7 +16,7 @@ import { useSession } from "./SessionProvider";
  * so the root layout does not need a Suspense boundary.
  */
 const MESSAGES: Record<string, string> = {
-  emailVerified: "Email verified — you’re signed in.",
+  emailVerified: "Email verified. You’re signed in.",
   passwordReset: "Password updated. You can sign in with it now.",
 };
 

@@ -52,7 +52,7 @@ export default function PartnersHero() {
       <div className="phero__content shell">
         <span className="phero__badge ds-caption">
           <i />
-          Founding cohort 2026 — 5% locked
+          Founding cohort 2026 · 5% locked
         </span>
 
         <MaskLines

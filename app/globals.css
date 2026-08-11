@@ -79,8 +79,8 @@ html.lenis body {
 }
 
 /* For a page whose first block is an ordinary section rather than a full-bleed
-   hero. The nav is fixed and 76px tall, and `.pad-y` alone bottoms out below
-   that, so the first eyebrow would slide under the bar on narrow viewports. */
+   hero. The nav is fixed and 76px tall, and the first section's own top padding
+   is smaller than that, so its opening line would slide under the bar. */
 .page--nav-offset {
   padding-top: 76px;
 }
@@ -549,12 +549,20 @@ html.lenis body {
   }
 }
 
+/* The Explore block opens the page right under the fixed nav and carries no
+   eyebrow above its display line, so it takes a shorter top step than a
+   mid-page section — `.pad-y`'s full 64–96px on top of the 76px nav offset
+   would drop the title too far down the fold. Bottom padding stays as-is. */
+.boats--lead {
+  padding-top: clamp(28px, 3vw, 44px);
+}
+
 .boats__grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
   max-width: 1360px;
-  margin: 48px auto 0;
+  margin: 40px auto 0;
 }
 @media (max-width: 1240px) {
   .boats__grid {

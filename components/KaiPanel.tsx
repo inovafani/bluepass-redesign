@@ -386,7 +386,7 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
            traveller) and offered WhatsApp with no actual link to tap or copy. */
         push(
           "system",
-          `I'm having trouble reaching availability right now. Nothing you typed was lost — try again, or message us on WhatsApp: ${WHATSAPP_HREF}`,
+          `I'm having trouble reaching availability right now. Nothing you typed was lost. Try again, or message us on WhatsApp: ${WHATSAPP_HREF}`,
         );
         return;
       }
@@ -401,7 +401,7 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
       if (!data.contactRequest) setContactForm({ name: "", email: "", phone: "" });
       setPaymentRequest(data.paymentRequest ?? null);
     } catch {
-      push("system", "That didn’t send — check your connection and try again.");
+      push("system", "That didn’t send. Check your connection and try again.");
     } finally {
       setThinking(false);
     }
@@ -627,7 +627,7 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
         <div ref={scrollRef} className="kpanel__log" data-lenis-prevent>
           {traveller ? (
             <span className="ds-micro kpanel__who">
-              Signed in as {traveller.name ?? traveller.email} — Kai can pick up your enquiries.
+              Signed in as {traveller.name ?? traveller.email}. Kai can pick up your enquiries.
             </span>
           ) : null}
 

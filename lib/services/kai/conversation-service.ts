@@ -1052,7 +1052,7 @@ function buildMatchedTripsReply(
         ? "private charter quote"
         : "cabin price signal";
 
-      return `${index + 1}. ${match.name} — ${priceLabel}: ${price}; ${match.matchingReasons.slice(0, 3).join(", ")}.`;
+      return `${index + 1}. ${match.name}, ${priceLabel}: ${price}; ${match.matchingReasons.slice(0, 3).join(", ")}.`;
     })
     .join("\n");
 

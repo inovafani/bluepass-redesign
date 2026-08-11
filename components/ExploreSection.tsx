@@ -29,14 +29,30 @@ export default function ExploreSection() {
            of an over-scale — the two moving against each other is what gives
            the reveal its weight. */
         gsap
-          .timeline({ scrollTrigger: { trigger: ".boats__grid", start: "top 80%", once: true } })
+          .timeline({
+            scrollTrigger: {
+              trigger: ".boats__grid",
+              start: "top 80%",
+              once: true,
+            },
+          })
           .fromTo(
             frame,
             { clipPath: "inset(100% 0 0 0)" },
-            { clipPath: "inset(0% 0 0 0)", duration: 1.2, ease: "bp-inOut", delay: i * 0.08 },
+            {
+              clipPath: "inset(0% 0 0 0)",
+              duration: 1.2,
+              ease: "bp-inOut",
+              delay: i * 0.08,
+            },
             0,
           )
-          .fromTo(img, { scale: 1.35 }, { scale: 1, duration: 1.6, ease: "bp-out" }, i * 0.08)
+          .fromTo(
+            img,
+            { scale: 1.35 },
+            { scale: 1, duration: 1.6, ease: "bp-out" },
+            i * 0.08,
+          )
           .fromTo(
             chip,
             { opacity: 0, x: -12 },
@@ -55,16 +71,52 @@ export default function ExploreSection() {
            the scrub above — sharing `y` between the two would fight. */
         const inner = card.querySelector(".boat__inner");
         const enter = () => {
-          gsap.to(img, { scale: 1.08, duration: 0.9, ease: "power3.out", overwrite: "auto" });
-          gsap.to(inner, { y: -10, duration: 0.5, ease: "power3.out", overwrite: "auto" });
-          gsap.to(card.querySelector(".boat__price"), { x: 6, duration: 0.5, ease: "power3.out" });
-          gsap.to(chip, { backgroundColor: "rgba(255,255,255,0.92)", color: "#0a0a09", duration: 0.4 });
+          gsap.to(img, {
+            scale: 1.08,
+            duration: 0.9,
+            ease: "power3.out",
+            overwrite: "auto",
+          });
+          gsap.to(inner, {
+            y: -10,
+            duration: 0.5,
+            ease: "power3.out",
+            overwrite: "auto",
+          });
+          gsap.to(card.querySelector(".boat__price"), {
+            x: 6,
+            duration: 0.5,
+            ease: "power3.out",
+          });
+          gsap.to(chip, {
+            backgroundColor: "rgba(255,255,255,0.92)",
+            color: "#0a0a09",
+            duration: 0.4,
+          });
         };
         const leave = () => {
-          gsap.to(img, { scale: 1, duration: 0.9, ease: "power3.out", overwrite: "auto" });
-          gsap.to(inner, { y: 0, duration: 0.5, ease: "power3.out", overwrite: "auto" });
-          gsap.to(card.querySelector(".boat__price"), { x: 0, duration: 0.5, ease: "power3.out" });
-          gsap.to(chip, { backgroundColor: "rgba(10,10,9,0.65)", color: "#ffffff", duration: 0.4 });
+          gsap.to(img, {
+            scale: 1,
+            duration: 0.9,
+            ease: "power3.out",
+            overwrite: "auto",
+          });
+          gsap.to(inner, {
+            y: 0,
+            duration: 0.5,
+            ease: "power3.out",
+            overwrite: "auto",
+          });
+          gsap.to(card.querySelector(".boat__price"), {
+            x: 0,
+            duration: 0.5,
+            ease: "power3.out",
+          });
+          gsap.to(chip, {
+            backgroundColor: "rgba(10,10,9,0.65)",
+            color: "#ffffff",
+            duration: 0.4,
+          });
         };
         card.addEventListener("pointerenter", enter);
         card.addEventListener("pointerleave", leave);
@@ -105,104 +157,156 @@ export default function ExploreSection() {
   );
 
   return (
-    <section ref={ref} className="section section--gap shell pad-y">
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <Words
-          as="span"
-          className="ds-caption"
-          text="Explore"
-          style={{ color: "var(--color-ink-muted)", textTransform: "uppercase", letterSpacing: 3 }}
-        />
+    <section ref={ref} className="section section--gap shell pad-y boats--lead">
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
         <MaskLines
           lines={["Real boats. Real reefs.", "Live availability."]}
           className="ds-display-lg"
-          style={{ textAlign: "center", marginTop: 16 }}
+          style={{ textAlign: "center" }}
         />
         <Words
           className="ds-body"
-          text="A small network of vetted ocean operators — booked at the price you see."
-          style={{ color: "var(--color-ink-muted)", textAlign: "center", marginTop: 12, maxWidth: 560 }}
+          text="A small network of vetted ocean operators, booked at the price you see."
+          style={{
+            color: "var(--color-ink-muted)",
+            textAlign: "center",
+            marginTop: 12,
+            maxWidth: 560,
+          }}
         />
       </div>
 
       <div className="boats__grid">
         {boats.map((boat) => (
-          <article key={boat.img} className="boat" style={{ willChange: "transform" }}>
-            <div className="boat__inner" style={{ display: "flex", flexDirection: "column", willChange: "transform" }}>
+          <article
+            key={boat.img}
+            className="boat"
+            style={{ willChange: "transform" }}
+          >
             <div
-              className="boat__frame"
+              className="boat__inner"
               style={{
-                position: "relative",
-                aspectRatio: "4 / 5",
-                borderRadius: "var(--radius-lg)",
-                overflow: "hidden",
-                background: "var(--color-surface-1)",
+                display: "flex",
+                flexDirection: "column",
+                willChange: "transform",
               }}
             >
-              <div className="boat__img" style={{ position: "absolute", inset: 0, willChange: "transform" }}>
-                <Image
-                  src={boat.imgSrc}
-                  alt={`${boat.name} — ${boat.loc}`}
-                  fill
-                  sizes="(max-width: 780px) 50vw, (max-width: 1240px) 33vw, 20vw"
-                  style={{ objectFit: "cover" }}
-                />
-              </div>
-              <span
-                className="boat__chip ds-micro"
+              <div
+                className="boat__frame"
                 style={{
-                  position: "absolute",
-                  top: 12,
-                  left: 12,
-                  padding: "5px 10px",
-                  background: "rgba(10,10,9,0.65)",
-                  borderRadius: "var(--radius-pill)",
-                  color: "#ffffff",
-                  letterSpacing: 1,
-                  textTransform: "uppercase",
-                  pointerEvents: "none",
+                  position: "relative",
+                  aspectRatio: "4 / 5",
+                  borderRadius: "var(--radius-lg)",
+                  overflow: "hidden",
+                  background: "var(--color-surface-1)",
                 }}
               >
-                {boat.loc}
-              </span>
-            </div>
+                <div
+                  className="boat__img"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    willChange: "transform",
+                  }}
+                >
+                  <Image
+                    src={boat.imgSrc}
+                    alt={`${boat.name}, ${boat.loc}`}
+                    fill
+                    sizes="(max-width: 780px) 50vw, (max-width: 1240px) 33vw, 20vw"
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
+                <span
+                  className="boat__chip ds-micro"
+                  style={{
+                    position: "absolute",
+                    top: 12,
+                    left: 12,
+                    padding: "5px 10px",
+                    background: "rgba(10,10,9,0.65)",
+                    borderRadius: "var(--radius-pill)",
+                    color: "#ffffff",
+                    letterSpacing: 1,
+                    textTransform: "uppercase",
+                    pointerEvents: "none",
+                  }}
+                >
+                  {boat.loc}
+                </span>
+              </div>
 
-            <div className="boat__meta">
-              <div className="ds-headline" style={{ marginTop: 14, fontSize: 18 }}>
-                {boat.name}
-              </div>
-              <div className="ds-body-sm" style={{ color: "var(--color-ink-muted)", marginTop: 4 }}>
-                {boat.guests}
-              </div>
-              <div style={{ borderTop: "1px solid var(--color-hairline-soft)", margin: "12px 0" }} />
-              <div className="boat__price" style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                {/* Some operators publish no rate card. Saying so is better than
+              <div className="boat__meta">
+                <div
+                  className="ds-headline"
+                  style={{ marginTop: 14, fontSize: 18 }}
+                >
+                  {boat.name}
+                </div>
+                <div
+                  className="ds-body-sm"
+                  style={{ color: "var(--color-ink-muted)", marginTop: 4 }}
+                >
+                  {boat.guests}
+                </div>
+                <div
+                  style={{
+                    borderTop: "1px solid var(--color-hairline-soft)",
+                    margin: "12px 0",
+                  }}
+                />
+                <div
+                  className="boat__price"
+                  style={{ display: "flex", alignItems: "baseline", gap: 6 }}
+                >
+                  {/* Some operators publish no rate card. Saying so is better than
                     printing a number nobody can hold them to. */}
-                {boat.price ? (
-                  <>
-                    <span className="ds-body-sm" style={{ color: "var(--color-ink)", fontWeight: 700 }}>
-                      from {boat.price}
+                  {boat.price ? (
+                    <>
+                      <span
+                        className="ds-body-sm"
+                        style={{ color: "var(--color-ink)", fontWeight: 700 }}
+                      >
+                        from {boat.price}
+                      </span>
+                      <span
+                        className="ds-micro"
+                        style={{ color: "var(--color-ink-muted)" }}
+                      >
+                        {boat.unit}
+                      </span>
+                    </>
+                  ) : (
+                    <span
+                      className="ds-body-sm"
+                      style={{ color: "var(--color-ink)", fontWeight: 700 }}
+                    >
+                      Price on request
                     </span>
-                    <span className="ds-micro" style={{ color: "var(--color-ink-muted)" }}>
-                      {boat.unit}
-                    </span>
-                  </>
-                ) : (
-                  <span className="ds-body-sm" style={{ color: "var(--color-ink)", fontWeight: 700 }}>
-                    Price on request
-                  </span>
-                )}
+                  )}
+                </div>
+                <div
+                  className="ds-micro"
+                  style={{ color: "var(--color-ink-muted)", marginTop: 4 }}
+                >
+                  {boat.sub}
+                </div>
               </div>
-              <div className="ds-micro" style={{ color: "var(--color-ink-muted)", marginTop: 4 }}>
-                {boat.sub}
-              </div>
-            </div>
             </div>
           </article>
         ))}
       </div>
 
-      <div className="boats__cta" style={{ display: "flex", justifyContent: "center", marginTop: 44 }}>
+      <div
+        className="boats__cta"
+        style={{ display: "flex", justifyContent: "center", marginTop: 44 }}
+      >
         <Button variant="translucent" large onClick={() => router.push("/")}>
           Explore all trips
         </Button>

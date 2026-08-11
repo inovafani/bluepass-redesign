@@ -25,13 +25,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Bluepass — Book the ocean. Leave it better.",
+  title: "Bluepass: Book the ocean. Leave it better.",
   description:
-    "Vetted operators for surf, sail and dive — at the same price as booking direct. A fixed 5% of every fare protects reefs, funds ocean clean-ups and lifts coastal communities.",
+    "Vetted operators for surf, sail and dive, at the same price as booking direct. A fixed 5% of every fare protects reefs, funds ocean clean-ups and lifts coastal communities.",
   openGraph: {
-    title: "Bluepass — Book the ocean. Leave it better.",
+    title: "Bluepass: Book the ocean. Leave it better.",
     description:
-      "Vetted operators for surf, sail and dive — at the same price as booking direct.",
+      "Vetted operators for surf, sail and dive, at the same price as booking direct.",
     type: "website",
   },
   /* The icons live in `public/`, not as `app/` file conventions, so that these

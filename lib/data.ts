@@ -9,7 +9,7 @@ export const whyCards: WhyCard[] = [
   {
     iconD: "M20 12l-8 8-9-9V4h7zM7 7a1 1 0 1 0 0.01 0",
     title: "Never a markup",
-    desc: "You never pay more than booking the operator direct. Our fee funds the reef — it isn't a markup on you.",
+    desc: "You never pay more than booking the operator direct. Our fee funds the reef, it isn't a markup on you.",
   },
   {
     iconD: "M3 9c2-3 4-3 6 0s4 3 6 0 4-3 6 0M3 15c2-3 4-3 6 0s4 3 6 0 4-3 6 0",
@@ -19,7 +19,7 @@ export const whyCards: WhyCard[] = [
   {
     iconD: "M12 3v4M9 6h6M12 7v13M7 14a5 5 0 0 0 10 0M4 14h3M17 14h3",
     title: "Fairer for operators",
-    desc: "Operators keep 100% of their rate. Conservation and partners are paid from our fee — never their margin.",
+    desc: "Operators keep 100% of their rate. Conservation and partners are paid from our fee, never their margin.",
   },
 ];
 

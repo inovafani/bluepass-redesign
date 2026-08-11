@@ -18,7 +18,7 @@ export const metadata: Metadata = {
      routes keep their "<Page> — Bluepass" form. */
   title: "Bluepass",
   description:
-    "Whale watching, yacht charters, dive boats and expeditions across the Australian coast — at the operator's own rate, never a markup.",
+    "Whale watching, yacht charters, dive boats and expeditions across the Australian coast, at the operator's own rate, never a markup.",
 };
 
 /**

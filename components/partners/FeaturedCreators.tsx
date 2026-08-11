@@ -72,7 +72,7 @@ export default function FeaturedCreators() {
               <span className="pcreator__img">
                 <Image
                   src={c.img}
-                  alt={`${c.name} — ${c.region}`}
+                  alt={`${c.name}, ${c.region}`}
                   fill
                   sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
                   style={{ objectFit: "cover" }}

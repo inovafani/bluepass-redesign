@@ -103,7 +103,7 @@ export default function ConservationSection() {
           <Words
             as="span"
             className="ds-caption"
-            text="Built in — never an add-on"
+            text="Built in, never an add-on"
             style={{ color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: 3 }}
           />
           <MaskLines
@@ -113,7 +113,7 @@ export default function ConservationSection() {
           />
           <Words
             className="ds-body"
-            text="A fixed 5% of every fare goes to work in the waters you travel — protecting reefs, cleaning the ocean, and lifting the communities who live by it. Part of the price you see, never an add-on. Most platforms route nothing."
+            text="A fixed 5% of every fare goes to work in the waters you travel, protecting reefs, cleaning the ocean, and lifting the communities who live by it. Part of the price you see, never an add-on. Most platforms route nothing."
             style={{
               color: "rgba(255,255,255,0.65)",
               textAlign: "center",

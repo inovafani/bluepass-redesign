@@ -72,7 +72,7 @@ export default function ConservationHero() {
       <div className="phero__content shell">
         <span className="phero__badge ds-caption">
           <i />
-          Every booking, every region — no exceptions
+          Every booking, every region, no exceptions
         </span>
 
         <MaskLines
@@ -120,7 +120,7 @@ export default function ConservationHero() {
               <b className="ds-body-sm cledger__pct">5%</b>
             </span>
             <span className="cledger__row cledger__row--note ds-micro">
-              Bluepass&apos; commission comes from the operator&apos;s side — never added to your fare.
+              Bluepass&apos; commission comes from the operator&apos;s side, never added to your fare.
             </span>
           </div>
         </div>

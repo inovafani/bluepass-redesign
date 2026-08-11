@@ -69,7 +69,7 @@ export default function RegisterPage() {
       <AuthShell
         eyebrow="One step left"
         headline={["Check your", "inbox."]}
-        support="Open the link we just sent and you’ll be signed in — no password to type again."
+        support="Open the link we just sent and you’ll be signed in. No password to type again."
         image="/great-barrier.jpg"
         imageAlt="Aerial view of the Great Barrier Reef"
         rail="Verify"
@@ -88,8 +88,8 @@ export default function RegisterPage() {
             </svg>
           </span>
           <p className="ds-body averify__copy">
-            The link expires, so it’s worth opening now. Nothing else is needed from you here —
-            you can close this tab.
+            The link expires, so it’s worth opening now. Nothing else is needed from you here.
+            You can close this tab.
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export default function RegisterPage() {
     <AuthShell
       eyebrow="Join Bluepass"
       headline={["Book the ocean.", "Leave it better."]}
-      support="One account, every vetted operator. You pay the operator’s own rate — and a fixed 5% goes to the waters you visit."
+      support="One account, every vetted operator. You pay the operator’s own rate, and a fixed 5% goes to the waters you visit."
       image="/reef-conservation3.jpg"
       imageAlt="Sunbeams through a coral reef"
       rail="Join"
@@ -178,7 +178,7 @@ export default function RegisterPage() {
       </div>
 
       <p className="ds-micro aterms">
-        We’ll email you a link to verify the address. No card, no markup — ever.
+        We’ll email you a link to verify the address. No card, no markup, ever.
       </p>
     </AuthShell>
   );

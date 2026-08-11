@@ -60,7 +60,7 @@ export default function SiteFooter() {
               Bluepass
             </div>
             <div className="ds-body-sm" style={{ color: "var(--color-ink-muted)", marginTop: 10, maxWidth: 220 }}>
-              Vetted operators for surf, sail and dive — booked at the price you see.
+              Vetted operators for surf, sail and dive, booked at the price you see.
             </div>
           </div>
 

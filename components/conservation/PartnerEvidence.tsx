@@ -93,7 +93,7 @@ export default function PartnerEvidence() {
                 <span className="cpartner__img">
                   <Image
                     src={p.img}
-                    alt={`${p.name} — ${p.region}`}
+                    alt={`${p.name}, ${p.region}`}
                     fill
                     sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
                     style={{ objectFit: "cover" }}

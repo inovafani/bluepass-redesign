@@ -191,14 +191,14 @@ export default function TripGrid() {
             <button type="button" className="tpill" onClick={() => clearFilters()}>
               {region}
               <i aria-hidden>×</i>
-              <span className="sr-only">— clear region filter</span>
+              <span className="sr-only">Clear region filter</span>
             </button>
           ) : null}
           {category !== "All" ? (
             <button type="button" className="tpill" onClick={() => changeFilter("All")}>
               {category}
               <i aria-hidden>×</i>
-              <span className="sr-only">— clear category filter</span>
+              <span className="sr-only">Clear category filter</span>
             </button>
           ) : null}
           <button type="button" className="tactive__clear ds-micro" onClick={clearFilters}>
@@ -219,7 +219,7 @@ export default function TripGrid() {
           <p className="ds-body tempty__copy">
             No {category !== "All" ? category.toLowerCase() : ""} trips run out of{" "}
             {region === ALL_REGIONS ? "these waters" : region} this season. Widen the search, or ask
-            Kai — we hold departures that never make the grid.
+            Kai. We hold departures that never make the grid.
           </p>
           <div className="tempty__acts">
             <Button variant="primary" onClick={clearFilters}>
@@ -244,7 +244,7 @@ export default function TripGrid() {
               <span className="trip__img">
                 <Image
                   src={t.img}
-                  alt={`${t.name} — ${t.region}`}
+                  alt={`${t.name}, ${t.region}`}
                   fill
                   sizes="(max-width: 760px) 100vw, (max-width: 1180px) 50vw, 33vw"
                   style={{ objectFit: "cover" }}
@@ -328,7 +328,7 @@ export default function TripGrid() {
                     <span className="ds-display-md">{aud(t.price)}</span>
                     <span className="ds-micro">/guest</span>
                   </div>
-                  <div className="ds-micro trip__rate">Operator&apos;s rate — never a markup</div>
+                  <div className="ds-micro trip__rate">Operator&apos;s rate, never a markup</div>
                 </div>
                 <span className="trip__cta">
                   <Button variant="translucent" magnetic={false} onClick={() => open(t)}>

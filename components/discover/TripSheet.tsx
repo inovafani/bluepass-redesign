@@ -205,7 +205,7 @@ export default function TripSheet() {
             <span className="tsheet__photo">
               <Image
                 src={trip.img}
-                alt={`${trip.name} — ${trip.region}`}
+                alt={`${trip.name}, ${trip.region}`}
                 fill
                 priority
                 sizes="(max-width: 1000px) 100vw, 1120px"
@@ -364,7 +364,7 @@ export default function TripSheet() {
                   <span className="ds-micro">/guest</span>
                 </div>
                 <div className="ds-micro tsheet__rate">
-                  Operator&apos;s rate — never a markup
+                  Operator&apos;s rate, never a markup
                 </div>
 
                 {trip.departures.length > 0 ? (
@@ -395,7 +395,7 @@ export default function TripSheet() {
                   </Button>
                 </div>
                 <span className="ds-micro tsheet__note">
-                  No card needed — Kai confirms with the operator first.
+                  No card needed. Kai confirms with the operator first.
                 </span>
               </div>
 
@@ -406,7 +406,7 @@ export default function TripSheet() {
                   <span className="ds-body-sm">of this fare</span>
                 </div>
                 <p className="ds-body-sm tsheet__give-copy">
-                  Goes to {trip.fundsPartner} — built into the price you see, not added to it.
+                  Goes to {trip.fundsPartner}, built into the price you see, not added to it.
                 </p>
 
                 <div className="tsheet__bar" aria-hidden>

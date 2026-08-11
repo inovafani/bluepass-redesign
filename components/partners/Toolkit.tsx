@@ -91,7 +91,7 @@ export default function Toolkit() {
           />
           <Words
             className="ds-body csplit__support"
-            text="No new software, no dashboard to learn, no inventory to hold. You keep the relationship — Bluepass carries the booking."
+            text="No new software, no dashboard to learn, no inventory to hold. You keep the relationship. Bluepass carries the booking."
           />
           <div className="paud">
             {audiences.map((a) => (
