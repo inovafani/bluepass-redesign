@@ -10,16 +10,25 @@ import { useSession } from "./auth/SessionProvider";
 type Suggested = { label: string; message: string };
 type Region = "indonesia" | "australia";
 
-/** A yacht Kai matched. The route already maps Kai Core's shape onto this. */
+/**
+ * A card Kai attached to a reply - either a BluePass yacht match (Indonesia) or an AU/Boattime
+ * product card (kai-conversation-flow-notes.md item 9). The BluePass-only fields (region, tier,
+ * cabins, maxGuests, pricePerCabin/charterPrice, heroImageUrl) are optional because Boattime cards
+ * carry none of them - no photo source exists today and the user decided not to build one. `priceLabel`
+ * is the AU-side price (null until a date is known); BluePass cards don't set it, so the price line
+ * falls back to the existing per-cabin/charter fields for them.
+ */
 type Match = {
   slug: string;
   name: string;
-  region: string;
-  tier: string;
-  maxGuests: number;
-  cabins: number;
-  pricePerCabin: string;
-  charterPrice: string | null;
+  region?: string;
+  tier?: string;
+  maxGuests?: number;
+  cabins?: number;
+  pricePerCabin?: string;
+  charterPrice?: string | null;
+  priceLabel?: string | null;
+  dateChecked?: boolean;
   matchingReasons: string[];
   productUrl: string | null;
   heroImageUrl?: string;
@@ -643,56 +652,70 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
 
                 {m.matches?.length ? (
                   <span className="kmatches">
-                    {m.matches.map((match) => (
-                      <a
-                        key={match.slug}
-                        className="kmatch"
-                        href={match.productUrl ?? `/yachts/${match.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {match.heroImageUrl ? (
-                          // The catalog can point at assets this app doesn't carry (the yacht
-                          // photos live in bluepass-app), so a miss hides the thumbnail rather
-                          // than leaving a broken-image box in the card. Plain img, not
-                          // next/image, because Kai Core may return absolute foreign URLs.
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            className="kmatch__img"
-                            src={match.heroImageUrl}
-                            alt=""
-                            loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                        ) : null}
-                        <span className="kmatch__body">
-                          <span className="ds-body-sm kmatch__name">{match.name}</span>
-                          <span className="ds-micro kmatch__meta">
-                            {[
-                              match.tier,
-                              match.region,
-                              match.cabins ? `${match.cabins} cabins` : null,
-                              match.maxGuests ? `up to ${match.maxGuests}` : null,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ")}
+                    {m.matches.map((match) => {
+                      // BluePass cards resolve per-cabin-vs-charter the same way the text replies
+                      // do (kai-conversation-flow-notes.md item 12) - prefer the per-cabin figure
+                      // unless it's a bare "Quote on request". AU/Boattime cards carry priceLabel
+                      // instead (null until a date is known - see the fallback prompt below).
+                      const bluePassPrice =
+                        match.pricePerCabin && match.pricePerCabin !== "Quote on request"
+                          ? match.pricePerCabin
+                          : (match.charterPrice ?? match.pricePerCabin ?? null);
+                      const priceText = match.priceLabel ?? bluePassPrice;
+                      const metaLine = [
+                        match.tier,
+                        match.region,
+                        match.cabins ? `${match.cabins} cabins` : null,
+                        match.maxGuests ? `up to ${match.maxGuests}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ");
+                      const CardTag = match.productUrl ? "a" : "div";
+
+                      return (
+                        <CardTag
+                          key={match.slug}
+                          className="kmatch"
+                          {...(match.productUrl
+                            ? { href: match.productUrl, target: "_blank", rel: "noreferrer" }
+                            : {})}
+                        >
+                          {match.heroImageUrl ? (
+                            // The catalog can point at assets this app doesn't carry (the yacht
+                            // photos live in bluepass-app), so a miss hides the thumbnail rather
+                            // than leaving a broken-image box in the card. Plain img, not
+                            // next/image, because Kai Core may return absolute foreign URLs.
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              className="kmatch__img"
+                              src={match.heroImageUrl}
+                              alt=""
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          ) : null}
+                          <span className="kmatch__body">
+                            <span className="ds-body-sm kmatch__name">{match.name}</span>
+                            {metaLine ? <span className="ds-micro kmatch__meta">{metaLine}</span> : null}
+                            <span className="ds-micro kmatch__price">
+                              {priceText ?? (match.dateChecked ? "Not available on this date" : "Share your date for pricing")}
+                            </span>
+                            {match.matchingReasons?.length ? (
+                              <span className="ds-micro kmatch__why">
+                                {match.matchingReasons.slice(0, 2).join(" · ")}
+                              </span>
+                            ) : null}
                           </span>
-                          <span className="ds-micro kmatch__price">
-                            {match.charterPrice ?? match.pricePerCabin}
-                          </span>
-                          {match.matchingReasons?.length ? (
-                            <span className="ds-micro kmatch__why">
-                              {match.matchingReasons.slice(0, 2).join(" · ")}
+                          {match.productUrl ? (
+                            <span className="kmatch__go" aria-hidden>
+                              →
                             </span>
                           ) : null}
-                        </span>
-                        <span className="kmatch__go" aria-hidden>
-                          →
-                        </span>
-                      </a>
-                    ))}
+                        </CardTag>
+                      );
+                    })}
                   </span>
                 ) : null}
               </span>

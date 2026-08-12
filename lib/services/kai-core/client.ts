@@ -43,8 +43,22 @@ type KaiCoreMessageResponse = {
     content?: string;
   };
   bluepassMatches?: KaiCoreBluePassMatch[];
+  productCards?: KaiCoreProductCard[] | null;
   contactRequest?: KaiCoreContactRequest | null;
   paymentRequest?: KaiCorePaymentRequest | null;
+};
+
+// kai-conversation-flow-notes.md item 9: the AU/Boattime equivalent of KaiCoreBluePassMatch - the
+// generic-booking-flow branch of Kai Core's /api/widget/messages attaches this instead of
+// bluepassMatches (BookingProductCard on the Kai side). No image/tier/region/cabins - Boattime
+// products carry none of that.
+type KaiCoreProductCard = {
+  slug: string;
+  title: string;
+  description: string;
+  productUrl?: string | null;
+  priceLabel?: string | null;
+  dateChecked?: boolean;
 };
 
 export type KaiCorePaymentRequest = {
@@ -189,7 +203,7 @@ export type KaiCoreWebChatResult = {
   reply: string;
   sessionId?: string;
   region?: KaiRegion;
-  matches?: ReturnType<typeof toBluePassChatMatch>[];
+  matches?: (ReturnType<typeof toBluePassChatMatch> | ReturnType<typeof toProductCardMatch>)[];
   contactRequest?: KaiCoreContactRequest | null;
   paymentRequest?: KaiCorePaymentRequest | null;
 };
@@ -276,7 +290,20 @@ export async function handleKaiCoreWebChat(
     ...(data.paymentRequest ? { paymentRequest: data.paymentRequest } : {}),
     ...(data.bluepassMatches && data.bluepassMatches.length > 0
       ? { matches: data.bluepassMatches.map(toBluePassChatMatch) }
-      : {}),
+      : data.productCards && data.productCards.length > 0
+        ? { matches: data.productCards.map(toProductCardMatch) }
+        : {}),
+  };
+}
+
+function toProductCardMatch(card: KaiCoreProductCard) {
+  return {
+    slug: card.slug,
+    name: card.title,
+    matchingReasons: [] as string[],
+    productUrl: card.productUrl ?? null,
+    priceLabel: card.priceLabel ?? null,
+    dateChecked: card.dateChecked ?? false,
   };
 }
 
