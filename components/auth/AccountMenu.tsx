@@ -149,6 +149,22 @@ export default function AccountMenu() {
                 Your operator dashboard
               </Link>
             ) : null}
+            {/* Every signed-in account gets this: `/account` shows only what belongs to the
+                session's own id, and the operator-only accounts minted by `createManualOperator`
+                have genuine booking history too. Gating it on the TRAVELLER role would hide a
+                person's own trips from them — see `requireSignedInOrRedirect`. */}
+            <Link
+              href="/account"
+              className="acct__row ds-body-sm"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 6h16v13H4z" />
+                <path d="M4 10h16M9 3v4M15 3v4" />
+              </svg>
+              Your trips
+            </Link>
             <Link href="/" className="acct__row ds-body-sm" role="menuitem" onClick={() => setOpen(false)}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="9" />

@@ -22,6 +22,9 @@ const operatorProfileSelect = {
   stripeOnboardedAt: true,
   kaiTenantSlug: true,
   rezdySupplierId: true,
+  /* Not secret, unlike the payout blob above: this is the operator's own refund terms, and the
+     dashboard both displays them and seeds its editor from them. */
+  cancellationPolicyTiers: true,
 } as const;
 
 export type OperatorProfileView = Prisma.OperatorProfileGetPayload<{

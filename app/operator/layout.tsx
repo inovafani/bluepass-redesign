@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import type { ReactNode } from "react";
 import OperatorNav from "@/components/operator/OperatorNav";
 import { currentOperatorPathname, requireOperatorOrRedirect } from "@/lib/services/operator/guard";
@@ -26,19 +25,11 @@ export default async function OperatorLayout({ children }: { children: ReactNode
   const { account, profile } = await requireOperatorOrRedirect(pathname);
 
   return (
-    /* `adm` for the shell's structure, `opr` for its skin. The operator area shares the admin
-       console's markup and components deliberately — see OperatorNav — but an operator is a partner
-       being shown their own business, not staff working a queue, so this one wears the site's
-       photography the way /login and /register do. Every `.opr` rule in globals.css is scoped to
-       this class; /admin renders from the same components and is unaffected. */
-    <div className="adm opr">
-      <div className="opr__bg" aria-hidden>
-        {/* Decorative, so no alt text and no priority — the operator came here for their payouts,
-            and this must never be what the page is waiting on to paint. */}
-        <Image src="/great-barrier.jpg" alt="" fill sizes="100vw" quality={70} />
-        <span className="opr__scrim" />
-      </div>
-
+    /* Deliberately the admin console's shell, unmodified. An operator and an admin are looking at
+       variations of the same kind of page, and this area having its own visual language meant two
+       sets of console styles to keep in step — with the operator's half always the one lagging.
+       Consistency here is the feature. */
+    <div className="adm">
       <aside className="adm__rail">
         <OperatorNav companyName={profile.companyName} email={account.email} />
       </aside>

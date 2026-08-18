@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import { lockScroll, unlockScroll } from "@/lib/lenis";
 import { useSession } from "./auth/SessionProvider";
+import { stripDuplicatedProductList } from "@/lib/services/kai-core/reply-product-list";
+import KaiMatchThumbPlaceholder from "./KaiMatchThumbPlaceholder";
 
 /* Shapes transcribed from `app/api/kai/web-chat/route.ts`. */
 type Suggested = { label: string; message: string };
@@ -402,7 +404,15 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
 
       if (data.sessionId) setSessionId(data.sessionId);
       if (data.region) regionRef.current = data.region;
-      push("assistant", data.reply, data.matches);
+      /* Kai's reply repeats the products as a numbered list *and* returns them as cards. Now that
+         each card has its own "Select this", that list is a second, unclickable copy of the same
+         options directly above the real ones — so it is dropped whenever the cards are shown. The
+         text keeps it for surfaces that cannot draw cards (WhatsApp shares this reply). */
+      push(
+        "assistant",
+        stripDuplicatedProductList(data.reply, (data.matches ?? []).map((match) => match.name)),
+        data.matches,
+      );
       setSuggested(Array.isArray(data.suggestedReplies) ? data.suggestedReplies.slice(0, 4) : []);
 
       /* Both are latch-style: absent in a reply means that step is no longer pending. */
@@ -648,7 +658,10 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
                 </span>
               ) : null}
               <span className="kmsg__bubble ds-body-sm">
-                {m.content}
+                {/* Wrapped so the cards can be spaced off real text. `{m.content}` alone is a text
+                    node, and a text node is not an element — `.kmatches:first-child` therefore
+                    matched even when prose was present, which is what collapsed the gap. */}
+                {m.content ? <span className="kmsg__text">{m.content}</span> : null}
 
                 {m.matches?.length ? (
                   <span className="kmatches">
@@ -670,50 +683,81 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
                       ]
                         .filter(Boolean)
                         .join(" · ");
-                      const CardTag = match.productUrl ? "a" : "div";
-
+                      /* No wrapping link any more. The card used to be one big <a>, which meant a
+                         traveller could open the product page but had no way to *pick* it — and it
+                         also nested a <div> inside a <span> when no productUrl existed, which is
+                         invalid. Actions are now explicit siblings, so neither can ever trigger the
+                         other: there is no ancestor click handler left to bubble into. */
                       return (
-                        <CardTag
-                          key={match.slug}
-                          className="kmatch"
-                          {...(match.productUrl
-                            ? { href: match.productUrl, target: "_blank", rel: "noreferrer" }
-                            : {})}
-                        >
-                          {match.heroImageUrl ? (
-                            // The catalog can point at assets this app doesn't carry (the yacht
-                            // photos live in bluepass-app), so a miss hides the thumbnail rather
-                            // than leaving a broken-image box in the card. Plain img, not
-                            // next/image, because Kai Core may return absolute foreign URLs.
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              className="kmatch__img"
-                              src={match.heroImageUrl}
-                              alt=""
-                              loading="lazy"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
-                          ) : null}
-                          <span className="kmatch__body">
-                            <span className="ds-body-sm kmatch__name">{match.name}</span>
-                            {metaLine ? <span className="ds-micro kmatch__meta">{metaLine}</span> : null}
-                            <span className="ds-micro kmatch__price">
-                              {priceText ?? (match.dateChecked ? "Not available on this date" : "Share your date for pricing")}
-                            </span>
-                            {match.matchingReasons?.length ? (
-                              <span className="ds-micro kmatch__why">
-                                {match.matchingReasons.slice(0, 2).join(" · ")}
+                        <span key={match.slug} className="kmatch">
+                          <span className="kmatch__main">
+                            {match.heroImageUrl ? (
+                              // The catalog can point at assets this app doesn't carry (the yacht
+                              // photos live in bluepass-app), so a miss hides the thumbnail rather
+                              // than leaving a broken-image box in the card. Plain img, not
+                              // next/image, because Kai Core may return absolute foreign URLs.
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                className="kmatch__img"
+                                src={match.heroImageUrl}
+                                alt=""
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              /* No URL at all — the Rezdy-backed AU cards. The `onError` path above
+                                 is left exactly as it was: a URL that 404s still hides itself,
+                                 which is the BluePass side's own already-settled behaviour. */
+                              <KaiMatchThumbPlaceholder />
+                            )}
+                            <span className="kmatch__body">
+                              <span className="ds-body-sm kmatch__name">{match.name}</span>
+                              {metaLine ? <span className="ds-micro kmatch__meta">{metaLine}</span> : null}
+                              <span className="ds-micro kmatch__price">
+                                {priceText ?? (match.dateChecked ? "Not available on this date" : "Share your date for pricing")}
                               </span>
+                              {match.matchingReasons?.length ? (
+                                <span className="ds-micro kmatch__why">
+                                  {match.matchingReasons.slice(0, 2).join(" · ")}
+                                </span>
+                              ) : null}
+                            </span>
+                          </span>
+
+                          <span className="kmatch__actions">
+                            {/* Sends the product name down the same path as a typed message, which
+                                is exactly what a traveller had to do by hand before. Kai then
+                                continues on its own — asking for a date next if it does not have
+                                one — so nothing about its flow needed changing, only this trigger.
+                                Disabled while a reply is in flight for the same reason the composer
+                                is: `send` early-returns on `thinking`, and a button that silently
+                                does nothing is worse than one that looks unavailable. */}
+                            <button
+                              type="button"
+                              className="kmatch__act kmatch__act--select"
+                              onClick={() => void send(match.name)}
+                              disabled={thinking}
+                            >
+                              Select this
+                            </button>
+                            {match.productUrl ? (
+                              /* Read-only by design: opens the page and never touches the
+                                 conversation. Absent entirely on the majority of cards, which carry
+                                 no productUrl — better than a dead button that looks identical to
+                                 the live one. */
+                              <a
+                                className="kmatch__act kmatch__act--view"
+                                href={match.productUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                View trip
+                              </a>
                             ) : null}
                           </span>
-                          {match.productUrl ? (
-                            <span className="kmatch__go" aria-hidden>
-                              →
-                            </span>
-                          ) : null}
-                        </CardTag>
+                        </span>
                       );
                     })}
                   </span>

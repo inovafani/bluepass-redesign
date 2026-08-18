@@ -29,7 +29,16 @@ export default function Nav() {
      one this check was originally written for. */
   const bare =
     ["/login", "/register", "/reset-password"].includes(pathname) || isConsolePathname(pathname);
-  const [hover, setHover] = useState<number | null>(null);
+  /* The index the white indicator is actually sitting under.
+     This used to be a separate `hover` state, and the split was the bug: the text colour read
+     `hover ?? active` while the indicator's position was set independently by `moveIndicator`. The
+     two could disagree — and when they did, a link rendered in `--color-on-primary` (#0a0a09, near
+     black) with no white pill behind it, which is a black block where a word should be.
+     It desynced reliably once the Kai panel existed: `.kpanel__veil` covers the whole viewport,
+     navbar included, so a pointer moving from a nav link into the panel never fires the pill's
+     `onPointerLeave`. `hover` stayed put while the `[active, bare]` effect slid the indicator home.
+     Deriving both from one value makes the disagreement unrepresentable. */
+  const [highlighted, setHighlighted] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
 
   /* Section links (/#conservation) only count as current while on that page.
@@ -128,7 +137,13 @@ export default function Nav() {
     const ind = indicatorRef.current;
     if (!pill || !ind) return;
     const target = pill.querySelectorAll("a")[index] as HTMLElement | undefined;
-    if (!target) return;
+    /* Nothing to sit under — `active` is -1 on any page not in the nav. Clearing here is what stops
+       a stale link keeping the dark-on-dark colour after the indicator gives up. */
+    if (!target) {
+      setHighlighted(null);
+      return;
+    }
+    setHighlighted(index);
     gsap.to(ind, {
       x: target.offsetLeft - 5,
       width: target.offsetWidth,
@@ -187,7 +202,7 @@ export default function Nav() {
   );
 
   const linkColor = (i: number) =>
-    (hover ?? active) === i ? "var(--color-on-primary)" : "var(--color-ink-muted)";
+    highlighted === i ? "var(--color-on-primary)" : "var(--color-ink-muted)";
 
   if (bare) return null;
 
@@ -262,15 +277,34 @@ export default function Nav() {
           ref={pillRef}
           className="nav__pill"
           onPointerLeave={() => {
-            setHover(null);
             moveIndicator(active);
           }}
           style={{
             position: "relative",
             alignItems: "center",
             gap: 2,
-            background: "rgba(26,26,24,0.42)",
-            backdropFilter: "blur(14px)",
+            /* No `backdrop-filter` here, unlike the avatar and the burger — and that omission is
+               the fix, not an oversight.
+               `backdrop-filter` re-samples whatever is painted behind the element every time the
+               compositor invalidates that region. The Kai panel sits above the navbar (its veil is
+               a full-viewport layer at z-index 150), so hovering a card button repaints through
+               that stack and forces this pill to re-sample. Chrome resolves the sample wrongly at a
+               large `border-radius`, and the worst-hit spot is the corner with nothing drawn over
+               it — the bare right cap past the last link, which flashed black on every hover. The
+               left cap never showed it because the white active indicator paints over it.
+               Dropping the blur removes the sampling entirely, so there is nothing left to
+               mis-sample. The fill alone still reads as a container against the hairline below.
+               Note the avatar and burger keep their blur: they are small, fully covered by their
+               own content, and were never reported — but they sit on the same mechanism, so if a
+               dark flash ever shows up on them, this is the reason and this is the fix. */
+            background: "rgba(26,26,24,0.30)",
+            /* The same hairline the avatar and the burger already carry, and for the same reason:
+               this pill is glass over a photograph, so without a defined edge it has none. It was
+               the only glass element in the navbar missing it, which showed up worst as the strip
+               of bare pill after the last link — the white indicator caps the left end, so that
+               tail was the only dark run with nothing to bound it and read as a smudge rather than
+               as the container it is. */
+            border: "1px solid var(--color-hairline-soft)",
             padding: 5,
             borderRadius: "var(--radius-pill)",
             minWidth: 0,
@@ -295,7 +329,6 @@ export default function Nav() {
               key={link.href}
               href={link.href}
               onPointerEnter={() => {
-                setHover(i);
                 moveIndicator(i);
               }}
               style={{
@@ -305,7 +338,7 @@ export default function Nav() {
                 color: linkColor(i),
                 fontFamily: "var(--font-body)",
                 fontSize: "var(--type-body-sm-size)",
-                fontWeight: (hover ?? active) === i ? 600 : 500,
+                fontWeight: highlighted === i ? 600 : 500,
                 whiteSpace: "nowrap",
                 flex: "none",
                 textDecoration: "none",

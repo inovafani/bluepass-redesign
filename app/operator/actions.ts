@@ -1,0 +1,139 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { currentOperatorAccess } from "@/lib/services/operator/guard";
+import {
+  updateOperatorCancellationPolicy,
+  updateOperatorPayoutDetails,
+} from "@/lib/services/operator/payout-settings";
+
+export type OperatorSettingsState =
+  | { status: "idle" }
+  | { status: "done"; message: string }
+  | { status: "error"; message: string; field?: string };
+
+/**
+ * Both actions below re-derive the operator themselves rather than trusting the page-load gate, for
+ * the same reason every write in the admin console does: the layout's check finished before these
+ * buttons existed on screen. A tab left open after the profile was detached still holds a fully
+ * rendered form.
+ *
+ * The stronger reason here is that the identity *is* the authorisation. There is no profile id in
+ * the submitted form — it is read from the signed-in session every time, so a tampered payload
+ * cannot aim this at another operator's payout details. That is why neither action accepts one.
+ */
+async function requireOperator() {
+  const access = await currentOperatorAccess();
+
+  if (!access.ok) {
+    return {
+      failure: {
+        status: "error" as const,
+        message:
+          access.reason === "SIGNED_OUT"
+            ? "Your session has expired. Sign in again and retry — nothing was changed."
+            : "This account can no longer edit that operator profile. Nothing was changed.",
+      },
+    };
+  }
+
+  return { access };
+}
+
+export async function updatePayoutDetailsAction(
+  _previous: OperatorSettingsState,
+  formData: FormData,
+): Promise<OperatorSettingsState> {
+  const { access, failure } = await requireOperator();
+
+  if (failure) {
+    return failure;
+  }
+
+  const text = (field: string) => {
+    const value = formData.get(field);
+    return typeof value === "string" ? value.trim() : "";
+  };
+
+  /* The confirmation is enforced server-side, not just rendered. A form that reached this action
+     without it is not a form this page produced. */
+  if (formData.get("confirm") !== "on") {
+    return {
+      status: "error",
+      message: "Confirm the change before saving — this decides where your money is sent.",
+    };
+  }
+
+  const result = await updateOperatorPayoutDetails({
+    operatorProfileId: access.profile.id,
+    updatedByEmail: access.account.email,
+    payoutMethod: text("payoutMethod") as never,
+    bankDetails: text("bankDetails"),
+    airwallexReference: text("airwallexReference"),
+  });
+
+  if (!result.ok) {
+    return { status: "error", message: result.message, field: result.field };
+  }
+
+  revalidatePath("/operator");
+
+  return {
+    status: "done",
+    message: "Payout details saved. Bluepass will use these for your next payout.",
+  };
+}
+
+export async function updateCancellationPolicyAction(
+  _previous: OperatorSettingsState,
+  formData: FormData,
+): Promise<OperatorSettingsState> {
+  const { access, failure } = await requireOperator();
+
+  if (failure) {
+    return failure;
+  }
+
+  /* Rows arrive as parallel `days`/`percent` entries in DOM order, which is the order the operator
+     sees them in. They are zipped back into tiers here and validated as a whole — the ordering
+     rules are properties of the list, not of any single row. */
+  const days = formData.getAll("minDaysBeforeDeparture");
+  const percents = formData.getAll("refundPercent");
+
+  if (days.length !== percents.length) {
+    return { status: "error", message: "That form was malformed. Reload the page and try again." };
+  }
+
+  const tiers = days.map((value, index) => ({
+    minDaysBeforeDeparture: toNumber(value),
+    refundPercent: toNumber(percents[index]),
+  }));
+
+  const result = await updateOperatorCancellationPolicy({
+    operatorProfileId: access.profile.id,
+    updatedByEmail: access.account.email,
+    tiers,
+  });
+
+  if (!result.ok) {
+    return { status: "error", message: result.message, field: result.field };
+  }
+
+  revalidatePath("/operator");
+
+  return {
+    status: "done",
+    message: "Cancellation policy saved. It applies to cancellations from now on.",
+  };
+}
+
+/**
+ * An empty or non-numeric field becomes NaN rather than 0.
+ *
+ * `Number("")` is 0, which would turn a row the operator left blank into a real "0 days, 0% refund"
+ * tier — a policy they never wrote. NaN fails the schema and is reported back instead.
+ */
+function toNumber(value: FormDataEntryValue) {
+  const text = typeof value === "string" ? value.trim() : "";
+  return text === "" ? Number.NaN : Number(text);
+}

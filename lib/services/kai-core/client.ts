@@ -658,6 +658,100 @@ export async function listKaiCorePmsBookingLedger(
   }));
 }
 
+/** One tenant as Kai reports it alongside a traveller's booking — null if the row lost its join. */
+export type KaiCoreTravellerTenant = { slug: string; name: string } | null;
+
+/** An Australia/direct-PMS booking attempt belonging to one traveller. */
+export type KaiCoreTravellerAuBooking = {
+  id: string;
+  conversationId: string;
+  productTitle: string;
+  dateText: string;
+  guests: number;
+  grossAmountCents: number;
+  currency: string;
+  status: string;
+  externalBookingId: string;
+  settledAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  tenant: KaiCoreTravellerTenant;
+};
+
+/** An Indonesia/marketplace inquiry belonging to one traveller. Carries no money of its own. */
+export type KaiCoreTravellerInquiry = {
+  id: string;
+  conversationId: string;
+  status: string;
+  destination: string | null;
+  selectedYachtName: string | null;
+  operatorName: string | null;
+  dateWindow: string | null;
+  guests: number | null;
+  createdAt: string;
+  tenant: KaiCoreTravellerTenant;
+};
+
+export type KaiCoreTravellerBookings = {
+  auBookings: KaiCoreTravellerAuBooking[];
+  indonesiaInquiries: KaiCoreTravellerInquiry[];
+};
+
+/**
+ * One traveller's real booking history, across every tenant they have ever talked to Kai in.
+ *
+ * Not tenant-scoped, unlike every other admin call in this file: the traveller's own
+ * `BluePassAccount.id` is the entire query. That id reaches Kai through `createKaiCoreSession`
+ * above, which has been sending it as `travellerId` on every widget session since cross-device
+ * resume shipped — so this is a read of a linkage that already exists, not a new one.
+ *
+ * Uses the admin token because it is a service-to-service call: this app has already established
+ * *which* traveller is asking (from its own session cookie) before it gets here. Kai is trusting
+ * this app's authentication, which is exactly why the caller must never take the account id from
+ * user input — see the page's own gate.
+ */
+export async function listKaiCoreTravellerBookings(
+  input: { travellerAccountId: string },
+  env: KaiCoreClientEnv = process.env,
+  fetchImpl: FetchLike = fetch,
+): Promise<KaiCoreTravellerBookings> {
+  const config = resolveKaiCoreConfig(env);
+  const adminToken = env.KAI_CORE_ADMIN_TOKEN?.trim();
+
+  if (!adminToken) {
+    throw new Error("Kai Core admin token is not configured.");
+  }
+
+  const params = new URLSearchParams({ travellerAccountId: input.travellerAccountId });
+
+  const response = await fetchKaiCoreWithRetry(
+    fetchImpl,
+    `${config.baseUrl}/api/admin/traveller-bookings?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        ...buildKaiCoreHeaders(config),
+        authorization: `Bearer ${adminToken}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Kai Core traveller bookings request failed.");
+  }
+
+  const data = (await response.json()) as Partial<KaiCoreTravellerBookings>;
+
+  /* Both lists default to empty rather than being trusted to exist. An absent key here would mean
+     "we could not tell you", and coercing that to [] is safe only because the request itself
+     already succeeded — a failed request throws above and never reaches this line. */
+  return {
+    auBookings: data.auBookings ?? [],
+    indonesiaInquiries: data.indonesiaInquiries ?? [],
+  };
+}
+
 export type KaiCoreCronRun = {
   id: string;
   jobName: string;

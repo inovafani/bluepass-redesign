@@ -24,8 +24,8 @@ export default function OperatorProfileSummary({ profile }: { profile: OperatorP
       <header className="adm-block__head">
         <h2 className="ds-headline adm-block__title">Your profile</h2>
         <p className="ds-caption adm-block__note">
-          What travellers and the payouts run see. Anything wrong here is fixed by your Bluepass
-          contact — this page is read-only for now.
+          What travellers and the payouts run see. Your payout method and cancellation policy are
+          yours to change below; anything else here is fixed by your Bluepass contact.
         </p>
       </header>
 
@@ -69,7 +69,8 @@ export default function OperatorProfileSummary({ profile }: { profile: OperatorP
           <p className="ds-caption adm-list__note">
             Payouts on this method are sent by hand against the bank details Bluepass holds for you.
             Those details are stored encrypted and are never displayed back, here or in the admin
-            console — ask your Bluepass contact if you need to change them.
+            console — which is why the form below starts empty rather than showing them. Change them
+            there whenever you need to.
           </p>
         )}
       </div>

@@ -4597,29 +4597,35 @@ html.is-scroll-locked body {
 /* Matched yachts ---------------------------------------------------------
    Kai returns these alongside the prose. They sit inside the assistant bubble
    so the recommendation stays attached to the sentence that made it. */
+/* No top margin by default: when the reply was nothing but the product list, the cards are the
+   bubble's only content and a gap would just be padding against nothing. The space is added by the
+   adjacency rule below, which only fires when there is real text to be spaced away from. */
 .kmatches {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 12px;
 }
+.kmsg__text + .kmatches {
+  margin-top: 14px;
+}
+/* The card is a container now, not a control. Its whole-card hover is gone with the wrapping
+   link: highlighting on hover promised a click the card no longer accepts, and with two real
+   actions inside it a lit-up surface competed with the thing you actually press. */
 .kmatch {
   display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 8px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--color-hairline-soft);
-  text-decoration: none;
   color: inherit;
-  transition:
-    background 0.3s ease,
-    border-color 0.3s ease;
 }
-.kmatch:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--color-hairline);
+/* The former card layout — thumbnail beside the text — is now just the card's top row. */
+.kmatch__main {
+  display: flex;
+  align-items: center;
+  gap: 11px;
 }
 .kmatch__img {
   width: 52px;
@@ -4627,6 +4633,19 @@ html.is-scroll-locked body {
   border-radius: var(--radius-md);
   object-fit: cover;
   flex: none;
+}
+/* The no-photo slot. Shares `.kmatch__img`'s box so a real photo dropping in later changes nothing
+   about the card's layout. Flat fill and a hairline rather than anything photographic — it has to
+   read as "no picture yet", not as a very dark product shot. */
+.kmatch__img--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-ink-muted);
+  /* Muted enough to sit behind the title and price, which are what the card is actually for. */
+  opacity: 0.75;
 }
 .kmatch__body {
   display: flex;
@@ -4648,10 +4667,58 @@ html.is-scroll-locked body {
   color: var(--color-ink);
   line-height: 1.35;
 }
-.kmatch__go {
-  flex: none;
-  color: var(--color-ink-muted);
-  padding-right: 4px;
+/* Two buttons, deliberately different weights. "Select this" is the one that moves the
+   conversation forward and is the reason these cards exist, so it is the filled one; "View trip"
+   leaves the chat and is secondary. They are never ambiguously the same control. */
+.kmatch__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.kmatch__act {
+  flex: 1 1 auto;
+  min-width: 96px;
+  padding: 9px 14px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: var(--type-micro-size);
+  letter-spacing: var(--type-micro-ls);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    opacity 0.25s ease;
+}
+.kmatch__act--select {
+  border: 1px solid transparent;
+  background: var(--color-ink);
+  color: var(--color-canvas);
+  font-weight: 600;
+}
+.kmatch__act--select:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.86);
+}
+/* Matches the composer's own disabled state: while Kai is answering, `send` refuses anyway, and a
+   button that silently does nothing is worse than one that looks unavailable. */
+.kmatch__act--select:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.kmatch__act--view {
+  border: 1px solid var(--color-hairline);
+  background: transparent;
+  color: var(--color-ink);
+}
+.kmatch__act--view:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+/* Keyboard users get the same two targets, and must be able to tell which one they are on. */
+.kmatch__act:focus-visible {
+  outline: 2px solid var(--color-accent-blue);
+  outline-offset: 2px;
 }
 
 /* Contact capture + payment ---------------------------------------------
@@ -5277,6 +5344,24 @@ html.is-scroll-locked body {
   line-height: 1.45;
   cursor: pointer;
 }
+
+/* The generic "I have checked this" tick that gates a consequential save.
+   Same shape as .adm-dupe__confirm, which is the admin duplicate-guard's own copy of it — that one
+   stays where it is because it belongs to that block's warning styling, while this is the one any
+   console form can reach for. The checkbox is pulled onto the first line of text rather than the
+   middle of the label, which is where a two-line confirmation would otherwise centre it. */
+.adm-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  color: var(--color-ink);
+  line-height: 1.45;
+  cursor: pointer;
+}
+.adm-confirm input {
+  margin-top: 3px;
+  flex: none;
+}
 .adm-dupe__confirm input {
   margin-top: 2px;
   flex: none;
@@ -5755,154 +5840,223 @@ html.is-scroll-locked body {
   }
 }
 
-/* ============================================================
-   OPERATOR CONSOLE — the .adm shell, wearing the site's skin
-   ============================================================
+/* Cancellation tier editor ------------------------------------------------- */
+/* Rows of "at least N days -> M% back", living inside an .adm-form__section like every other
+   console form control. No surface of its own: the section is already the card, and giving each
+   row a background was what made this read as boxes inside boxes.
 
-   An operator is a Bluepass partner, not staff. /admin can read as an internal tool because it is
-   one; this surface is the product the operator was sold, so it borrows AuthShell's argument —
-   photography holding the full frame, content floating over it — rather than the flat console
-   canvas.
+   `align-items: end` is what keeps the row from colliding. The two fields carry a label above the
+   input and the remove control does not, so aligning to the start left the button floating against
+   the labels and only a hardcoded margin pushed it down — a magic number that drifted the moment a
+   label wrapped. Aligning to the end lines every control up on the input row itself, whatever the
+   labels above them do. */
+.adm-tiers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.adm-tiers__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-md);
+}
+.adm-tiers__field {
+  min-width: 0;
+}
+.adm-tiers__remove {
+  /* Matched to .afield__input's own vertical padding so the control sits on the same line as the
+     inputs beside it rather than being nudged there by hand. */
+  padding: 14px 0;
+  white-space: nowrap;
+}
+@media (max-width: 700px) {
+  /* Two number fields side by side stop being readable well before the page does; the remove
+     control drops to its own line rather than being squeezed against them. */
+  .adm-tiers__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .adm-tiers__remove {
+    grid-column: 1 / -1;
+    justify-self: start;
+    padding: 0;
+  }
+}
 
-   Every rule here is scoped under `.opr`, which the operator layout sets *alongside* `.adm`. That
-   is what lets the markup and components stay shared with the admin console (one set of console
-   styles to keep in step) while only this area is re-skinned. Nothing below can reach /admin.
-
-   The scrim is doing real work, not decoration. This page carries payout figures, and money that is
-   hard to read is money someone misreads — so the photograph is pushed well back behind a heavy
-   gradient, and every surface holding data gets its own opaque-enough fill on top of that. Legible
-   first, cinematic second. */
-
-.opr {
-  position: relative;
+/* Traveller account — /account ---------------------------------------------- */
+/* Deliberately not `.adm`. The consoles own their whole viewport because staff live in them; a
+   traveller checking their trips is still on bluepass.co, keeps the site nav and footer, and should
+   never feel handed off to an internal tool. So this borrows the marketing pages' rhythm — page
+   gutter, generous top space under the fixed nav — rather than the console's rail-and-canvas. */
+.acctpage {
   background: var(--color-canvas);
-  isolation: isolate;
+  min-height: 100svh;
+}
+.acctpage__inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(120px, 16vh, 180px) var(--page-gutter) clamp(64px, 10vh, 120px);
+}
+.acctpage__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xl);
+}
+.acctpage__eyebrow {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+}
+.acctpage__title {
+  color: var(--color-ink);
+}
+.acctpage__support {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  max-width: 62ch;
 }
 
-/* Fixed rather than absolute: the photograph stays put while the ledger scrolls over it, which is
-   what keeps it reading as a backdrop instead of a very tall banner. */
-.opr__bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
+.acctpage__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  align-items: flex-start;
+  padding: var(--space-xxl) var(--space-lg);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+}
+.acctpage__panel--fault {
+  border-color: rgba(255, 138, 118, 0.45);
+}
+.acctpage__fault-title,
+.acctpage__empty-title {
+  color: var(--color-ink);
+}
+.acctpage__fault-body,
+.acctpage__empty-body {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+.acctpage__cta {
+  margin-top: var(--space-sm);
+  color: var(--color-ink);
 }
 
-.opr__bg img {
-  object-fit: cover;
+/* One trip per card. A flat list rather than a grid: these are read top to bottom in date order,
+   and a two-column layout would break the "newest first" reading the sort exists to create. */
+.trips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.trip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+}
+.trip__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+.trip__ident {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.trip__title {
+  color: var(--color-ink);
+}
+.trip__operator {
+  color: var(--color-ink-muted);
+}
+.trip__status {
+  flex: none;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-hairline);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  white-space: nowrap;
+}
+/* Tones read from the traveller's point of view: green is done, blue is in motion, grey is over,
+   coral is the only one asking them to act. */
+.trip__status--good {
+  color: var(--color-semantic-success);
+  border-color: rgba(34, 197, 94, 0.34);
+  background: rgba(34, 197, 94, 0.1);
+}
+/* "In motion" is intentionally the neutral one. The console paints a pending row amber because a
+   human has to chase it; to the traveller who booked it, waiting is simply what booking feels like,
+   and colouring it as a warning invents a problem they do not have. */
+.trip__status--wait {
+  color: var(--color-ink);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.trip__status--bad {
+  color: var(--color-gradient-coral);
+  border-color: rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.12);
+}
+.trip__status--off,
+.trip__status--neutral {
+  color: var(--color-ink-muted);
 }
 
-/* Darkest at the top-left, where the rail and the page title sit, and never fully transparent —
-   the lightest point is still 62% ink so a pale patch of water can't wash out a figure. */
-.opr__scrim {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(10, 10, 9, 0.92) 0%,
-      rgba(10, 10, 9, 0.74) 42%,
-      rgba(10, 10, 9, 0.88) 100%
-    ),
-    linear-gradient(90deg, rgba(10, 10, 9, 0.86) 0%, rgba(10, 10, 9, 0.62) 60%);
+.trip__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  margin: 0;
+}
+.trip__fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.trip__label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+}
+.trip__value {
+  color: var(--color-ink);
+}
+.trip__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  align-items: baseline;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-hairline-soft);
+}
+.trip__when,
+.trip__note {
+  color: var(--color-ink-muted);
 }
 
-/* The shell itself steps aside so the photograph shows through. */
-.opr.adm {
-  background: transparent;
-}
-
-.opr .adm__rail {
-  background: rgba(16, 17, 19, 0.62);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-right: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-/* Glass, but with enough fill behind it to stay a reading surface. The blur alone would leave text
-   sitting on whatever the photo happens to be doing underneath. */
-.opr .adm-card {
-  background: rgba(20, 22, 25, 0.72);
-  backdrop-filter: blur(16px) saturate(135%);
-  -webkit-backdrop-filter: blur(16px) saturate(135%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
-    0 18px 44px rgba(0, 0, 0, 0.42);
-}
-
-.opr .adm-card--link:hover {
-  background: rgba(26, 29, 33, 0.82);
-  border-color: rgba(255, 255, 255, 0.24);
-}
-
-/* The payout line is the one thing on this page that must never be squinted at, so it gets the most
-   opaque surface of the set rather than the most decorative one. */
-.opr .adm-ledger__row {
-  background: rgba(18, 20, 23, 0.86);
-}
-
-.opr .adm-ledger__amount {
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
-}
-
-/* Tables and rows read against the glass rather than the flat surface tokens. */
-.opr .adm-table thead th {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.opr .adm-table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.opr .adm-tenant__head {
-  border-bottom-color: rgba(255, 255, 255, 0.14);
-}
-
-/* The masthead sits directly on the photograph with no card behind it — the one place the image is
-   allowed to come forward — so its type carries its own shadow instead. */
-.opr .adm-head__title,
-.opr .adm-head__support {
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
-}
-
-.opr .adm-nav__link.is-active {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-/* Backdrop blur is expensive on a low-end machine and useless to anyone who can't see the photo
-   anyway. Both fallbacks drop to a solid surface rather than a transparent one, so the failure mode
-   is a plain console, never unreadable text over an image. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .opr .adm__rail {
-    background: var(--color-surface-1);
+@media (max-width: 640px) {
+  .trip__head {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .opr .adm-card {
-    background: var(--color-surface-1);
-  }
-  .opr .adm-ledger__row {
-    background: var(--color-surface-1);
-  }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .opr .adm__rail,
-  .opr .adm-card,
-  .opr .adm-ledger__row {
-    background: var(--color-surface-1);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-}
-
-@media (max-width: 900px) {
-  /* The rail becomes a top bar at this width and the photo has far less room to read, so the scrim
-     goes flat and heavy — the layout's job here is legibility, not atmosphere. */
-  .opr__scrim {
-    background: linear-gradient(180deg, rgba(10, 10, 9, 0.9) 0%, rgba(10, 10, 9, 0.94) 100%);
-  }
-  .opr .adm__rail {
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  .trip__facts {
+    gap: var(--space-md);
   }
 }
