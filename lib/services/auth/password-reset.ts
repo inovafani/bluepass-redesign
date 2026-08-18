@@ -36,7 +36,7 @@ export async function createAndSendPasswordReset(input: {
 
   const delivery = await sendAuthEmail({
     to: account.email,
-    subject: "Reset your BluePass password",
+    subject: "Set your BluePass password",
     text: buildResetText(resetUrl),
     html: buildResetHtml({ name: account.displayName, resetUrl }),
   });
@@ -52,7 +52,13 @@ export async function resetPasswordWithToken(input: { token: string; newPassword
   const tokenHash = hashResetToken(input.token);
   const reset = await prisma.bluePassAccountPasswordResetToken.findUnique({
     where: { tokenHash },
-    select: { id: true, accountId: true, expiresAt: true, usedAt: true },
+    select: {
+      id: true,
+      accountId: true,
+      expiresAt: true,
+      usedAt: true,
+      account: { select: { emailVerifiedAt: true } },
+    },
   });
 
   if (!reset) {
@@ -73,7 +79,24 @@ export async function resetPasswordWithToken(input: { token: string; newPassword
   await prisma.$transaction([
     prisma.bluePassAccount.update({
       where: { id: reset.accountId },
-      data: { passwordHash },
+      data: {
+        passwordHash,
+        /**
+         * Opening a link that was only ever delivered to this account's inbox is the same proof of
+         * control that `/api/auth/verify-email` asks for, so a reset counts as a verification for an
+         * account that never had one.
+         *
+         * Without this, `/api/auth/login` 403s `EMAIL_NOT_VERIFIED` immediately after a successful
+         * reset, and the account is stuck behind a second email it has no reason to expect. That
+         * dead end is reachable today by any traveller who registers and resets instead of
+         * verifying, and it is *every* operator's path: the accounts `createManualOperator` and the
+         * Rezdy sync mint carry `emailVerifiedAt: null`, so their whole "set your first password"
+         * flow ends at a login they cannot pass.
+         *
+         * Only ever fills a null — an already-verified account keeps its original timestamp.
+         */
+        ...(reset.account.emailVerifiedAt ? {} : { emailVerifiedAt: usedAt }),
+      },
     }),
     prisma.bluePassAccountPasswordResetToken.update({
       where: { id: reset.id },
@@ -112,9 +135,17 @@ function hashResetToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/**
+ * One wording for both audiences.
+ *
+ * This email is now also the operator login invite (`sendOperatorLoginInvite`), and an operator
+ * clicking it has never had a password to reset — "we received a request to reset your password"
+ * reads to them as an email meant for someone else. "Set a new password" is true whether or not one
+ * already exists, so neither audience is told something false about their own account.
+ */
 function buildResetText(resetUrl: string) {
   return [
-    "Reset your BluePass password",
+    "Set your BluePass password",
     "",
     "Click this link to choose a new password:",
     resetUrl,
@@ -129,10 +160,10 @@ function buildResetHtml(input: { name?: string | null; resetUrl: string }) {
   return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #092033;">
       <p>${greeting}</p>
-      <p>We received a request to reset your BluePass password.</p>
+      <p>Use the link below to set a new password for your BluePass account.</p>
       <p>
         <a href="${input.resetUrl}" style="display:inline-block;background:#006f8e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700;">
-          Reset password
+          Set password
         </a>
       </p>
       <p style="font-size: 13px; color: #64748b;">This link expires in ${RESET_TOKEN_MINUTES} minutes. If you didn't request this, you can ignore this email.</p>

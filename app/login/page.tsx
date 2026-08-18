@@ -23,6 +23,61 @@ import { forgotPassword, login, resendVerification } from "@/lib/auth-client";
  */
 type Mode = "signin" | "forgot";
 
+/**
+ * `?next=` is attacker-supplied — anyone can mail out a Bluepass login link
+ * carrying someone else's destination. Only a single-slash relative path is
+ * allowed through: "//evil.com" and "https://evil.com" are both absolute to the
+ * browser and would turn this page into an open redirect.
+ *
+ * Returns null rather than "/" for "no usable destination", so the caller can
+ * tell an explicit request apart from the default and pick a landing page by
+ * role instead of overriding somewhere the visitor actually asked for.
+ */
+function safeNext(value: string | null) {
+  return value && value.startsWith("/") && !value.startsWith("//") ? value : null;
+}
+
+/**
+ * Why the operator area bounced someone back here, per
+ * `requireOperatorOrRedirect`. Sending an already-signed-in person to a login
+ * form only makes sense with the reason attached — and in the commonest case it
+ * is the right destination, because they are signed in as their own traveller
+ * account rather than the operator one the invite was sent to.
+ */
+const OPERATOR_NOTICES: Record<string, { tone: NoticeTone; text: string }> = {
+  "signed-out": {
+    tone: "info",
+    text: "Sign in to reach your operator dashboard.",
+  },
+  "not-operator": {
+    tone: "error",
+    text: "That account isn’t set up as an operator. If Bluepass sent you a login invite, sign in with the address it was sent to.",
+  },
+  "no-profile": {
+    tone: "error",
+    text: "Your account is marked as an operator but has no operator profile attached, so there’s nothing for us to show you. Your Bluepass contact needs to fix that — signing in again won’t.",
+  },
+};
+
+/**
+ * Where a freshly signed-in account belongs when it didn't ask for anywhere.
+ *
+ * Only operators are redirected: an operator's whole reason for having a login
+ * is `/operator`, and the homepage is a traveller's marketing page, so landing
+ * them there means every sign-in starts with a hunt for a link that isn't in
+ * the nav. Travellers keep the homepage, and an account that is both admin and
+ * operator lands in the admin console — the more privileged surface is the one
+ * they signed in to use, and `/operator` stays one click away.
+ *
+ * The ADMIN test is the roles array only. `requireCurrentAdmin` also honours
+ * `BLUEPASS_ADMIN_EMAILS`, which the browser cannot see and which names Bluepass
+ * staff — none of whom hold an `OperatorProfile`, so this branch never reaches
+ * them.
+ */
+function landingFor(roles: string[]) {
+  return roles.includes("OPERATOR") && !roles.includes("ADMIN") ? "/operator" : "/";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useSession();
@@ -33,9 +88,23 @@ export default function LoginPage() {
   const [notice, setNotice] = useState<{ tone: NoticeTone; text: string } | null>(null);
   /** Set when login 403s — drives the resend affordance. */
   const [unverified, setUnverified] = useState<string | null>(null);
+  /* Where to land after signing in, when the visitor asked for somewhere
+     specific. The admin and operator gates send people here with the page they
+     actually wanted, so honouring it is what stops a deep link into /admin
+     dumping them on the home page. Null means "nobody asked" — see onSignIn. */
+  const [next, setNext] = useState<string | null>(null);
 
   useEffect(() => {
-    const reason = new URLSearchParams(window.location.search).get("verification");
+    const params = new URLSearchParams(window.location.search);
+    setNext(safeNext(params.get("next")));
+
+    const operatorReason = params.get("operator");
+    if (operatorReason && OPERATOR_NOTICES[operatorReason]) {
+      setNotice(OPERATOR_NOTICES[operatorReason]);
+      return;
+    }
+
+    const reason = params.get("verification");
     if (!reason) return;
     setNotice({
       tone: "error",
@@ -66,8 +135,8 @@ export default function LoginPage() {
 
     /* The cookie is set — pull the session before navigating so the nav is
        already showing the signed-in state when the next page paints. */
-    await refresh();
-    router.push("/");
+    const me = await refresh();
+    router.push(next ?? landingFor(me?.roles ?? []));
     router.refresh();
   };
 

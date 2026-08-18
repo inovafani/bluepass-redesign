@@ -79,11 +79,51 @@ async function buildUniqueListingSlug(title: string) {
  * Dedupe key is rezdySupplierId, not kaiTenantSlug - a Rezdy marketplace supplier has no Kai
  * Tenant/booking flow of its own (that's a separate concept, used only by tenants like Boattime that
  * actually have bookings flowing through Kai).
+ *
+ * Returns `created` alongside the profile because the caller's own counter can no longer be derived
+ * from a rezdySupplierId lookup - the name fallback below resolves profiles that have no supplier id
+ * yet, and counting those as "created" would overstate every sync run.
  */
 async function findOrCreateOperatorProfileForSupplier(product: RezdyMarketplaceProduct) {
   const existing = await prisma.operatorProfile.findUnique({ where: { rezdySupplierId: product.supplierId } });
   if (existing) {
-    return existing;
+    return { profile: existing, created: false };
+  }
+
+  /**
+   * An operator onboarded by hand through the admin console (lib/services/admin/operator-onboarding.ts)
+   * has a real companyName and real payout details but no rezdySupplierId - nobody knew it at the time
+   * of the call. Without this fallback, the first sync that sees their Rezdy products builds a second
+   * BluePassAccount + OperatorProfile for the same business, and the placeholder duplicate is the one
+   * the listings hang off while the payout details sit on the profile nobody is looking at.
+   *
+   * Restricted to `rezdySupplierId: null` so this can never steal a supplier id from a profile that
+   * already has a different one - only unclaimed profiles are eligible to be backfilled.
+   */
+  const supplierName = product.supplierName?.trim();
+  if (supplierName) {
+    /* Two candidates means the name does not identify anyone. Picking the older one would attach a
+       real operator's listings - and eventually their payouts - to whichever row happened to be
+       created first, silently and with nothing on screen to show it happened. A placeholder
+       duplicate is the worse-looking outcome and the safer one: it is visible, and it is what
+       already happens today. Only an unambiguous single match is backfilled. */
+    const candidates = await prisma.operatorProfile.findMany({
+      where: {
+        rezdySupplierId: null,
+        companyName: { equals: supplierName, mode: "insensitive" },
+      },
+      orderBy: { createdAt: "asc" },
+      take: 2,
+    });
+
+    if (candidates.length === 1) {
+      const backfilled = await prisma.operatorProfile.update({
+        where: { id: candidates[0].id },
+        data: { rezdySupplierId: product.supplierId },
+      });
+
+      return { profile: backfilled, created: false };
+    }
   }
 
   const account = await prisma.bluePassAccount.create({
@@ -95,7 +135,7 @@ async function findOrCreateOperatorProfileForSupplier(product: RezdyMarketplaceP
     },
   });
 
-  return prisma.operatorProfile.create({
+  const profile = await prisma.operatorProfile.create({
     data: {
       accountId: account.id,
       rezdySupplierId: product.supplierId,
@@ -105,6 +145,8 @@ async function findOrCreateOperatorProfileForSupplier(product: RezdyMarketplaceP
       notes: `Auto-created by the Rezdy Agent API Discover sync on ${new Date().toISOString().slice(0, 10)}.`,
     },
   });
+
+  return { profile, created: true };
 }
 
 // Rezdy's marketplace product listing has no category concept in the mapping Kai exposes - default
@@ -169,12 +211,8 @@ export async function syncRezdyAgentMarketplaceProducts(
     }
     result.productsSeen += 1;
 
-    const profileBefore = await prisma.operatorProfile.findUnique({
-      where: { rezdySupplierId: product.supplierId },
-      select: { id: true },
-    });
-    const profile = await findOrCreateOperatorProfileForSupplier(product);
-    if (!profileBefore) {
+    const { profile, created } = await findOrCreateOperatorProfileForSupplier(product);
+    if (created) {
       result.operatorsCreated += 1;
     }
 

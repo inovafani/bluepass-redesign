@@ -1,13 +1,24 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import KaiPanel from "./KaiPanel";
+import { isConsolePathname } from "@/lib/services/pathname";
 
 /** The floating "Ask Kai" pill — `showFloatingChat` in the design, default on. */
 export default function KaiChat() {
   const ref = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  /* Kai is the traveller's trip assistant, and it is pinned to the bottom-left
+     gutter — which on a console is where the rail's own footer sits. It was
+     painting straight over "Back to the site" on /admin, and floating across an
+     operator's own payout figures on /operator. Nobody working inside a console
+     is the audience for a booking assistant, so it stands down across all of
+     them, the same way Nav does. */
+  const hidden = isConsolePathname(pathname);
 
   /* Anything on the page can open the panel by dispatching `kai:open` — the hero's
      "Ask Kai" CTA does. An event rather than lifted state because the pill lives in
@@ -62,6 +73,13 @@ export default function KaiChat() {
     },
     { scope: ref },
   );
+
+  /* After the hooks, never before them — the GSAP effect above already no-ops
+     on a null ref, so bailing here costs nothing and keeps the hook order
+     stable across routes. */
+  if (hidden) {
+    return null;
+  }
 
   return (
     <>

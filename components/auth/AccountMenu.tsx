@@ -131,6 +131,24 @@ export default function AccountMenu() {
           <span className="acct__badge ds-micro">{roleLabel}</span>
 
           <div className="acct__rows">
+            {/* The only way back to the operator dashboard once the post-sign-in redirect has been
+                spent — nothing else in the site's nav points at /operator. Gated on the role *and*
+                the profile, exactly what `resolveOperatorAccess` requires, so this link can never
+                offer a door that then bounces them to /login. */}
+            {traveller.roles.includes("OPERATOR") && traveller.operatorProfile ? (
+              <Link
+                href="/operator"
+                className="acct__row ds-body-sm"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 20h18M5 20V9l7-5 7 5v11" />
+                  <path d="M10 20v-5h4v5" />
+                </svg>
+                Your operator dashboard
+              </Link>
+            ) : null}
             <Link href="/" className="acct__row ds-body-sm" role="menuitem" onClick={() => setOpen(false)}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="9" />

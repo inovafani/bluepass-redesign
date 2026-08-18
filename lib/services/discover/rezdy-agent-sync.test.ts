@@ -13,9 +13,15 @@ import {
 // title). Every account this file creates uses the same "rezdy+" email prefix as the real sync
 // (deliberately, to test the real upsert path) - clean them all up, cascading down through
 // OperatorProfile to OperatorListing, so a real test run never leaves live junk on the real site.
+// The name-fallback test also seeds a *manually onboarded* profile (no "rezdy+" email, because the
+// whole point is that it wasn't created by this sync), so its own prefix has to be cleaned up too.
+const MANUAL_EMAIL_PREFIX = "admin-sync-test+";
+
 afterAll(async () => {
   const accounts = await prisma.bluePassAccount.findMany({
-    where: { email: { startsWith: "rezdy+SUP-" } },
+    where: {
+      OR: [{ email: { startsWith: "rezdy+SUP-" } }, { email: { startsWith: MANUAL_EMAIL_PREFIX } }],
+    },
     select: { id: true },
   });
   await prisma.bluePassAccount.deleteMany({ where: { id: { in: accounts.map((a) => a.id) } } });
@@ -26,7 +32,11 @@ function product(overrides: Partial<RezdyMarketplaceProduct> = {}): RezdyMarketp
     productCode: `AGT-${randomUUID()}`,
     name: `Whitsundays Sunset Sail ${randomUUID()}`,
     description: "A relaxed sunset sail through the Whitsundays.",
-    supplierName: "Whitsunday Sailing Co",
+    /* Unique per product. The sync now matches an unclaimed profile by company name, so a fixed
+       fixture name silently couples this file to any other test (or real row) that happens to use
+       the same one - operator-listings-as-trips.test.ts seeds a "Whitsunday Sailing Co" profile
+       with no supplier id, and running in parallel it was this file's supplier that adopted it. */
+    supplierName: `Whitsunday Sailing Co ${randomUUID()}`,
     supplierId: `SUP-${randomUUID()}`,
     region: "Whitsundays",
     priceFrom: 189,
@@ -83,6 +93,104 @@ describe("syncRezdyAgentMarketplaceProducts", () => {
     expect(listing.priceSignal).toBe("From AUD 250");
     expect(listing.priceFrom).toBe(250);
     expect(listing.description).toBe("Updated description.");
+  });
+
+  it("backfills a manually onboarded profile matched by name instead of creating a duplicate", async () => {
+    /* The scenario Part 3's onboarding form creates: a real operator with real payout details,
+       onboarded by an admin before anyone knew their Rezdy supplier id. When the sync later sees
+       their products, the listings must attach to *this* profile — not to a second placeholder
+       account that leaves the payout details stranded on a profile nobody looks at. */
+    const companyName = `Manual Onboard Co ${randomUUID()}`;
+    const account = await prisma.bluePassAccount.create({
+      data: {
+        email: `${MANUAL_EMAIL_PREFIX}${randomUUID()}@ops.bluepass.co`,
+        passwordHash: randomUUID(),
+        displayName: companyName,
+        roles: ["OPERATOR"],
+      },
+    });
+    const seeded = await prisma.operatorProfile.create({
+      data: {
+        accountId: account.id,
+        companyName,
+        status: "LIVE",
+        rezdySupplierId: null,
+        payoutContactEmail: account.email,
+      },
+    });
+
+    // Casing deliberately differs — Rezdy's supplierName will not match how an admin typed it.
+    const p = product({ supplierName: companyName.toUpperCase() });
+    const result = await syncRezdyAgentMarketplaceProducts([p]);
+
+    expect(result.operatorsCreated).toBe(0);
+
+    const profiles = await prisma.operatorProfile.findMany({
+      where: { companyName: { equals: companyName, mode: "insensitive" } },
+    });
+    expect(profiles).toHaveLength(1);
+    expect(profiles[0].id).toBe(seeded.id);
+    expect(profiles[0].rezdySupplierId).toBe(p.supplierId);
+    // The listing hangs off the profile that holds the payout details.
+    const listing = await prisma.operatorListing.findFirstOrThrow({
+      where: { operatorProfileId: seeded.id, title: p.name },
+    });
+    expect(listing.status).toBe("LIVE");
+    // No second placeholder account was minted for the same business.
+    expect(
+      await prisma.bluePassAccount.count({ where: { email: `rezdy+${p.supplierId}@ops.bluepass.co` } }),
+    ).toBe(0);
+  });
+
+  it("refuses to guess when two unclaimed profiles share the supplier name", async () => {
+    /* An ambiguous name must not resolve to whichever row is older — that would hand one real
+       business's listings, and eventually its payouts, to another. Falling through to a visible
+       placeholder is the safer failure. */
+    const companyName = `Ambiguous Onboard Co ${randomUUID()}`;
+    for (let i = 0; i < 2; i += 1) {
+      const account = await prisma.bluePassAccount.create({
+        data: {
+          email: `${MANUAL_EMAIL_PREFIX}${randomUUID()}@ops.bluepass.co`,
+          passwordHash: randomUUID(),
+          roles: ["OPERATOR"],
+        },
+      });
+      await prisma.operatorProfile.create({
+        data: { accountId: account.id, companyName, status: "LIVE", rezdySupplierId: null },
+      });
+    }
+
+    const p = product({ supplierName: companyName });
+    const result = await syncRezdyAgentMarketplaceProducts([p]);
+
+    expect(result.operatorsCreated).toBe(1);
+    const seeded = await prisma.operatorProfile.findMany({
+      where: { companyName: { equals: companyName, mode: "insensitive" }, rezdySupplierId: null },
+    });
+    expect(seeded).toHaveLength(2);
+    const placeholder = await prisma.operatorProfile.findUniqueOrThrow({
+      where: { rezdySupplierId: p.supplierId },
+    });
+    expect(seeded.map((s) => s.id)).not.toContain(placeholder.id);
+  });
+
+  it("never steals a supplier id from a profile that already has a different one", async () => {
+    const first = product();
+    await syncRezdyAgentMarketplaceProducts([first]);
+
+    // Same supplierName, different supplierId: the existing profile is already claimed by `first`,
+    // so the name fallback must not touch it and a genuinely new supplier gets its own profile.
+    const second = product({ supplierName: first.supplierName });
+    const result = await syncRezdyAgentMarketplaceProducts([second]);
+
+    expect(result.operatorsCreated).toBe(1);
+    const firstProfile = await prisma.operatorProfile.findUniqueOrThrow({
+      where: { rezdySupplierId: first.supplierId },
+    });
+    const secondProfile = await prisma.operatorProfile.findUniqueOrThrow({
+      where: { rezdySupplierId: second.supplierId },
+    });
+    expect(firstProfile.id).not.toBe(secondProfile.id);
   });
 
   it("skips a product with no supplierId or no name rather than creating a broken record", async () => {

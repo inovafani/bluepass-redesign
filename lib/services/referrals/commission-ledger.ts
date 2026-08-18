@@ -124,6 +124,35 @@ export function creatorCommissionLedgerKind() {
   return "CREATOR_COMMISSION_ESTIMATE" satisfies ReferralLedgerKind;
 }
 
+/**
+ * Reads back what syncReferralCommissionLedger writes.
+ *
+ * Nothing read this table until the admin payouts page existed - the sync above only ever
+ * deleteMany'd and createMany'd into it, so the numbers were being maintained and never looked at.
+ * `status` is a plain String column here (not the enum the Kai-side ledgers use), and rows land as
+ * PENDING, so the default is deliberately no filter: the point is to see everything that is sitting
+ * there.
+ */
+export async function listCommissionLedgerEntries(
+  input: { status?: string; kind?: string; take?: number } = {},
+) {
+  const take = input.take && input.take > 0 ? Math.min(input.take, 200) : 100;
+
+  return prisma.commissionLedgerEntry.findMany({
+    where: {
+      ...(input.status ? { status: input.status } : {}),
+      ...(input.kind ? { kind: input.kind } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take,
+    include: {
+      account: { select: { email: true, displayName: true } },
+    },
+  });
+}
+
+export type CommissionLedgerEntryRow = Awaited<ReturnType<typeof listCommissionLedgerEntries>>[number];
+
 async function findReferralAccountId(
   referralPartnerId: string,
   referralRole?: ReferralPartnerRole | null,

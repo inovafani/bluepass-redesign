@@ -572,6 +572,200 @@ export async function releaseKaiCoreBluePassLedgerEntryPayoutViaStripe(
   return { ...data.entry, inquiry: data.entry.inquiry ?? null };
 }
 
+/**
+ * The Australia/Rezdy counterpart to KaiCoreBluePassLedgerEntry: a line on a direct-PMS booking
+ * (Boattime's flow) rather than a marketplace inquiry, so it joins to the booking attempt and its
+ * payout instead of to an inquiry.
+ *
+ * `pmsBookingPaymentAttemptId` is the scalar FK, not part of the nested `attempt` projection - Kai's
+ * route uses a top-level Prisma `include`, which returns every scalar column alongside the selected
+ * relations. It matters because it is the only key that can address the settle endpoint: that route
+ * is keyed on the attempt, not on the ledger entry.
+ */
+export type KaiCorePmsBookingLedgerEntry = {
+  id: string;
+  kind: string;
+  amountCents: number;
+  currency: string;
+  status: "PENDING" | "FINALIZED" | "VOIDED";
+  paidOutAt: string | null;
+  paidOutReference: string | null;
+  paidOutBy: string | null;
+  createdAt: string;
+  pmsBookingPaymentAttemptId: string;
+  attempt: {
+    productTitle: string;
+    dateText: string;
+    guests: number;
+    travellerName: string;
+    externalBookingId: string;
+    grossAmountCents: number;
+    settledAt: string | null;
+  } | null;
+  payout: {
+    status: string;
+    stripeTransferId: string | null;
+    releasedAt: string | null;
+    releasedBy: string | null;
+    failureReason: string | null;
+  } | null;
+};
+
+type KaiCorePmsBookingLedgerEntryResponse = Omit<KaiCorePmsBookingLedgerEntry, "attempt" | "payout"> & {
+  attempt?: KaiCorePmsBookingLedgerEntry["attempt"];
+  payout?: KaiCorePmsBookingLedgerEntry["payout"];
+};
+
+export async function listKaiCorePmsBookingLedger(
+  input: { tenantSlug: string; status?: "PENDING" | "FINALIZED" | "VOIDED"; take?: number },
+  env: KaiCoreClientEnv = process.env,
+  fetchImpl: FetchLike = fetch,
+): Promise<KaiCorePmsBookingLedgerEntry[]> {
+  const config = resolveKaiCoreConfig(env);
+  const adminToken = env.KAI_CORE_ADMIN_TOKEN?.trim();
+
+  if (!adminToken) {
+    throw new Error("Kai Core admin token is not configured.");
+  }
+
+  const params = new URLSearchParams({ take: String(input.take ?? 100) });
+  if (input.status) {
+    params.set("status", input.status);
+  }
+
+  const response = await fetchKaiCoreWithRetry(
+    fetchImpl,
+    `${config.baseUrl}/api/admin/${encodeURIComponent(input.tenantSlug)}/pms-booking-ledger?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        ...buildKaiCoreHeaders(config),
+        authorization: `Bearer ${adminToken}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Kai Core PMS booking ledger request failed.");
+  }
+
+  const data = (await response.json()) as { entries?: KaiCorePmsBookingLedgerEntryResponse[] };
+  return (data.entries ?? []).map((entry) => ({
+    ...entry,
+    attempt: entry.attempt ?? null,
+    payout: entry.payout ?? null,
+  }));
+}
+
+export type KaiCoreCronRun = {
+  id: string;
+  jobName: string;
+  status: "SUCCESS" | "PARTIAL" | "FAILURE";
+  summary: unknown;
+  errorMessage: string | null;
+  startedAt: string;
+  finishedAt: string;
+};
+
+/**
+ * Kai's own CronRunLog - distinct from this repo's (lib/services/monitoring/cron-run-log.ts), which
+ * only knows about jobs that run here. `settle-pms-bookings`, the job that actually releases operator
+ * payouts, runs on the Kai side and is invisible from this app without this call.
+ */
+export async function listKaiCoreCronRuns(
+  input: { jobName?: string; limit?: number } = {},
+  env: KaiCoreClientEnv = process.env,
+  fetchImpl: FetchLike = fetch,
+): Promise<KaiCoreCronRun[]> {
+  const config = resolveKaiCoreConfig(env);
+  const adminToken = env.KAI_CORE_ADMIN_TOKEN?.trim();
+
+  if (!adminToken) {
+    throw new Error("Kai Core admin token is not configured.");
+  }
+
+  const params = new URLSearchParams();
+  if (input.jobName) {
+    params.set("jobName", input.jobName);
+  }
+  if (input.limit) {
+    params.set("limit", String(input.limit));
+  }
+
+  const query = params.toString();
+  const response = await fetchKaiCoreWithRetry(
+    fetchImpl,
+    `${config.baseUrl}/api/admin/cron-runs${query ? `?${query}` : ""}`,
+    {
+      method: "GET",
+      headers: {
+        ...buildKaiCoreHeaders(config),
+        authorization: `Bearer ${adminToken}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Kai Core cron runs request failed.");
+  }
+
+  const data = (await response.json()) as { runs?: KaiCoreCronRun[] };
+  return data.runs ?? [];
+}
+
+/**
+ * Settles one Australia/Rezdy booking: releases the operator's payout via Stripe Connect (looked up
+ * automatically on Kai's side when no account id is supplied) and marks the attempt SETTLED.
+ *
+ * Addressed by `attemptId`, not by ledger entry id - the AU side has no per-ledger-entry mark-paid
+ * route the way the Indonesia flow does. One settle covers every ledger line on that booking.
+ */
+export async function settleKaiCorePmsBooking(
+  input: {
+    tenantSlug: string;
+    attemptId: string;
+    reviewerEmail: string;
+    stripeConnectAccountId?: string;
+    paidOutReference?: string;
+  },
+  env: KaiCoreClientEnv = process.env,
+  fetchImpl: FetchLike = fetch,
+): Promise<unknown> {
+  const config = resolveKaiCoreConfig(env);
+  const adminToken = env.KAI_CORE_ADMIN_TOKEN?.trim();
+
+  if (!adminToken) {
+    throw new Error("Kai Core admin token is not configured.");
+  }
+
+  const response = await fetchKaiCoreWithRetry(
+    fetchImpl,
+    `${config.baseUrl}/api/admin/${encodeURIComponent(input.tenantSlug)}/pms-bookings/${encodeURIComponent(input.attemptId)}/settle`,
+    {
+      method: "POST",
+      headers: {
+        ...buildKaiCoreHeaders(config),
+        authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        reviewerEmail: input.reviewerEmail,
+        ...(input.stripeConnectAccountId ? { stripeConnectAccountId: input.stripeConnectAccountId } : {}),
+        ...(input.paidOutReference ? { paidOutReference: input.paidOutReference } : {}),
+      }),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw new Error(errorBody?.error?.message ?? "Kai Core PMS booking settle request failed.");
+  }
+
+  return (await response.json()) as unknown;
+}
+
 export async function createKaiCoreOperatorStripeConnectAccount(
   input: { existingStripeAccountId?: string | null },
   env: KaiCoreClientEnv = process.env,

@@ -9,34 +9,51 @@ import { useId, useState } from "react";
  * hairline for the edge, accent-blue for focus. The label sits above in
  * `ds-micro` uppercase, matching the eyebrow treatment the marketing sections
  * use, so a form still reads as part of the same system.
+ *
+ * Works either way round. The auth pages drive it as a controlled input
+ * (`value` + `onChange`); the admin console posts to a server action, where
+ * React state would only be a copy of what the browser already holds, so it
+ * passes `name` and lets the field own its own value. Supplying `value` is what
+ * picks controlled mode.
  */
 export default function Field({
   label,
+  name,
   type = "text",
   value,
   onChange,
+  defaultValue,
   placeholder,
   autoComplete,
   hint,
   required,
   disabled,
+  inputMode,
   /** Renders a show/hide toggle — only meaningful for passwords. */
   reveal,
 }: {
   label: string;
+  /** Required for uncontrolled use — it is the key in the posted FormData. */
+  name?: string;
   type?: string;
-  value: string;
-  onChange: (v: string) => void;
+  value?: string;
+  onChange?: (v: string) => void;
+  defaultValue?: string;
   placeholder?: string;
   autoComplete?: string;
   hint?: string;
   required?: boolean;
   disabled?: boolean;
+  inputMode?: "text" | "email" | "tel" | "url" | "numeric";
   reveal?: boolean;
 }) {
   const id = useId();
   const [shown, setShown] = useState(false);
   const inputType = reveal && shown ? "text" : type;
+  const binding =
+    value !== undefined
+      ? { value, onChange: (e: { target: { value: string } }) => onChange?.(e.target.value) }
+      : { defaultValue };
 
   return (
     <label className="afield" htmlFor={id}>
@@ -47,11 +64,12 @@ export default function Field({
       <span className="afield__well">
         <input
           id={id}
+          name={name}
           type={inputType}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          {...binding}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          inputMode={inputMode}
           required={required}
           disabled={disabled}
           className="afield__input"

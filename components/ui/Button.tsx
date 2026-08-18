@@ -27,6 +27,10 @@ export default function Button({
   large,
   onClick,
   magnetic = true,
+  type = "button",
+  name,
+  value,
+  disabled,
 }: {
   variant?: Variant;
   children: ReactNode;
@@ -34,6 +38,16 @@ export default function Button({
   large?: boolean;
   onClick?: () => void;
   magnetic?: boolean;
+  /**
+   * `submit` lets this drive a `<form action={serverAction}>` — with `name` and
+   * `value` set, which button was pressed arrives in the FormData. That is how
+   * the approvals queue puts Approve and Decline on one form without a client
+   * round-trip in between.
+   */
+  type?: "button" | "submit";
+  name?: string;
+  value?: string;
+  disabled?: boolean;
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null);
 
@@ -101,7 +115,10 @@ export default function Button({
   return (
     <span ref={wrapRef} className="btn-magnet">
       <button
-        type="button"
+        type={type}
+        name={name}
+        value={value}
+        disabled={disabled}
         onClick={onClick}
         className={`btn btn--${variant} ${large ? "btn--lg" : ""} ${className}`}
       >

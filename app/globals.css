@@ -4745,3 +4745,1164 @@ html.is-scroll-locked body {
     margin-left: 0;
   }
 }
+
+/* Admin console ------------------------------------------------------------
+ * The internal control plane. Same canvas, same surfaces, same hairlines as the
+ * public site — an admin should recognise it as Bluepass, because the judgement
+ * calls made in here are the ones customer money depends on. Nothing below
+ * introduces a colour, radius or step that isn't already in tokens.css.
+ *
+ * Nav.tsx goes `bare` on /admin, so the fixed marketing bar is not overhead and
+ * these surfaces own the full viewport height. */
+.adm {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100svh;
+  background: var(--color-canvas);
+}
+
+.adm__rail {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100svh;
+  border-right: 1px solid var(--color-hairline);
+  background: var(--color-surface-1);
+}
+
+.adm__main {
+  min-width: 0;
+  padding: clamp(28px, 4vw, 56px) var(--page-gutter) clamp(64px, 8vw, 120px);
+}
+
+.adm__inner {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+/* Rail --------------------------------------------------------------------- */
+.adm-nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-lg) var(--space-md);
+  gap: var(--space-xl);
+}
+
+.adm-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-xs) var(--space-sm);
+  color: var(--color-ink);
+}
+.adm-nav__brand:hover {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.adm-nav__mark {
+  display: flex;
+  flex: none;
+}
+.adm-nav__brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.adm-nav__wordmark {
+  color: var(--color-ink);
+}
+.adm-nav__eyebrow {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+}
+
+.adm-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.adm-nav__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: 11px var(--space-sm);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  color: var(--color-ink-muted);
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.adm-nav__link:hover {
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+/* The active row is the one place accent-blue appears in the rail — it reads as
+   position rather than decoration. */
+.adm-nav__link.is-active {
+  background: var(--color-surface-2);
+  border-color: var(--color-hairline);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-3);
+}
+.adm-nav__label {
+  min-width: 0;
+}
+.adm-nav__count {
+  flex: none;
+  min-width: 20px;
+  padding: 3px 7px;
+  text-align: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-blue);
+  color: var(--color-primary);
+}
+
+.adm-nav__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: var(--space-sm);
+  border-top: 1px solid var(--color-hairline-soft);
+}
+.adm-nav__foot-label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+}
+.adm-nav__foot-value {
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+.adm-nav__exit {
+  margin-top: var(--space-xs);
+  color: var(--color-ink-muted);
+}
+.adm-nav__exit:hover {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+/* Page masthead ------------------------------------------------------------ */
+.adm-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--color-hairline);
+}
+.adm-head__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-width: 62ch;
+}
+.adm-head__eyebrow {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+}
+.adm-head__title {
+  color: var(--color-ink);
+}
+.adm-head__support {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+/* Cards -------------------------------------------------------------------- */
+.adm-card {
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-lg);
+}
+
+.adm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+.adm-card--link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  color: var(--color-ink);
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+.adm-card--link:hover {
+  background: var(--color-surface-2);
+  border-color: rgba(255, 255, 255, 0.22);
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+.adm-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+.adm-card__title {
+  color: var(--color-ink);
+}
+.adm-card__blurb {
+  line-height: 1.5;
+  flex: 1;
+}
+.adm-card__go {
+  color: var(--color-accent-blue);
+}
+
+.adm-pill {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface-2);
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+}
+.adm-pill--live {
+  border-color: rgba(0, 153, 255, 0.35);
+  background: var(--color-accent-blue-soft);
+  color: var(--color-ink);
+}
+/* A week in the queue is a business waiting on us, not a styling flourish. */
+.adm-pill--warn {
+  border-color: rgba(255, 122, 48, 0.35);
+  background: rgba(255, 122, 48, 0.1);
+  color: var(--color-gradient-orange);
+}
+
+/* Tabs --------------------------------------------------------------------- */
+.adm-tabs__bar {
+  display: flex;
+  gap: var(--space-xxs);
+  padding: var(--space-xxs);
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-1);
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.adm-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 9px var(--space-md);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--color-ink-muted);
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
+}
+.adm-tabs__tab:hover {
+  color: var(--color-ink);
+}
+.adm-tabs__tab.is-active {
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+}
+.adm-tabs__count {
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+}
+
+/* Review queue ------------------------------------------------------------- */
+.adm-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.adm-list__note {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  max-width: 78ch;
+}
+
+.adm-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.adm-review__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+.adm-review__ident {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.adm-review__title {
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+.adm-review__when {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: none;
+}
+.adm-review__date {
+  color: var(--color-ink-muted);
+}
+
+.adm-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-sm) var(--space-lg);
+  margin: 0;
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--color-hairline-soft);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+.adm-facts__row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.adm-facts__label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+}
+.adm-facts__value {
+  margin: 0;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.adm-review__notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+.adm-review__notes-body {
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.adm-decide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.adm-decide__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+.adm-decide__warn {
+  color: var(--color-gradient-coral);
+}
+/* .btn--secondary is painted --color-surface-1, which is also the review card's
+   own background — on a card it lost its edges and Decline read as stray text
+   beside the Approve pill. Lift it one surface and give it a hairline so both
+   decisions read as buttons. */
+.adm-decide .btn--secondary {
+  background: var(--color-surface-2);
+  box-shadow: inset 0 0 0 1px var(--color-hairline);
+}
+/* Decline stays a secondary button — it borrows the coral only once armed, so
+   the queue doesn't read as a wall of red before anyone has decided anything. */
+.btn--danger {
+  color: var(--color-gradient-coral);
+}
+.adm-decide .btn--danger {
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.4);
+}
+.btn--danger .btn__wipe {
+  background: rgba(255, 107, 107, 0.22);
+}
+
+.adm-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  text-align: center;
+  padding: var(--space-xxl) var(--space-lg);
+}
+.adm-empty__title {
+  color: var(--color-ink);
+}
+.adm-empty__body {
+  color: var(--color-ink-muted);
+}
+
+/* Forms -------------------------------------------------------------------- */
+.adm-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+.adm-form__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+}
+.adm-form__legend {
+  color: var(--color-ink);
+}
+.adm-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-md);
+}
+.adm-form__grid--conditional:empty {
+  display: none;
+}
+.adm-form__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 0;
+}
+.adm-form__row--wide {
+  grid-column: 1 / -1;
+}
+/* Points at the field the server rejected, without recolouring the whole card. */
+.adm-form__row--invalid .afield__well {
+  border-color: rgba(255, 107, 107, 0.55);
+}
+.adm-form__help {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+.adm-textarea {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+  font-family: var(--font-body);
+}
+
+.adm-choice {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-xs);
+}
+.adm-choice__option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  cursor: pointer;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+.adm-choice__option:hover {
+  background: var(--color-surface-2);
+}
+.adm-choice__option.is-active {
+  background: var(--color-surface-2);
+  border-color: rgba(0, 153, 255, 0.4);
+  box-shadow: var(--shadow-3);
+}
+/* The card itself is the control; the native radio only carries the value. */
+.adm-choice__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.adm-choice__label {
+  color: var(--color-ink);
+}
+.adm-choice__hint {
+  color: var(--color-ink-muted);
+  line-height: 1.45;
+}
+
+.adm-dupe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid rgba(255, 122, 48, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(255, 122, 48, 0.08);
+}
+.adm-dupe__body {
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.5;
+}
+.adm-dupe__confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  color: var(--color-ink);
+  line-height: 1.45;
+  cursor: pointer;
+}
+.adm-dupe__confirm input {
+  margin-top: 2px;
+  flex: none;
+  accent-color: var(--color-accent-blue);
+}
+
+.adm-form__submit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+.adm-form__submit-note {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  max-width: 48ch;
+}
+
+.adm-done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-items: flex-start;
+  border-color: rgba(34, 197, 94, 0.32);
+}
+.adm-done__glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--color-semantic-success);
+}
+.adm-done__title {
+  color: var(--color-ink);
+}
+.adm-done__body {
+  color: var(--color-ink-muted);
+  line-height: 1.55;
+  max-width: 62ch;
+}
+.adm-done__body strong {
+  color: var(--color-ink);
+  font-weight: 500;
+}
+.adm-done__facts {
+  width: 100%;
+}
+.adm-done__actions {
+  display: flex;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Under a laptop the rail unpins and becomes a scrolling top strip — the queue
+   is the thing that needs the height, not the navigation. */
+@media (max-width: 900px) {
+  .adm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .adm__rail {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .adm-nav {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--page-gutter);
+    overflow-x: auto;
+  }
+  .adm-nav__list {
+    flex-direction: row;
+    flex: 1;
+  }
+  .adm-nav__foot {
+    display: none;
+  }
+  .adm__main {
+    padding-top: var(--space-lg);
+  }
+}
+
+/* Payouts & Ledger ---------------------------------------------------------
+ * Same surfaces and hairlines as the rest of the console. The one thing this
+ * page adds is a status vocabulary (.adm-status--*), because its whole job is
+ * letting someone spot a broken cron or an unpaid operator at a glance. Those
+ * four tones are the only colour used for meaning here, and they reuse the
+ * semantic tokens the site already ships. */
+.adm-block {
+  margin-bottom: var(--space-xxl);
+}
+/* A heading and its own explanation, stacked — not two things spread apart.
+   This was `justify-content: space-between` on a row, which pinned the title left and the note
+   right and opened a gap between them that grew with the viewport: the shorter the heading and the
+   wider the screen, the less they read as belonging to each other. Length is the giveaway that a
+   row was the wrong model here — "Your profile" and its two-line note are one block of copy, and
+   the row made their relationship depend on how much text each happened to contain.
+   `flex-wrap` is gone with it: wrapping a column starts a second column, which is never what this
+   header wants. Stacked, it degrades by simply getting taller, so narrow viewports need no special
+   case. `--space-xs` rather than the row's old `--space-md` matches `.adm-head__copy`, which
+   already stacks a title over its support line — the two console header patterns should not sit at
+   different rhythms. */
+.adm-block__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+.adm-block__title {
+  color: var(--color-ink);
+}
+.adm-block__note {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  max-width: 76ch;
+}
+
+/* Status vocabulary -------------------------------------------------------- */
+.adm-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface-2);
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+  letter-spacing: 0.6px;
+}
+.adm-status--good {
+  border-color: rgba(34, 197, 94, 0.34);
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--color-semantic-success);
+}
+.adm-status--warn {
+  border-color: rgba(255, 122, 48, 0.36);
+  background: rgba(255, 122, 48, 0.1);
+  color: var(--color-gradient-orange);
+}
+.adm-status--bad {
+  border-color: rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--color-gradient-coral);
+}
+.adm-status--muted {
+  color: var(--color-ink-muted);
+}
+
+/* A failed section, never a silent empty table ----------------------------- */
+.adm-fault {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  border-color: rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.07);
+  margin-bottom: var(--space-sm);
+}
+.adm-fault__glyph {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-gradient-coral);
+}
+.adm-fault__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 0;
+}
+.adm-fault__title {
+  color: var(--color-ink);
+}
+.adm-fault__detail {
+  color: var(--color-gradient-coral);
+  overflow-wrap: anywhere;
+}
+.adm-fault__hint {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+/* Cron health -------------------------------------------------------------- */
+.adm-cron {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.adm-cron__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  padding: var(--space-sm) var(--space-md);
+}
+.adm-cron__row.is-bad {
+  border-color: rgba(255, 107, 107, 0.32);
+}
+.adm-cron__ident {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  min-width: 220px;
+  flex: 1;
+}
+.adm-cron__job {
+  color: var(--color-ink);
+  font-family: var(--font-mono, var(--font-body));
+}
+.adm-cron__source {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+}
+.adm-cron__when {
+  color: var(--color-ink-muted);
+}
+.adm-cron__streak {
+  color: var(--color-gradient-coral);
+}
+.adm-cron__error {
+  flex-basis: 100%;
+  color: var(--color-ink-muted);
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--color-hairline-soft);
+  padding-top: var(--space-xs);
+}
+
+/* Status filter ------------------------------------------------------------ */
+.adm-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-xl);
+}
+.adm-filter__label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+}
+.adm-filter__options {
+  display: flex;
+  gap: var(--space-xxs);
+  padding: var(--space-xxs);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-1);
+}
+.adm-filter__option {
+  padding: 7px var(--space-md);
+  border-radius: var(--radius-pill);
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
+}
+.adm-filter__option:hover {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.adm-filter__option.is-active {
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+}
+
+/* Ledger ------------------------------------------------------------------- */
+.adm-tenant {
+  margin-bottom: var(--space-lg);
+}
+.adm-tenant__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+.adm-tenant__slug {
+  color: var(--color-ink);
+  font-family: var(--font-mono, var(--font-body));
+  letter-spacing: 1px;
+}
+.adm-tenant__count {
+  color: var(--color-ink-muted);
+}
+
+.adm-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.adm-ledger__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+/* The operator-payout line is the one that owes a real business money — the
+   other kinds on the same booking are internal splits. */
+.adm-ledger__row.is-payout {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.adm-ledger__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+.adm-ledger__ident {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.adm-ledger__title {
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+.adm-ledger__kind {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+}
+.adm-ledger__money {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: none;
+}
+.adm-ledger__amount {
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.adm-ledger__pills {
+  display: flex;
+  gap: var(--space-xxs);
+  flex-wrap: wrap;
+}
+.adm-ledger__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-hairline-soft);
+  padding-top: var(--space-sm);
+}
+.adm-ledger__created,
+.adm-ledger__detail {
+  color: var(--color-ink-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Manual payout override --------------------------------------------------- */
+.adm-payact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+.adm-payact__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+.adm-payact__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 260px;
+}
+.adm-payact__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.adm-payact__warn {
+  color: var(--color-gradient-coral);
+  line-height: 1.5;
+  max-width: 52ch;
+}
+.adm-payact .btn--secondary {
+  background: var(--color-surface-2);
+  box-shadow: inset 0 0 0 1px var(--color-hairline);
+}
+
+/* Operator login invite ---------------------------------------------------- */
+.adm-invite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+  text-align: left;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-hairline-soft);
+}
+.adm-invite__form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+.adm-invite__note {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+  max-width: 52ch;
+}
+.adm-invite__devlink {
+  color: inherit;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.adm-invite .btn--secondary {
+  background: var(--color-surface-2);
+  box-shadow: inset 0 0 0 1px var(--color-hairline);
+}
+
+/* Plain data table (local commission ledger) ------------------------------- */
+.adm-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-1);
+  box-shadow: var(--shadow-2);
+}
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+.adm-table th,
+.adm-table td {
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+.adm-table th {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.adm-table td {
+  color: var(--color-ink);
+}
+.adm-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.adm-table tbody tr:hover td {
+  background: var(--color-surface-2);
+}
+.adm-table__num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .adm-ledger__money {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .adm-payact {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   OPERATOR CONSOLE — the .adm shell, wearing the site's skin
+   ============================================================
+
+   An operator is a Bluepass partner, not staff. /admin can read as an internal tool because it is
+   one; this surface is the product the operator was sold, so it borrows AuthShell's argument —
+   photography holding the full frame, content floating over it — rather than the flat console
+   canvas.
+
+   Every rule here is scoped under `.opr`, which the operator layout sets *alongside* `.adm`. That
+   is what lets the markup and components stay shared with the admin console (one set of console
+   styles to keep in step) while only this area is re-skinned. Nothing below can reach /admin.
+
+   The scrim is doing real work, not decoration. This page carries payout figures, and money that is
+   hard to read is money someone misreads — so the photograph is pushed well back behind a heavy
+   gradient, and every surface holding data gets its own opaque-enough fill on top of that. Legible
+   first, cinematic second. */
+
+.opr {
+  position: relative;
+  background: var(--color-canvas);
+  isolation: isolate;
+}
+
+/* Fixed rather than absolute: the photograph stays put while the ledger scrolls over it, which is
+   what keeps it reading as a backdrop instead of a very tall banner. */
+.opr__bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.opr__bg img {
+  object-fit: cover;
+}
+
+/* Darkest at the top-left, where the rail and the page title sit, and never fully transparent —
+   the lightest point is still 62% ink so a pale patch of water can't wash out a figure. */
+.opr__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 10, 9, 0.92) 0%,
+      rgba(10, 10, 9, 0.74) 42%,
+      rgba(10, 10, 9, 0.88) 100%
+    ),
+    linear-gradient(90deg, rgba(10, 10, 9, 0.86) 0%, rgba(10, 10, 9, 0.62) 60%);
+}
+
+/* The shell itself steps aside so the photograph shows through. */
+.opr.adm {
+  background: transparent;
+}
+
+.opr .adm__rail {
+  background: rgba(16, 17, 19, 0.62);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-right: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+/* Glass, but with enough fill behind it to stay a reading surface. The blur alone would leave text
+   sitting on whatever the photo happens to be doing underneath. */
+.opr .adm-card {
+  background: rgba(20, 22, 25, 0.72);
+  backdrop-filter: blur(16px) saturate(135%);
+  -webkit-backdrop-filter: blur(16px) saturate(135%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 18px 44px rgba(0, 0, 0, 0.42);
+}
+
+.opr .adm-card--link:hover {
+  background: rgba(26, 29, 33, 0.82);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+/* The payout line is the one thing on this page that must never be squinted at, so it gets the most
+   opaque surface of the set rather than the most decorative one. */
+.opr .adm-ledger__row {
+  background: rgba(18, 20, 23, 0.86);
+}
+
+.opr .adm-ledger__amount {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
+}
+
+/* Tables and rows read against the glass rather than the flat surface tokens. */
+.opr .adm-table thead th {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.opr .adm-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.opr .adm-tenant__head {
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+
+/* The masthead sits directly on the photograph with no card behind it — the one place the image is
+   allowed to come forward — so its type carries its own shadow instead. */
+.opr .adm-head__title,
+.opr .adm-head__support {
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
+}
+
+.opr .adm-nav__link.is-active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Backdrop blur is expensive on a low-end machine and useless to anyone who can't see the photo
+   anyway. Both fallbacks drop to a solid surface rather than a transparent one, so the failure mode
+   is a plain console, never unreadable text over an image. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .opr .adm__rail {
+    background: var(--color-surface-1);
+  }
+  .opr .adm-card {
+    background: var(--color-surface-1);
+  }
+  .opr .adm-ledger__row {
+    background: var(--color-surface-1);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .opr .adm__rail,
+  .opr .adm-card,
+  .opr .adm-ledger__row {
+    background: var(--color-surface-1);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (max-width: 900px) {
+  /* The rail becomes a top bar at this width and the photo has far less room to read, so the scrim
+     goes flat and heavy — the layout's job here is legibility, not atmosphere. */
+  .opr__scrim {
+    background: linear-gradient(180deg, rgba(10, 10, 9, 0.9) 0%, rgba(10, 10, 9, 0.94) 100%);
+  }
+  .opr .adm__rail {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  }
+}

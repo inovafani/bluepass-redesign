@@ -9,6 +9,7 @@ import { navLinks } from "@/lib/data";
 import Button from "./ui/Button";
 import AccountMenu from "./auth/AccountMenu";
 import { useSession } from "./auth/SessionProvider";
+import { isConsolePathname } from "@/lib/services/pathname";
 
 export default function Nav() {
   const ref = useRef<HTMLElement>(null);
@@ -22,8 +23,12 @@ export default function Nav() {
   /* The auth pages carry their own brand mark inside the poster panel and have
      no use for a marketing nav — leaving it up stacked two Bluepass marks in
      the same corner and offered "Join Bluepass" to someone already on
-     /register. */
-  const bare = ["/login", "/register", "/reset-password"].includes(pathname);
+     /register. The consoles are the same story: each has its own rail, its own
+     mark, and no business offering "Join Bluepass" to someone already signed in
+     and working. `isConsolePathname` covers every console area rather than the
+     one this check was originally written for. */
+  const bare =
+    ["/login", "/register", "/reset-password"].includes(pathname) || isConsolePathname(pathname);
   const [hover, setHover] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
 

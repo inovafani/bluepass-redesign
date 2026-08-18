@@ -15,7 +15,12 @@ type Ctx = {
   traveller: Traveller | null;
   /** True until the first `/api/auth/me` settles — the nav shows a rest state, not a wrong one. */
   loading: boolean;
-  refresh: () => Promise<void>;
+  /**
+   * Returns what it just fetched as well as storing it. A caller that needs to act on the fresh
+   * session immediately — the login page deciding where to land an operator — cannot read it off
+   * the context, which is still holding the previous render's value at that point.
+   */
+  refresh: () => Promise<Traveller | null>;
   signOut: () => Promise<void>;
 };
 
@@ -43,6 +48,7 @@ export default function SessionProvider({ children }: { children: ReactNode }) {
     const next = await fetchMe();
     setTraveller(next);
     setLoading(false);
+    return next;
   }, []);
 
   useEffect(() => {
