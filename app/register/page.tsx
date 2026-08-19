@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AuthShell from "@/components/auth/AuthShell";
 import Field from "@/components/auth/Field";
 import Notice, { type NoticeTone } from "@/components/auth/Notice";
 import PhoneField from "@/components/auth/PhoneField";
 import Button from "@/components/ui/Button";
 import { PASSWORD_MIN, register, resendVerification } from "@/lib/auth-client";
+
+/** Same rule as the login page's `safeNext` — only a single-slash relative path is trusted. */
+function safeNext(value: string | null) {
+  return value && value.startsWith("/") && !value.startsWith("//") ? value : null;
+}
 
 /**
  * Create an account.
@@ -29,6 +34,13 @@ export default function RegisterPage() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ tone: NoticeTone; text: string } | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  /* Where the emailed verification link should land, when this registration is step 1 of a
+     specific flow (e.g. the partner application) rather than a plain sign-up. */
+  const [next, setNext] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNext(safeNext(new URLSearchParams(window.location.search).get("next")));
+  }, []);
 
   // `phone` is E.164 straight from PhoneField, or "" while it is incomplete —
   // the length floor is `registerTravellerSchema.phone.min(6)`.
@@ -47,6 +59,7 @@ export default function RegisterPage() {
       email: email.trim(),
       phone: phone.trim(),
       password,
+      ...(next ? { next } : {}),
     });
 
     setBusy(false);
@@ -120,7 +133,8 @@ export default function RegisterPage() {
       rail="Join"
       footer={
         <>
-          Already have an account? <Link href="/login">Sign in</Link>
+          Already have an account?{" "}
+          <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}>Sign in</Link>
         </>
       }
     >

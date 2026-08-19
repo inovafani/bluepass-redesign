@@ -18,9 +18,9 @@ export function middleware(request: NextRequest) {
   return NextResponse.next({ request: { headers } });
 }
 
-/* Scoped to the two signed-in consoles only — every other route on the site keeps its current
-   zero-middleware request path. `:path*` matches zero segments too, so `/admin` and `/operator`
-   themselves are covered. */
+/* Scoped to the signed-in consoles only — every other route on the site keeps its current
+   zero-middleware request path. `:path*` matches zero segments too, so `/admin`, `/operator`, and
+   `/creator` themselves are covered. */
 export const config = {
-  matcher: ["/admin/:path*", "/operator/:path*"],
+  matcher: ["/admin/:path*", "/operator/:path*", "/creator/:path*"],
 };

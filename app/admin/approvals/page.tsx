@@ -12,6 +12,13 @@ export default async function ApprovalsPage() {
   const { claims, applications } = await listPendingApprovals();
   const total = claims.length + applications.length;
 
+  /* Split rather than a single merged list: a creator application and an operator application are
+     different decisions with different consequences (a referral link either way, but a company
+     versus a person), and the merged list sorted everyone by wait time alone — a same-day creator
+     application could sit invisible below a stack of week-old operator ones. */
+  const creatorApplications = applications.filter((item) => item.kind === "creator-application");
+  const operatorApplications = applications.filter((item) => item.kind === "operator-application");
+
   return (
     <>
       <AdminPageHeader
@@ -39,13 +46,25 @@ export default async function ApprovalsPage() {
             ),
           },
           {
-            id: "applications",
-            label: "Applications",
-            count: applications.length,
+            id: "creator-applications",
+            label: "Partners",
+            count: creatorApplications.length,
             content: (
               <ReviewList
-                items={applications}
-                empty="No creator or operator applications are waiting."
+                items={creatorApplications}
+                empty="No partner applications are waiting."
+                note="Approving provisions a referral partner and a live referral link for the applicant."
+              />
+            ),
+          },
+          {
+            id: "operator-applications",
+            label: "Operators",
+            count: operatorApplications.length,
+            content: (
+              <ReviewList
+                items={operatorApplications}
+                empty="No operator applications are waiting."
                 note="Approving provisions a referral partner and a live referral link for the applicant."
               />
             ),

@@ -70,7 +70,7 @@ export default function PartnersHero() {
         </p>
 
         <div className="phero__ctas">
-          <Link href="#claim" style={{ textDecoration: "none" }}>
+          <Link href="/partners/apply" style={{ textDecoration: "none" }}>
             <Button variant="primary" large>
               Claim my founding-partner link
             </Button>

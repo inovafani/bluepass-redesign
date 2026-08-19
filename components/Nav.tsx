@@ -28,7 +28,8 @@ export default function Nav() {
      and working. `isConsolePathname` covers every console area rather than the
      one this check was originally written for. */
   const bare =
-    ["/login", "/register", "/reset-password"].includes(pathname) || isConsolePathname(pathname);
+    ["/login", "/register", "/reset-password", "/partners/apply"].includes(pathname) ||
+    isConsolePathname(pathname);
   /* The index the white indicator is actually sitting under.
      This used to be a separate `hover` state, and the split was the bug: the text colour read
      `hover ?? active` while the indicator's position was set independently by `moveIndicator`. The

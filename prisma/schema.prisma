@@ -326,6 +326,7 @@ model CreatorProfile {
   audienceUrl       String?
   instagramUrl      String?
   youtubeUrl        String?
+  tiktokUrl         String?
   notes             String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
@@ -799,6 +800,7 @@ model SignupLead {
   roles        SignupRole[] @default([])
   instagramUrl String?
   youtubeUrl   String?
+  tiktokUrl    String?
   websiteUrl   String?
   createdAt    DateTime     @default(now())
 

@@ -9,6 +9,7 @@ const signupSchema = z.object({
   phone: z.string().trim().min(6).max(40),
   instagramUrl: z.string().trim().max(300).optional(),
   youtubeUrl: z.string().trim().max(300).optional(),
+  tiktokUrl: z.string().trim().max(300).optional(),
   websiteUrl: z.string().trim().max(300).optional(),
   roles: z
     .array(z.enum(["OPERATOR", "CREATOR"]))
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
     "instagram",
   );
   const youtubeUrl = normalizeSocialUrl(parsed.data.youtubeUrl, "youtube");
+  const tiktokUrl = normalizeSocialUrl(parsed.data.tiktokUrl, "tiktok");
   const websiteUrl = normalizeWebsiteUrl(parsed.data.websiteUrl);
   const name = parsed.data.name.trim();
   const email = account.email;
@@ -71,6 +73,7 @@ export async function POST(request: NextRequest) {
       roles: parsed.data.roles,
       instagramUrl,
       youtubeUrl,
+      tiktokUrl,
       websiteUrl,
     },
     select: {
@@ -112,6 +115,7 @@ export async function POST(request: NextRequest) {
         handle: buildHandle(name),
         instagramUrl,
         youtubeUrl,
+        tiktokUrl,
         notes: `Applied from signup lead ${lead.id}.`,
       },
       update: {
@@ -122,6 +126,7 @@ export async function POST(request: NextRequest) {
         handle: buildHandle(name),
         instagramUrl,
         youtubeUrl,
+        tiktokUrl,
         notes: `Updated from signup lead ${lead.id}.`,
       },
     });
@@ -172,7 +177,7 @@ function buildHandle(name: string) {
 
 function normalizeSocialUrl(
   value: string | undefined,
-  platform: "instagram" | "youtube",
+  platform: "instagram" | "youtube" | "tiktok",
 ) {
   const raw = value?.trim();
 
@@ -191,6 +196,8 @@ function normalizeSocialUrl(
     .replace(/^youtube\.com\//i, "")
     .replace(/^www\.youtube\.com\//i, "")
     .replace(/^youtu\.be\//i, "")
+    .replace(/^tiktok\.com\//i, "")
+    .replace(/^www\.tiktok\.com\//i, "")
     .replace(/^\/+/, "");
 
   if (!cleaned) {
@@ -199,6 +206,10 @@ function normalizeSocialUrl(
 
   if (platform === "instagram") {
     return `https://www.instagram.com/${cleaned.replace(/\/+$/, "")}`;
+  }
+
+  if (platform === "tiktok") {
+    return `https://www.tiktok.com/${cleaned.startsWith("@") ? cleaned : `@${cleaned}`}`;
   }
 
   return `https://www.youtube.com/${cleaned.startsWith("@") ? cleaned : `@${cleaned}`}`;

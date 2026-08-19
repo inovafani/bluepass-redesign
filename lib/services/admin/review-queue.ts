@@ -140,6 +140,7 @@ export async function listPendingApprovals(): Promise<PendingApprovals> {
           ["Audience", profile.audienceUrl, profile.audienceUrl],
           ["Instagram", profile.instagramUrl, profile.instagramUrl],
           ["YouTube", profile.youtubeUrl, profile.youtubeUrl],
+          ["TikTok", profile.tiktokUrl, profile.tiktokUrl],
         ]),
       })),
       ...operatorProfiles.map((profile) => ({

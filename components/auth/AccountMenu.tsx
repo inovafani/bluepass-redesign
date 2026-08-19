@@ -97,11 +97,16 @@ export default function AccountMenu() {
     );
   }
 
-  const roleLabel = traveller.operatorProfile
-    ? (traveller.operatorProfile.companyName ?? "Operator")
-    : traveller.creatorProfile
-      ? `@${traveller.creatorProfile.handle ?? "creator"}`
-      : "Traveller";
+  /* Admin outranks the others for this badge: it's the highest-privilege role an account can
+     carry, and a staff member who also happens to hold an operator or creator profile is still
+     signed in as staff first. */
+  const roleLabel = traveller.roles.includes("ADMIN")
+    ? "Admin"
+    : traveller.operatorProfile
+      ? (traveller.operatorProfile.companyName ?? "Operator")
+      : traveller.creatorProfile
+        ? `@${traveller.creatorProfile.handle ?? "creator"}`
+        : "Traveller";
 
   return (
     <div ref={ref} className="acct">
@@ -131,6 +136,24 @@ export default function AccountMenu() {
           <span className="acct__badge ds-micro">{roleLabel}</span>
 
           <div className="acct__rows">
+            {/* Admin has no profile row to gate on — unlike operator/creator, `requireCurrentAdmin`
+                only ever checks the role (or the `BLUEPASS_ADMIN_EMAILS` allowlist, which this
+                client-side menu can't see; an allowlisted-but-roleless admin can still reach
+                /admin directly by URL, just without this shortcut). Shown first: it's the
+                highest-privilege surface an account can reach, so it leads. */}
+            {traveller.roles.includes("ADMIN") ? (
+              <Link
+                href="/admin"
+                className="acct__row ds-body-sm"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l8 4v6c0 5-3.4 7.9-8 10-4.6-2.1-8-5-8-10V6z" />
+                </svg>
+                Your admin console
+              </Link>
+            ) : null}
             {/* The only way back to the operator dashboard once the post-sign-in redirect has been
                 spent — nothing else in the site's nav points at /operator. Gated on the role *and*
                 the profile, exactly what `resolveOperatorAccess` requires, so this link can never
@@ -147,6 +170,22 @@ export default function AccountMenu() {
                   <path d="M10 20v-5h4v5" />
                 </svg>
                 Your operator dashboard
+              </Link>
+            ) : null}
+            {/* Same reasoning, same gate shape, for /creator — resolveCreatorAccess requires the
+                role and a profile row, same as the operator link above. */}
+            {traveller.roles.includes("CREATOR") && traveller.creatorProfile ? (
+              <Link
+                href="/creator"
+                className="acct__row ds-body-sm"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0z" />
+                  <path d="M12 2v2M12 20v2M2 12h2M20 12h2" />
+                </svg>
+                Your creator dashboard
               </Link>
             ) : null}
             {/* Every signed-in account gets this: `/account` shows only what belongs to the

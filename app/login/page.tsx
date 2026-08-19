@@ -59,6 +59,22 @@ const OPERATOR_NOTICES: Record<string, { tone: NoticeTone; text: string }> = {
   },
 };
 
+/** Same idea as OPERATOR_NOTICES, for `requireCreatorOrRedirect`. */
+const CREATOR_NOTICES: Record<string, { tone: NoticeTone; text: string }> = {
+  "signed-out": {
+    tone: "info",
+    text: "Sign in to reach your creator dashboard.",
+  },
+  "not-creator": {
+    tone: "error",
+    text: "That account isn’t set up as a creator. If Bluepass sent you a login invite, sign in with the address it was sent to.",
+  },
+  "no-profile": {
+    tone: "error",
+    text: "Your account is marked as a creator but has no creator profile attached, so there’s nothing for us to show you. Your Bluepass contact needs to fix that — signing in again won’t.",
+  },
+};
+
 /**
  * Where a freshly signed-in account belongs when it didn't ask for anywhere.
  *
@@ -75,7 +91,10 @@ const OPERATOR_NOTICES: Record<string, { tone: NoticeTone; text: string }> = {
  * them.
  */
 function landingFor(roles: string[]) {
-  return roles.includes("OPERATOR") && !roles.includes("ADMIN") ? "/operator" : "/";
+  if (roles.includes("ADMIN")) return "/admin";
+  if (roles.includes("OPERATOR")) return "/operator";
+  if (roles.includes("CREATOR")) return "/creator";
+  return "/";
 }
 
 export default function LoginPage() {
@@ -101,6 +120,12 @@ export default function LoginPage() {
     const operatorReason = params.get("operator");
     if (operatorReason && OPERATOR_NOTICES[operatorReason]) {
       setNotice(OPERATOR_NOTICES[operatorReason]);
+      return;
+    }
+
+    const creatorReason = params.get("creator");
+    if (creatorReason && CREATOR_NOTICES[creatorReason]) {
+      setNotice(CREATOR_NOTICES[creatorReason]);
       return;
     }
 

@@ -20,9 +20,10 @@ export const CONSOLE_PATHNAME_HEADER = "x-bluepass-pathname";
  * Each console owns its whole viewport: its own rail, its own brand mark, its own footer. The site
  * chrome has to stand aside for all of them, and there is now more than one — `/operator` shipped
  * after `/admin` and inherited none of its treatment, so the marketing nav painted over the
- * operator rail and the Kai launcher floated across an operator's own payout figures.
+ * operator rail and the Kai launcher floated across an operator's own payout figures. `/creator`
+ * repeated the same miss when it shipped after this comment was already written above it.
  */
-const CONSOLE_PATHNAME_PREFIXES = ["/admin", "/operator"];
+const CONSOLE_PATHNAME_PREFIXES = ["/admin", "/operator", "/creator"];
 
 /**
  * Whether `pathname` is inside a console area.

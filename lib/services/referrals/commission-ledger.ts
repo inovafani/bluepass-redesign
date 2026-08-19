@@ -134,7 +134,7 @@ export function creatorCommissionLedgerKind() {
  * there.
  */
 export async function listCommissionLedgerEntries(
-  input: { status?: string; kind?: string; take?: number } = {},
+  input: { status?: string; kind?: string; referralPartnerId?: string; take?: number } = {},
 ) {
   const take = input.take && input.take > 0 ? Math.min(input.take, 200) : 100;
 
@@ -142,6 +142,7 @@ export async function listCommissionLedgerEntries(
     where: {
       ...(input.status ? { status: input.status } : {}),
       ...(input.kind ? { kind: input.kind } : {}),
+      ...(input.referralPartnerId ? { referralPartnerId: input.referralPartnerId } : {}),
     },
     orderBy: { createdAt: "desc" },
     take,

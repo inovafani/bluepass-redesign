@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import { MaskLines } from "../ui/Text";
@@ -65,9 +66,11 @@ export default function PartnersCta() {
         </p>
 
         <span className="pcta__btn">
-          <Button variant="primary" large>
-            Claim my 5% founding link
-          </Button>
+          <Link href="/partners/apply" style={{ textDecoration: "none" }}>
+            <Button variant="primary" large>
+              Claim my 5% founding link
+            </Button>
+          </Link>
         </span>
 
         <span className="pcta__note ds-micro">
