@@ -4100,9 +4100,14 @@ html.is-scroll-locked body {
 /* Actions, notices, small links ------------------------------------------- */
 .aactions {
   margin-top: 6px;
+  /* Separates the button+hint block from whatever trailing note follows it
+     (aterms, a "forgot password" link) - without this, that next line only
+     had the form's own field-to-field gap to work with, so a helper sentence
+     and the line right after it read as one cramped stack. */
+  margin-bottom: 6px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .aactions .btn-magnet,
 .aactions .btn {
@@ -4111,6 +4116,15 @@ html.is-scroll-locked body {
 .aactions__hint {
   color: var(--color-ink-muted);
   text-align: center;
+  /* Shrink-wrapped to its own text rather than stretching the full form width
+     - a short sentence spanning 420px reads as adrift. `fit-content` sizes to
+     whichever hint is actually showing (three different lengths share this
+     class) instead of a fixed ch guess that fit the shortest one and wrapped
+     the longest - `max-width: 100%` is the fallback for the rare case a hint
+     genuinely doesn't fit the 420px column at all. */
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .anotice {
