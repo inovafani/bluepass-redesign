@@ -115,8 +115,12 @@ export default function SiteFooter() {
           className="footer__legal"
           style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}
         >
+          {/* Bluepass Pty Ltd, ACN 701 302 463 - real, from the ASIC certificate of registration
+              the user shared 2026-08-21 (registered Queensland, 12 Aug 2026). Not an ABN - a
+              company doesn't get one of those automatically on incorporation, and this cert
+              doesn't show one, so this stays ACN rather than guessing. */}
           <span className="ds-micro" style={{ color: "var(--color-ink-muted)" }}>
-            © 2026 Bluepass
+            © 2026 Bluepass Pty Ltd. ACN 701 302 463.
           </span>
           <div style={{ display: "flex", gap: 20 }}>
             <Link href="/privacy" className="footer__link ds-micro">

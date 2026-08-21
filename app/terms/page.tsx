@@ -9,7 +9,10 @@ export const metadata: Metadata = {
  * Same drafting basis as `app/privacy/page.tsx` - grounded in what the product actually does
  * (marketplace connecting travellers to vetted operators, Stripe payment, no markup on the
  * operator's own rate, 5% conservation share, tiered cancellation refunds) rather than generic
- * boilerplate. Still a draft pending the founders'/a lawyer's sign-off on the bracketed fields.
+ * boilerplate. Still a draft pending the founders'/a lawyer's sign-off on the remaining bracketed
+ * fields - the entity itself is real (Bluepass Pty Ltd, ACN 701 302 463, ASIC certificate of
+ * registration sighted 2026-08-21), but registered address, liability caps, accepted-currency
+ * handling and a support contact email are still not filled in.
  */
 export default function TermsPage() {
   return (
@@ -23,9 +26,9 @@ export default function TermsPage() {
 
         <div className="legalpage__draft-note" role="note">
           <p className="ds-body-sm">
-            <strong>Draft — pending review.</strong> The bracketed fields below (company details,
-            jurisdiction, liability specifics) have not yet been filled in by Bluepass's own team
-            and should be treated as placeholders until they are.
+            <strong>Draft — pending review.</strong> The remaining bracketed fields below (registered
+            address, liability caps, accepted-currency handling, support contact) have not yet been
+            filled in by Bluepass's own team and should be treated as placeholders until they are.
           </p>
         </div>
 
@@ -33,9 +36,9 @@ export default function TermsPage() {
           <section>
             <h2 className="ds-headline">1. Who you're agreeing with</h2>
             <p className="ds-body">
-              Bluepass is operated by <strong>[Bluepass legal entity name, ABN/company number]</strong>,
-              registered at <strong>[registered address]</strong>. By creating an account or booking
-              a trip through bluepass.co, you agree to these terms.
+              Bluepass is operated by <strong>Bluepass Pty Ltd (ACN 701 302 463)</strong>, registered
+              at <strong>[registered address]</strong>. By creating an account or booking a trip
+              through bluepass.co, you agree to these terms.
             </p>
           </section>
 
@@ -143,8 +146,9 @@ export default function TermsPage() {
           <section>
             <h2 className="ds-headline">11. Governing law</h2>
             <p className="ds-body">
-              These terms are governed by the laws of <strong>[jurisdiction, e.g. Australia]</strong>,
-              and any dispute is subject to the exclusive jurisdiction of its courts.
+              These terms are governed by the laws of <strong>Queensland, Australia</strong> — Bluepass
+              Pty Ltd&apos;s state of registration — and any dispute is subject to the exclusive
+              jurisdiction of its courts.
             </p>
           </section>
 

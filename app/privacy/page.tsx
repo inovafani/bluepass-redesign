@@ -8,10 +8,12 @@ export const metadata: Metadata = {
 /**
  * Real, drafted from what this codebase actually does (Stripe for payment, Rezdy for AU operator
  * bookings, Kai/WhatsApp for chat, Supabase for storage, session cookies, referral tracking) - not
- * boilerplate. Flagged as a draft because the entity-specific facts (legal name, ABN, registered
- * address, governing law, a real privacy contact) need the founders/a lawyer to fill in and sign off,
- * not an engineering session. Ships anyway because a dead Privacy link was P0-1 in Tony's 2026-08-12
- * audit - "the site collects payment details with dead legal links" - and an honest draft beats a 404.
+ * boilerplate. Flagged as a draft because some entity-specific facts still need the founders/a
+ * lawyer to fill in and sign off, not an engineering session - the entity itself is real (Bluepass
+ * Pty Ltd, ACN 701 302 463, ASIC certificate of registration sighted 2026-08-21), but registered
+ * address, exact data-retention periods, hosting regions, and a real privacy contact email are
+ * still not filled in. Ships anyway because a dead Privacy link was P0-1 in Tony's 2026-08-12 audit
+ * - "the site collects payment details with dead legal links" - and an honest draft beats a 404.
  */
 export default function PrivacyPage() {
   return (
@@ -26,9 +28,9 @@ export default function PrivacyPage() {
         <div className="legalpage__draft-note" role="note">
           <p className="ds-body-sm">
             <strong>Draft — pending review.</strong> This page describes what Bluepass actually
-            collects and does with it today, in plain terms. The bracketed fields below (company
-            details, jurisdiction, contact) have not yet been filled in by Bluepass's own team and
-            should be treated as placeholders until they are.
+            collects and does with it today, in plain terms. The remaining bracketed fields below
+            (registered address, retention periods, hosting regions, contact) have not yet been
+            filled in by Bluepass's own team and should be treated as placeholders until they are.
           </p>
         </div>
 
@@ -37,7 +39,7 @@ export default function PrivacyPage() {
             <h2 className="ds-headline">1. Who this policy covers</h2>
             <p className="ds-body">
               This policy applies to bluepass.co and the Bluepass booking service, operated by{" "}
-              <strong>[Bluepass legal entity name, ABN/company number]</strong>, registered at{" "}
+              <strong>Bluepass Pty Ltd (ACN 701 302 463)</strong>, registered at{" "}
               <strong>[registered address]</strong> (&ldquo;Bluepass&rdquo;, &ldquo;we&rdquo;). It
               covers travellers booking trips, operators listed on Bluepass, and creators/referral
               partners.
