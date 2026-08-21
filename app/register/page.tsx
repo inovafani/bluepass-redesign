@@ -50,6 +50,14 @@ export default function RegisterPage() {
     phone.length >= 6 &&
     password.length >= PASSWORD_MIN;
 
+  /* No <form> here (see Field.tsx's onKeyDown doc) - wire Enter manually, gated the same as the
+     hint text below (2026-08-21: pressing Enter previously did nothing at all). */
+  const onFieldEnter = (e: { key: string; preventDefault: () => void }) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (valid) void onSubmit();
+  };
+
   const onSubmit = async () => {
     setBusy(true);
     setNotice(null);
@@ -148,6 +156,7 @@ export default function RegisterPage() {
         autoComplete="name"
         required
         disabled={busy}
+        onKeyDown={onFieldEnter}
       />
       <Field
         label="Email"
@@ -158,6 +167,7 @@ export default function RegisterPage() {
         autoComplete="email"
         required
         disabled={busy}
+        onKeyDown={onFieldEnter}
       />
       <PhoneField
         label="WhatsApp number"
@@ -178,6 +188,7 @@ export default function RegisterPage() {
         required
         disabled={busy}
         reveal
+        onKeyDown={onFieldEnter}
       />
 
       <div className="aactions">

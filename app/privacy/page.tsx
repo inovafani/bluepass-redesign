@@ -29,8 +29,9 @@ export default function PrivacyPage() {
           <p className="ds-body-sm">
             <strong>Draft — pending review.</strong> This page describes what Bluepass actually
             collects and does with it today, in plain terms. The remaining bracketed fields below
-            (registered address, retention periods, hosting regions, contact) have not yet been
-            filled in by Bluepass's own team and should be treated as placeholders until they are.
+            (registered address, retention periods, cross-border transfer basis, contact) have not
+            yet been filled in by Bluepass's own team and should be treated as placeholders until
+            they are.
           </p>
         </div>
 
@@ -154,9 +155,12 @@ export default function PrivacyPage() {
           <section>
             <h2 className="ds-headline">8. Where your data is stored</h2>
             <p className="ds-body">
-              Bluepass's databases are hosted on Supabase infrastructure. Depending on which part of
-              the service you use, your data may be processed outside your home country.{" "}
-              <strong>[Bluepass to confirm hosting regions and any cross-border transfer basis.]</strong>
+              Bluepass's databases are hosted on Supabase infrastructure, split across two regions:
+              account, booking, and payment records in Singapore (AWS ap-southeast-1), and Kai chat
+              conversation records in Tokyo (AWS ap-northeast-1). Depending on which part of the
+              service you use, your data is processed outside your home country as a result.{" "}
+              <strong>[Bluepass/legal to confirm the specific cross-border transfer basis this
+              relies on.]</strong>
             </p>
           </section>
 

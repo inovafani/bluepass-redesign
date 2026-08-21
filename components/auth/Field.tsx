@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type KeyboardEvent } from "react";
 
 /**
  * The form field for the auth pages.
@@ -31,6 +31,15 @@ export default function Field({
   inputMode,
   /** Renders a show/hide toggle — only meaningful for passwords. */
   reveal,
+  /**
+   * The auth pages have no `<form>` element (their fields are direct children of
+   * `.ashell__form`, which GSAP's entrance stagger targets one by one - wrapping them in a
+   * `<form>` would collapse that to a single animated block). That means Enter never submits
+   * on its own; a page that wants it wires this to whatever its button's onClick already
+   * calls. Optional and unused by default, so every other Field consumer (the uncontrolled
+   * server-action forms in the admin console) is unaffected.
+   */
+  onKeyDown,
 }: {
   label: string;
   /** Required for uncontrolled use — it is the key in the posted FormData. */
@@ -46,6 +55,7 @@ export default function Field({
   disabled?: boolean;
   inputMode?: "text" | "email" | "tel" | "url" | "numeric";
   reveal?: boolean;
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
 }) {
   const id = useId();
   const [shown, setShown] = useState(false);
@@ -72,6 +82,7 @@ export default function Field({
           inputMode={inputMode}
           required={required}
           disabled={disabled}
+          onKeyDown={onKeyDown}
           className="afield__input"
         />
         {reveal ? (

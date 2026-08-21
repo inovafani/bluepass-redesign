@@ -204,6 +204,18 @@ export default function LoginPage() {
   const canSignIn = email.trim().length > 3 && password.length >= 8 && !busy;
   const canForgot = email.trim().length > 3 && !busy;
 
+  /* No <form> here (see Field.tsx's onKeyDown doc) - wire Enter manually, gated the same as the
+     hint text below (2026-08-21: pressing Enter previously did nothing at all). */
+  const onFieldEnter = (e: { key: string; preventDefault: () => void }) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (mode === "signin") {
+      if (canSignIn) void onSignIn();
+    } else if (canForgot) {
+      void onForgot();
+    }
+  };
+
   return (
     <AuthShell
       eyebrow={mode === "signin" ? "Welcome back" : "Reset your password"}
@@ -239,6 +251,7 @@ export default function LoginPage() {
         autoComplete="email"
         required
         disabled={busy}
+        onKeyDown={onFieldEnter}
       />
 
       {mode === "signin" ? (
@@ -253,6 +266,7 @@ export default function LoginPage() {
           disabled={busy}
           reveal
           hint="Min 8"
+          onKeyDown={onFieldEnter}
         />
       ) : null}
 

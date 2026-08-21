@@ -77,7 +77,18 @@ export default function ParallaxMedia({
           alt={alt}
           fill
           priority={priority}
-          sizes="100vw"
+          /* "100vw" alone only accounts for viewport WIDTH - but every section this fills is
+             cropped with object-fit: cover, and on mobile these sections run much taller
+             (relative to their width) than the source photos' own landscape aspect ratio. The
+             browser was picking a source image sized for a ~375px-wide box, then stretching it
+             to cover a ~1000-1600px-tall one - visible pixelation on every hero on a phone
+             (2026-08-21, reported directly: "background image hero section... pecah"). The
+             extra width below is a deliberate over-fetch, not a precise one - there's no fixed
+             ratio that's exactly right for every section this component fills (some are a full
+             viewport-height hero, others run taller still with stacked content), so this trades
+             a larger mobile download for headroom against the tallest real cases rather than
+             chasing an exact number. */
+          sizes="(max-width: 900px) 180vw, 100vw"
           style={{ objectFit: "cover" }}
         />
       </div>

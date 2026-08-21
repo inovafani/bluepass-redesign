@@ -38,6 +38,14 @@ export default function ResetPasswordPage() {
   const mismatch = confirm.length > 0 && password !== confirm;
   const valid = password.length >= PASSWORD_MIN && password === confirm && !!token;
 
+  /* No <form> here (see Field.tsx's onKeyDown doc) - wire Enter manually, gated the same as the
+     hint text below (2026-08-21: pressing Enter previously did nothing at all). */
+  const onFieldEnter = (e: { key: string; preventDefault: () => void }) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (valid) void onSubmit();
+  };
+
   const onSubmit = async () => {
     if (!token) return;
     setBusy(true);
@@ -112,6 +120,7 @@ export default function ResetPasswordPage() {
         required
         disabled={busy || !ready}
         reveal
+        onKeyDown={onFieldEnter}
       />
       <Field
         label="Confirm new password"
@@ -124,6 +133,7 @@ export default function ResetPasswordPage() {
         required
         disabled={busy || !ready}
         reveal
+        onKeyDown={onFieldEnter}
       />
 
       <div className="aactions">

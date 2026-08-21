@@ -17,6 +17,26 @@ export type CurrentTraveller = {
   roles: string[];
 };
 
+/**
+ * `getCurrentTraveller()` runs from plain Server Component page renders (e.g. every page that
+ * calls `requireSignedInOrRedirect`), not just Route Handlers/Server Actions - and Next.js only
+ * allows cookie mutation from the latter two. A dead cookie (expired or tied to an unverified
+ * account) used to crash the entire page with "Cookies can only be modified in a Server Action or
+ * Route Handler" instead of just being treated as signed-out. The delete is a nice-to-have (stop
+ * resending an already-invalid cookie); it isn't required for the auth check itself, which already
+ * returns undefined regardless of whether this succeeds. Swallow the error rather than let a
+ * best-effort cleanup take the whole page down with it - a real Route Handler/Server Action call
+ * (e.g. actual sign-out) still deletes it for real.
+ */
+function tryDeleteSessionCookie(cookieStore: Awaited<ReturnType<typeof cookies>>) {
+  try {
+    cookieStore.delete(TRAVELLER_SESSION_COOKIE);
+  } catch {
+    // Not in a context that can mutate cookies (plain Server Component render) - fine, the
+    // caller already treats this session as invalid regardless.
+  }
+}
+
 export async function createTravellerSession(accountId: string) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000);
@@ -83,7 +103,7 @@ export async function getCurrentTraveller(): Promise<CurrentTraveller | undefine
     await prisma.bluePassAccountSession.deleteMany({
       where: { tokenHash: session.tokenHash },
     });
-    cookieStore.delete(TRAVELLER_SESSION_COOKIE);
+    tryDeleteSessionCookie(cookieStore);
     return undefined;
   }
 
@@ -91,7 +111,7 @@ export async function getCurrentTraveller(): Promise<CurrentTraveller | undefine
     await prisma.bluePassAccountSession.deleteMany({
       where: { tokenHash: session.tokenHash },
     });
-    cookieStore.delete(TRAVELLER_SESSION_COOKIE);
+    tryDeleteSessionCookie(cookieStore);
     return undefined;
   }
 
@@ -153,7 +173,7 @@ async function getCurrentTravellerFromLegacySession(
         where: { tokenHash: legacySession.tokenHash },
       });
     }
-    cookieStore.delete(TRAVELLER_SESSION_COOKIE);
+    tryDeleteSessionCookie(cookieStore);
     return undefined;
   }
 
@@ -161,7 +181,7 @@ async function getCurrentTravellerFromLegacySession(
     await prisma.travellerSession.deleteMany({
       where: { tokenHash: legacySession.tokenHash },
     });
-    cookieStore.delete(TRAVELLER_SESSION_COOKIE);
+    tryDeleteSessionCookie(cookieStore);
     return undefined;
   }
 
