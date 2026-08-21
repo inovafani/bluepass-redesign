@@ -42,13 +42,13 @@ export default function Nav() {
   const [highlighted, setHighlighted] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
 
-  /* Section links (/#conservation) only count as current while on that page.
-     An unrecognised route falls back to index 0 — Discover, which is also where
-     "/" redirects, so the pill matches wherever a stray URL actually lands. */
-  const active = Math.max(
-    0,
-    navLinks.findIndex((l) => l.href === pathname),
-  );
+  /* Section links (/#conservation) only count as current while on that page. "/" already resolves
+     to index 0 on its own (navLinks[0].href is "/") - no fallback needed for it. A real, separate
+     page that just isn't one of the four nav items - /account chief among them - gets no pill at
+     all rather than a wrong one; moveIndicator already clears the indicator cleanly on -1 (used
+     2026-08-21, after "Trips" stayed lit while signed-in travellers were looking at their own
+     saved trips, which read as the nav not knowing where they actually were). */
+  const active = navLinks.findIndex((l) => l.href === pathname);
 
   useGSAP(
     () => {
@@ -355,9 +355,24 @@ export default function Nav() {
           className="nav__actions"
           style={{ display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap", flexShrink: 0 }}
         >
-          {/* Signed in, "Join Bluepass" has nothing left to offer — the account
-              menu takes over that slot. */}
-          {traveller ? null : (
+          {/* Signed in, "Join Bluepass" has nothing left to offer, and its slot becomes the
+              wishlist shortcut instead — deep-links straight into the "Saved trips" tab on
+              /account (AccountTabs.tsx) rather than the "Your trips" bookings tab that the
+              account-menu link below opens by default. Two real tabs now, not two anchors into
+              one long scroll (2026-08-21, after the user pointed out both links landed on what
+              looked like the same page). */}
+          {traveller ? (
+            <Link
+              href="/account?tab=saved"
+              className="nav__avatar acct__circle acct__circle--link"
+              aria-label="Your saved trips"
+              title="Saved trips"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-ink)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20s-7-4.4-7-9.3A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.7c0 4.9-7 9.3-7 9.3z" />
+              </svg>
+            </Link>
+          ) : (
             <Button variant="primary" onClick={() => router.push("/register")}>
               Join Bluepass →
             </Button>
@@ -396,6 +411,13 @@ export default function Nav() {
               <span className="ds-micro nav__menu-who">
                 Signed in as {traveller.name ?? traveller.email}
               </span>
+              <Link
+                href="/account?tab=saved"
+                className="nav__menu-link ds-body"
+                onClick={() => setOpen(false)}
+              >
+                Saved trips
+              </Link>
               <button
                 type="button"
                 className="nav__menu-link ds-body"

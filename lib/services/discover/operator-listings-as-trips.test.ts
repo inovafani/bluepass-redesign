@@ -62,15 +62,16 @@ describe("fetchSyncedTrips", () => {
       operator: "Whitsunday Sailing Co",
       price: 189,
       img: "https://example.test/photo.jpg",
-      eco: false,
     });
     // Never fabricated - must be absent/empty, not a made-up value.
     expect(trip!.rating).toBeUndefined();
     expect(trip!.reviews).toBeUndefined();
     expect(trip!.quote).toBeUndefined();
+    expect(trip!.scarcity).toBeUndefined();
     expect(trip!.highlights).toEqual([]);
     expect(trip!.itinerary).toEqual([]);
     expect(trip!.departures).toEqual([]);
+    expect(trip!.gallery).toEqual([]);
     expect(trip!.operatorNote).toBeUndefined();
   });
 

@@ -76,7 +76,9 @@ export type Trip = {
   /** Attribution for `quote`, shown in the sheet's pull-quote. */
   quoteBy?: string;
   price: number;
-  eco: boolean;
+  /** Optional and never fabricated (2026-08-21, Tony's UX audit §9) - there's no real inventory
+      system to check remaining spots against, so leave this unset rather than claim a scarcity
+      figure nobody can verify. A future real availability integration can set it honestly. */
   scarcity?: string;
   img: string;
   /**
@@ -118,7 +120,6 @@ export const trips: Trip[] = [
     quote: "Cod Hole at 7am with nobody else on the site. The crew ran three dives before lunch.",
     quoteBy: "Tash & Dev, Melbourne",
     price: 2190,
-    eco: true,
     img: "/great-barrier-5.jpg",
     gallery: [
       "https://images.unsplash.com/photo-1708649290066-5f617003b93f",
@@ -159,7 +160,6 @@ export const trips: Trip[] = [
     quote: "Our 8-year-old heard whales sing through the hydrophone for twenty minutes straight.",
     quoteBy: "The Nguyens, Brisbane",
     price: 890,
-    eco: true,
     img: "/hervey-bay-1.jpg",
     gallery: [
       "https://images.unsplash.com/photo-1568430462989-44163eb1752f",
@@ -199,7 +199,6 @@ export const trips: Trip[] = [
     quote: "Hill Inlet at the tide turn from the bow, then dinner at anchor with nobody around.",
     quoteBy: "Priya & Sam, Perth",
     price: 1150,
-    eco: true,
     img: "/whitsundays-3.jpg",
     gallery: [
       "https://images.unsplash.com/photo-1697050891362-17b55eb48346",
@@ -239,7 +238,6 @@ export const trips: Trip[] = [
     quote: "Client night under the Bridge at golden hour. Not one phone came out all evening.",
     quoteBy: "Marcus L., Sydney",
     price: 395,
-    eco: true,
     img: "/australia-yacht.jpg",
     gallery: [
       "https://images.unsplash.com/photo-1515482758760-9535c2f0a18c",
@@ -280,7 +278,6 @@ export const trips: Trip[] = [
     quote: "Three sharks in one morning. The spotter plane radioed in before we'd finished breakfast.",
     quoteBy: "Ellie R., Auckland",
     price: 2450,
-    eco: true,
     /* The sheet crops its hero to 16:8, which a portrait top-down aerial cannot
        survive — this frame reads as reef at any crop. */
     img: "/reef-conservation1.jpg",
@@ -322,8 +319,6 @@ export const trips: Trip[] = [
     quote: "A 4.5-metre white circled the bottom cage for an hour. I've never been so still.",
     quoteBy: "Dan H., Adelaide",
     price: 3240,
-    eco: true,
-    scarcity: "Only 3 left",
     img: "/gold-coast-3.jpg",
     gallery: [
       "https://images.unsplash.com/photo-1704694214588-24f4bae4757b",

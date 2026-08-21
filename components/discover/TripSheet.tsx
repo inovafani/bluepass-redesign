@@ -238,12 +238,6 @@ export default function TripSheet() {
                   </svg>
                   {trip.category}
                 </span>
-                {trip.eco ? (
-                  <span className="chip chip--eco">
-                    <i />
-                    Eco certified
-                  </span>
-                ) : null}
                 {trip.scarcity ? <span className="chip chip--warn">{trip.scarcity}</span> : null}
               </span>
 

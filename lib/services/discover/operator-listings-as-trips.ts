@@ -54,9 +54,6 @@ export async function fetchSyncedTrips(): Promise<Trip[]> {
     // Universal, true for every trip on the platform - not a claim about this specific operator.
     impact: "funds ocean and reef conservation",
     price: listing.priceFrom as number,
-    // Eco-certification isn't something Rezdy's marketplace data confirms - default false rather
-    // than claim a certification that hasn't actually been verified for this operator.
-    eco: false,
     img: listing.heroImageUrl || FALLBACK_IMAGE,
     // No stock-photo stand-in here, unlike the 6 curated demo trips (lib/discover.ts) - a real
     // operator listing with no real gallery photos should show no gallery, not stock ones.

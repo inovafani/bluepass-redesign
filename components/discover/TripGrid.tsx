@@ -265,6 +265,9 @@ export default function TripGrid() {
               </span>
               <span className="trip__shade" />
 
+              {/* "Eco certified" chip removed 2026-08-21 (Tony's UX audit, §9) - all 6 curated
+                  trips claimed it but none had a real certifying body behind the claim. Link it
+                  to a real standard if one is ever adopted; don't bring the badge back without one. */}
               <span className="trip__chips">
                 <span className="chip">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -272,12 +275,6 @@ export default function TripGrid() {
                   </svg>
                   {t.category}
                 </span>
-                {t.eco ? (
-                  <span className="chip chip--eco">
-                    <i />
-                    Eco certified
-                  </span>
-                ) : null}
               </span>
 
               <button

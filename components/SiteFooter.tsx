@@ -78,7 +78,38 @@ export default function SiteFooter() {
           ))}
         </div>
 
-        <div style={{ borderTop: "1px solid var(--color-hairline-soft)", margin: "32px 0 28px" }} />
+        {/* Payment mark and support line (2026-08-21, Tony's UX audit §9 - "no payment security
+            marks, no support number"). Both are real rather than invented: Stripe genuinely
+            processes every checkout (see Kai's bluepass-pms-checkout-client.ts), and Kai chat -
+            already the floating pill on every page - is genuinely the only support channel this
+            business runs, so naming it here is a discoverability fix, not a new promise. An ABN
+            or registered company name would go here too, but neither exists yet - both /terms and
+            /privacy already flag that honestly as "Draft - pending review" rather than guess. */}
+        <div
+          className="footer__trust"
+          style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}
+        >
+          <span className="ds-micro footer__trust-item" style={{ color: "var(--color-ink-muted)" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="10" width="16" height="10" rx="2" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+            Payments secured by Stripe
+          </span>
+          <button
+            type="button"
+            className="ds-micro footer__link footer__trust-item"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            onClick={() => window.dispatchEvent(new CustomEvent("kai:open", { detail: {} }))}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 5h16v11H8l-4 4z" />
+            </svg>
+            Need help? Ask Kai
+          </button>
+        </div>
+
+        <div style={{ borderTop: "1px solid var(--color-hairline-soft)", margin: "20px 0 28px" }} />
 
         <div
           className="footer__legal"

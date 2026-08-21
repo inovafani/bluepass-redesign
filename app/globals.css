@@ -320,6 +320,14 @@ html.lenis body {
   transform: scaleX(1);
   transform-origin: left;
 }
+.footer__trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.footer__trust-item svg {
+  flex: none;
+}
 
 .wordmark {
   display: flex;
@@ -1383,13 +1391,6 @@ html.lenis body {
   font-weight: 500;
   letter-spacing: 0.2px;
   white-space: nowrap;
-}
-.chip--eco i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-semantic-success);
-  flex: none;
 }
 .chip--warn {
   border-color: rgba(255, 122, 48, 0.45);
@@ -6381,15 +6382,80 @@ html.is-scroll-locked body {
    traveller checking their trips is still on bluepass.co, keeps the site nav and footer, and should
    never feel handed off to an internal tool. So this borrows the marketing pages' rhythm — page
    gutter, generous top space under the fixed nav — rather than the console's rail-and-canvas. */
+/* "Ambient glow" - the flat canvas was the one page on the site with zero atmosphere. Kept as the
+   base treatment for /terms and /privacy (both share .acctpage), where a subtle wash suits a
+   legal document better than a hero photo would. /account itself moved to a real photo band
+   (.acctpage--photo below, 2026-08-21) - the glow alone read as barely-there once real content
+   sat on top of it and didn't do anything for the "excited to travel" feeling that page wants. */
 .acctpage {
-  background: var(--color-canvas);
+  position: relative;
+  background:
+    radial-gradient(720px 420px at 18% -10%, rgba(0, 153, 255, 0.16) 0%, rgba(0, 153, 255, 0) 60%),
+    radial-gradient(600px 360px at 88% 8%, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0) 60%),
+    var(--color-canvas);
   min-height: 100svh;
 }
 .acctpage__inner {
+  position: relative;
+  z-index: 1;
   max-width: 900px;
   margin: 0 auto;
   padding: clamp(120px, 16vh, 180px) var(--page-gutter) clamp(64px, 10vh, 120px);
 }
+
+/* Photo band (2026-08-21) - /account only. Overrides the glow entirely rather than layering under
+   it - a photo and a color wash fighting for the same 300px would just look muddy. */
+.acctpage--photo {
+  background: var(--color-canvas);
+}
+.acctpage__photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(320px, 42vh, 460px);
+  overflow: hidden;
+  z-index: 0;
+}
+.acctpage__photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 9, 0.25) 0%,
+    rgba(10, 10, 9, 0.55) 55%,
+    var(--color-canvas) 97%
+  );
+}
+/* Tab switcher (2026-08-21) - bookings and saved trips are two real views now, not two anchors
+   into one long scroll (modelled on Swee Lee's Detail Akun | Orders | Wishlist | ... pattern,
+   which is a store with the same "orders" vs "wishlist" distinction this page has). */
+.acct-tabs {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+.acct-tabs__item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 var(--space-sm);
+  color: var(--color-ink-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+.acct-tabs__item:hover {
+  color: var(--color-ink);
+}
+.acct-tabs__item.is-active {
+  color: var(--color-ink);
+  font-weight: 600;
+  border-bottom-color: var(--color-ink);
+}
+
 .acctpage__head {
   display: flex;
   flex-direction: column;
@@ -6575,14 +6641,7 @@ html.is-scroll-locked body {
   }
 }
 
-/* Saved trips - the traveller's own shortlist, below their booking history. */
-.acctpage__saved {
-  margin-top: var(--space-xxl);
-}
-.acctpage__saved-title {
-  color: var(--color-ink);
-  margin-bottom: var(--space-md);
-}
+/* Saved trips - the traveller's own shortlist, its own tab now (see .acct-tabs). */
 .acct-saved {
   list-style: none;
   margin: 0;
