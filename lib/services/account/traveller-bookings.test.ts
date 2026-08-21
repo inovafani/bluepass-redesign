@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { formatMoneyFromCents } from "@/lib/services/admin/payouts";
 import { listKaiCoreTravellerBookings } from "@/lib/services/kai-core/client";
-import { loadTravellerTrips, mergeTravellerTrips } from "./traveller-bookings";
+import { formatTravellerConservation, loadTravellerTrips, mergeTravellerTrips } from "./traveller-bookings";
 
 /**
  * No database and no live Kai, matching kai-core/client.test.ts: the merge is pure, and the client
@@ -134,7 +135,7 @@ describe("listKaiCoreTravellerBookings", () => {
       fetchImpl as unknown as typeof fetch,
     );
 
-    expect(result).toEqual({ auBookings: [], indonesiaInquiries: [] });
+    expect(result).toEqual({ auBookings: [], indonesiaInquiries: [], conservationByCurrency: [] });
   });
 });
 
@@ -201,6 +202,26 @@ describe("mergeTravellerTrips", () => {
 
   it("returns nothing for a traveller with no history", () => {
     expect(mergeTravellerTrips({ auBookings: [], indonesiaInquiries: [] })).toEqual([]);
+  });
+});
+
+describe("formatTravellerConservation", () => {
+  it("returns nothing when Kai reports no contribution", () => {
+    expect(formatTravellerConservation({ conservationByCurrency: [] })).toEqual([]);
+  });
+
+  it("formats each currency Kai already sorted, without inventing an order of its own", () => {
+    const result = formatTravellerConservation({
+      conservationByCurrency: [
+        { currency: "AUD", amountCents: 795 },
+        { currency: "USD", amountCents: 250 },
+      ],
+    });
+
+    expect(result).toEqual([
+      { currency: "AUD", amount: formatMoneyFromCents(795, "AUD") },
+      { currency: "USD", amount: formatMoneyFromCents(250, "USD") },
+    ]);
   });
 });
 

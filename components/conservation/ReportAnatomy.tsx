@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import { reportLines } from "@/lib/conservation";
-import { MaskLines, Words } from "../ui/Text";
+import { Words } from "../ui/Text";
 
 /**
  * Rather than describing what a report will contain, this renders the report's
@@ -47,7 +47,7 @@ export default function ReportAnatomy() {
   );
 
   return (
-    <section ref={ref} className="section shell creport-sec">
+    <section ref={ref} id="impact-report" className="section shell creport-sec">
       <div className="csplit csplit--reverse">
         <div className="csplit__lead">
           <Words
@@ -56,14 +56,13 @@ export default function ReportAnatomy() {
             text="Monthly report"
             style={{ color: "var(--color-ink-muted)", textTransform: "uppercase", letterSpacing: 3 }}
           />
-          <MaskLines
-            lines={["Reports will be dated,", "readable, and hard to fake."]}
-            className="ds-display-lg"
-            style={{ marginTop: 16 }}
-          />
+          {/* Demoted from a display headline to body copy (Tony's 2026-08-12 UX audit, §4.4) -
+              the page makes one headline-level claim ("Conservation you can audit, not just
+              trust", PromiseGrid.tsx), and this section's own point folds into its lead sentence
+              instead of competing with it for the reader's attention. */}
           <Words
-            className="ds-body csplit__support"
-            text="Every line ties to a named partner and a booking month. This is the shape each note will take. The fields stay blank until the first one publishes."
+            className="ds-body-lg csplit__support"
+            text="Reports will be dated, readable, and hard to fake. Every line ties to a named partner and a booking month. This is the shape each note will take. The fields stay blank until the first one publishes."
           />
           <div className="csplit__marks">
             {reportLines.map((r) => (

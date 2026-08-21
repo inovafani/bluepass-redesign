@@ -142,9 +142,10 @@ export default function RegionRail() {
               </span>
               <span className="rregion__meta">
                 <span className="ds-body-sm rregion__name">{r.name}</span>
-                <span className="ds-micro rregion__count">
-                  {active ? "Showing" : `${r.trips} ${r.trips === 1 ? "trip" : "trips"}`}
-                </span>
+                {/* No trip count here - see lib/discover.ts's Region type. A per-region count this
+                    low reads as an inventory-poverty signal (P0-4, Tony's 2026-08-12 UX audit); the
+                    active state still needs its own feedback, so "Showing" stays. */}
+                {active ? <span className="ds-micro rregion__count">Showing</span> : null}
               </span>
             </button>
           );

@@ -159,7 +159,19 @@ function loadStripeScript() {
  * details, or a payment step. Each of those is rendered here in the redesign's own
  * design language; only the sequence and field names come from the shared backend.
  */
-export default function KaiPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function KaiPanel({
+  open,
+  onClose,
+  initialMessage,
+  onInitialMessageSent,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** Set by a caller that already knows what the traveller wants - e.g. TripSheet's "Request this
+   * trip" - so the panel opens straight into that request instead of a blank thread. */
+  initialMessage?: string | null;
+  onInitialMessageSent?: () => void;
+}) {
   const { traveller } = useSession();
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -417,7 +429,18 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
 
       /* Both are latch-style: absent in a reply means that step is no longer pending. */
       setContactRequest(data.contactRequest ?? null);
-      if (!data.contactRequest) setContactForm({ name: "", email: "", phone: "" });
+      if (!data.contactRequest) {
+        setContactForm({ name: "", email: "", phone: "" });
+      } else if (traveller) {
+        /* A signed-in traveller already told us this once at registration - Kai asking again is a
+           form to confirm and correct, not one to fill from scratch. Blank fields fall back to
+           whatever's typed already rather than overwriting it. */
+        setContactForm((f) => ({
+          name: f.name || traveller.name || "",
+          email: f.email || traveller.email || "",
+          phone: f.phone || traveller.phone || "",
+        }));
+      }
       setPaymentRequest(data.paymentRequest ?? null);
     } catch {
       push("system", "That didn’t send. Check your connection and try again.");
@@ -425,6 +448,17 @@ export default function KaiPanel({ open, onClose }: { open: boolean; onClose: ()
       setThinking(false);
     }
   };
+
+  /* A trip-sheet "Request this trip"/"Ask Kai" click already knows what the traveller wants -
+     send it the moment the panel is actually open, rather than making them retype it into a
+     thread that just opened blank. `onInitialMessageSent` clears the caller's state so this
+     never re-fires on a later open with stale state still hanging around. */
+  useEffect(() => {
+    if (!open || !initialMessage) return;
+    void send(initialMessage);
+    onInitialMessageSent?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialMessage]);
 
   /* ---- contact details -------------------------------------------------
      Kai asks for these in prose; the form just spares the visitor from typing

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import { lockScroll, unlockScroll } from "@/lib/lenis";
-import { categoryIcon } from "@/lib/discover";
+import { categoryIcon, platformCancellationPolicy, standardExclusions } from "@/lib/discover";
 import { threeWays } from "@/lib/data";
 import Button from "../ui/Button";
 import { MaskLines } from "../ui/Text";
@@ -39,12 +39,14 @@ export default function TripSheet() {
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const [mounted, setMounted] = useState(false);
   const [departure, setDeparture] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   useEffect(() => setMounted(true), []);
 
   /* Each trip opens with its own first departure pre-selected. */
   useEffect(() => {
     setDeparture(trip?.departures[0] ?? null);
+    setLightbox(null);
   }, [trip]);
 
   /* ---- page lock, escape, and focus handling --------------------------- */
@@ -55,7 +57,12 @@ export default function TripSheet() {
     lockScroll();
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key !== "Escape") return;
+      setLightbox((current) => {
+        if (current !== null) return null;
+        close();
+        return current;
+      });
     };
     window.addEventListener("keydown", onKey);
 
@@ -81,9 +88,18 @@ export default function TripSheet() {
         y: 28,
         opacity: 0,
         duration: 0.34,
-        ease: "power2.in",
+        ease: "power2.in"
       })
       .to(el.querySelector(".tsheet__backdrop"), { opacity: 0, duration: 0.3 }, 0.06);
+  };
+
+  /* "Request this trip"/"Ask Kai" had no onClick at all until this - the sheet's only path to an
+     actual booking was the floating pill, unconnected to whichever trip was open. Hands Kai the
+     trip and departure already chosen here, then hands off to it entirely rather than leaving two
+     panels stacked. */
+  const openKaiFor = (message: string) => {
+    window.dispatchEvent(new CustomEvent("kai:open", { detail: { message } }));
+    close();
   };
 
   /* ---- entrance --------------------------------------------------------- */
@@ -302,6 +318,31 @@ export default function TripSheet() {
                 ))}
               </div>
 
+              {trip.gallery.length > 0 ? (
+                <section className="tsheet__block">
+                  <h3 className="ds-caption tsheet__label">More from this trip</h3>
+                  <div className="tsheet__gallery">
+                    {trip.gallery.map((src, i) => (
+                      <button
+                        key={src}
+                        type="button"
+                        className="tsheet__gallery-item"
+                        onClick={() => setLightbox(i)}
+                        aria-label={`Open photo ${i + 1} of ${trip.gallery.length}`}
+                      >
+                        <Image
+                          src={`${src}?w=480&q=80&auto=format&fit=crop`}
+                          alt={`${trip.name}, photo ${i + 1}`}
+                          fill
+                          sizes="220px"
+                          style={{ objectFit: "cover" }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
               {trip.highlights.length > 0 ? (
                 <section className="tsheet__block">
                   <h3 className="ds-caption tsheet__label">Why this one</h3>
@@ -348,11 +389,88 @@ export default function TripSheet() {
                 </section>
               ) : null}
 
+              {/* Universal, same list on every trip - not a claim about this specific operator,
+                  so it's honest to show even where trip.includes is empty (real synced trips). */}
+              <section className="tsheet__block">
+                <h3 className="ds-caption tsheet__label">Not included</h3>
+                <div className="tsheet__incl">
+                  {standardExclusions.map((x) => (
+                    <span key={x} className="tsheet__incl-chip tsheet__incl-chip--muted ds-micro">
+                      {x}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              {/* "Know before you go" - the three checklist items (meeting point, gear, cancellation)
+                  that have no real per-trip data anywhere in the system yet (confirmed 2026-08-21: no
+                  OperatorProfile row exists for any of the 6 curated trips). Honest placeholder copy
+                  rather than an invented address or gear list - a wrong gear requirement on a cage-dive
+                  trip is a safety issue, not just a cosmetic one. Cancellation is the one real fact
+                  here: the platform-default tiers, which is genuinely what every curated trip falls
+                  back to today. */}
+              <section className="tsheet__block">
+                <h3 className="ds-caption tsheet__label">Know before you go</h3>
+                <ul className="tsheet__know">
+                  <li>
+                    <span className="tsheet__know-icon" aria-hidden>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z" />
+                        <circle cx="12" cy="10" r="2.4" />
+                      </svg>
+                    </span>
+                    <div>
+                      <span className="ds-body-sm tsheet__know-title">Meeting point & time</span>
+                      <p className="ds-body-sm tsheet__know-desc">
+                        Confirmed by the operator once you book — Kai sends exact directions before departure.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="tsheet__know-icon" aria-hidden>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 3a3 3 0 1 0 6 0M6 21l1.5-11h9L18 21M10.5 10h3" />
+                      </svg>
+                    </span>
+                    <div>
+                      <span className="ds-body-sm tsheet__know-title">Gear & certification</span>
+                      <p className="ds-body-sm tsheet__know-desc">
+                        Requirements vary by trip — the operator confirms exactly what to bring, and any certification needed, when Kai locks in your booking.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="tsheet__know-icon" aria-hidden>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6z" />
+                        <path d="M9 12l2 2 4-4" />
+                      </svg>
+                    </span>
+                    <div>
+                      <span className="ds-body-sm tsheet__know-title">Cancellation policy</span>
+                      <p className="ds-body-sm tsheet__know-desc">{platformCancellationPolicy}</p>
+                    </div>
+                  </li>
+                </ul>
+              </section>
+
               {trip.quote ? (
                 <blockquote className="tsheet__quote">
                   <p className="ds-subhead">“{trip.quote}”</p>
                   <footer className="ds-micro">{trip.quoteBy}</footer>
                 </blockquote>
+              ) : null}
+
+              {/* Reviews are gated on real, verified bookings (§7 of Tony's audit) - never a fabricated
+                  star rating or quote here, same rule that removed the invented "4.9 (236)" figures
+                  platform-wide. Only the honest absence gets a placeholder. */}
+              {trip.rating == null ? (
+                <section className="tsheet__block">
+                  <h3 className="ds-caption tsheet__label">Reviews</h3>
+                  <p className="ds-body-sm tsheet__reviews-empty">
+                    No verified reviews yet — they&apos;ll appear here once real travellers complete this trip.
+                  </p>
+                </section>
               ) : null}
             </div>
 
@@ -383,14 +501,35 @@ export default function TripSheet() {
                         </button>
                       ))}
                     </div>
+                    {/* Honest about what this is: a short list of confirmed dates, not a live
+                        calendar - the real thing needs Rezdy Agent API availability across every
+                        operator at once, which doesn't exist yet (see lib/discover.ts's note on
+                        whenOptions/guestOptions - same underlying blocker). */}
+                    <p className="ds-micro tsheet__dep-note">
+                      More dates on request — ask Kai for a different week.
+                    </p>
                   </div>
                 ) : null}
 
                 <div className="tsheet__acts">
-                  <Button variant="primary" large magnetic={false}>
+                  <Button
+                    variant="primary"
+                    large
+                    magnetic={false}
+                    onClick={() =>
+                      openKaiFor(
+                        `I'd like to book ${trip.name}${departure ? `, ${departure}` : ""}.`,
+                      )
+                    }
+                  >
                     Request this trip
                   </Button>
-                  <Button variant="translucent" large magnetic={false}>
+                  <Button
+                    variant="translucent"
+                    large
+                    magnetic={false}
+                    onClick={() => openKaiFor(`I have a question about ${trip.name}.`)}
+                  >
                     Ask Kai →
                   </Button>
                 </div>
@@ -405,8 +544,11 @@ export default function TripSheet() {
                   <span className="ds-display-md tsheet__give-value">{aud(give)}</span>
                   <span className="ds-body-sm">of this fare</span>
                 </div>
+                {/* This is the conservation-partner line that used to sit on every grid card
+                    (§4.3 "card diet", 2026-08-21) - it belongs on the detail page, said once,
+                    not repeated across 6 cards on top of the hero and trust banner. */}
                 <p className="ds-body-sm tsheet__give-copy">
-                  Goes to {trip.fundsPartner}, built into the price you see, not added to it.
+                  {trip.impact}, built into the price you see, not added to it.
                 </p>
 
                 <div className="tsheet__bar" aria-hidden>
@@ -460,11 +602,71 @@ export default function TripSheet() {
             </div>
             <span className="ds-micro tsheet__dock-give">{aud(give)} to {trip.fundsPartner}</span>
           </div>
-          <Button variant="primary" magnetic={false}>
+          <Button
+            variant="primary"
+            magnetic={false}
+            onClick={() =>
+              openKaiFor(`I'd like to book ${trip.name}${departure ? `, ${departure}` : ""}.`)
+            }
+          >
             Request
           </Button>
         </div>
       </div>
+
+      {lightbox !== null ? (
+        <div className="tsheet__lightbox" role="dialog" aria-modal="true" aria-label={`${trip.name} photo ${lightbox + 1} of ${trip.gallery.length}`}>
+          <button
+            type="button"
+            className="tsheet__lightbox-backdrop"
+            aria-label="Close photo"
+            onClick={() => setLightbox(null)}
+          />
+          <span className="tsheet__lightbox-frame">
+            <Image
+              src={`${trip.gallery[lightbox]}?w=1400&q=85&auto=format`}
+              alt={`${trip.name}, photo ${lightbox + 1}`}
+              fill
+              sizes="90vw"
+              style={{ objectFit: "contain" }}
+            />
+          </span>
+          <button
+            type="button"
+            className="tsheet__icon tsheet__lightbox-close"
+            aria-label="Close photo"
+            onClick={() => setLightbox(null)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+          {trip.gallery.length > 1 ? (
+            <>
+              <button
+                type="button"
+                className="tsheet__lightbox-nav tsheet__lightbox-prev"
+                aria-label="Previous photo"
+                onClick={() => setLightbox((i) => (i === null ? i : (i - 1 + trip.gallery.length) % trip.gallery.length))}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 6l-6 6 6 6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="tsheet__lightbox-nav tsheet__lightbox-next"
+                aria-label="Next photo"
+                onClick={() => setLightbox((i) => (i === null ? i : (i + 1) % trip.gallery.length))}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
+            </>
+          ) : null}
+        </div>
+      ) : null}
     </div>,
     document.body,
   );

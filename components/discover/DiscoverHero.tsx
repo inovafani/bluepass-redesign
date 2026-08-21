@@ -78,7 +78,7 @@ function Field({
 export default function DiscoverHero() {
   const ref = useRef<HTMLElement>(null);
   /* Region is shared with the rail and the grid; when/guests stay local until
-     there is a real availability API to send them to. */
+     there is a real availability API to send them to (see lib/discover.ts). */
   const { region, setRegion, goToResults } = useDiscover();
   const [when, setWhen] = useState(whenOptions[0]);
   const [guests, setGuests] = useState(guestOptions[1]);
@@ -136,22 +136,27 @@ export default function DiscoverHero() {
           Australia&apos;s coastline, one conversation away
         </span>
 
+        {/* One claim per screen (Tony's 2026-08-12 UX audit, §4.1): was stacking a tagline, a
+            boat-type list, and the 5% claim in one breath. Hero now owns just the price claim -
+            the trip variety already shows itself in the category chips on the cards below, and
+            "5% funds conservation, always" is the one line this screen needs to make. */}
         <MaskLines
           as="h1"
           className="ds-display-xl"
-          lines={["Book the ocean.", "Leave it better."]}
+          lines={["Book the ocean", "at the operator's price."]}
           mode="load"
           delay={0.6}
           stagger={0.14}
         />
 
-        <p className="phero__copy ds-body-lg">
-          Whale watching, yacht charters, dive boats and expeditions across the
-          Australian coast. 5% of every booking funds the waters your guests
-          visit.
-        </p>
+        <p className="phero__copy ds-body-lg">5% funds conservation, always.</p>
 
         <div className="dsearch">
+          {/* When/Guests are shown but not wired to a filter - no availability API exists yet to
+              check them against (kept visible per the user's explicit call, 2026-08-21, despite
+              that; Tony's 2026-08-12 UX audit §3 flagged this as a "promises depth it doesn't have"
+              risk). Region is the one field here that's real: it drives the same filter
+              RegionRail does below. */}
           <Field
             label="Region"
             icon="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11zM12 10a1 1 0 1 0 .01 0"
@@ -200,7 +205,7 @@ export default function DiscoverHero() {
         </div>
       </div>
 
-      <Rail label="Discover" />
+      <Rail label="Trips" />
     </section>
   );
 }

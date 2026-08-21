@@ -1,6 +1,5 @@
 /**
- * Partners page content. Photography is picsum placeholder — swap the `img`
- * fields for real assets.
+ * Partners page content.
  *
  * Tone note: like the conservation page, nothing here claims results that do
  * not exist yet. "Founding cohort" framing is forward-looking on purpose.
@@ -126,6 +125,12 @@ export type Creator = {
   img: string;
 };
 
+/**
+ * `img` is each creator's own portrait photo, stored locally in `/public/partners/` (2026-08-20,
+ * full-res copies supplied directly rather than hotlinked) rather than pulled live from Instagram -
+ * the CDN URL Instagram serves a profile photo from is signed and expires in days, so linking it
+ * directly would go broken on its own within the week regardless of resolution.
+ */
 export const creators: Creator[] = [
   {
     slug: "josiah-william-gordon",
@@ -133,7 +138,7 @@ export const creators: Creator[] = [
     handle: "@josiahwg",
     region: "Indonesia / New Zealand",
     desc: "Fine-art travel photographer with a cinematic, destination-led eye.",
-    img: "https://picsum.photos/seed/bp-creator-josiah/900/1200",
+    img: "/partners/josiah-william-gordon.jpg",
   },
   {
     slug: "cam-vaughne",
@@ -141,7 +146,7 @@ export const creators: Creator[] = [
     handle: "@camvaughne",
     region: "Bali, Indonesia",
     desc: "Photo and film partner documenting remote Indonesia, sailing, and ocean conservation.",
-    img: "https://picsum.photos/seed/bp-creator-cam/900/1200",
+    img: "/partners/cam-vaughne.jpg",
   },
   {
     slug: "story-of-sage",
@@ -149,6 +154,6 @@ export const creators: Creator[] = [
     handle: "@storyofsage",
     region: "Indonesia",
     desc: "Ocean and travel storyteller with a soft, cinematic lens on slow island life.",
-    img: "https://picsum.photos/seed/bp-creator-sage/900/1200",
+    img: "/partners/story-of-sage.jpg",
   },
 ];

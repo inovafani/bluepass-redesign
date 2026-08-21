@@ -8,9 +8,10 @@ export type OperatorPayoutAccount = {
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
   /**
-   * Null when the operator hasn't set their own cancellation policy yet (no onboarding UI collects
-   * this today) - Kai's auto-refund calculator (src/core/cancellation/rules.ts) falls back to its
-   * own clearly-labeled platform default in that case, never invents this operator's real terms.
+   * Null until the operator saves one of their own via `components/operator/OperatorCancellationPolicy.tsx`
+   * - Kai's auto-refund calculator (src/core/cancellation/rules.ts) falls back to its own
+   * clearly-labeled platform default in that case, never invents this operator's real terms.
+   * Also what Kai's generic-booking-turn.ts discloses to a traveller before they pay.
    */
   cancellationPolicyTiers: CancellationPolicyTier[] | null;
   /**

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import DiscoverState from "@/components/discover/DiscoverState";
 import DiscoverHero from "@/components/discover/DiscoverHero";
+import TrustBanner from "@/components/discover/TrustBanner";
 import RegionRail from "@/components/discover/RegionRail";
 import TripGrid from "@/components/discover/TripGrid";
 import TripSheet from "@/components/discover/TripSheet";
@@ -14,7 +15,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   /* Just the brand: this is the front door, so the tab shouldn't read like a
-     sub-page. "Discover" is the nav label for it, not its title. The other
+     sub-page. "Trips" is the nav label for it, not its title. The other
      routes keep their "<Page> — Bluepass" form. */
   title: "Bluepass",
   description:
@@ -22,11 +23,12 @@ export const metadata: Metadata = {
 };
 
 /**
- * Discover, served at the root.
+ * Trips, served at the root (nav label "Trips" as of 2026-08-21 - was "Discover"; this
+ * page/component and its files still go by "Discover" internally, only the visible label changed).
  *
  * It lives here rather than at /discover so the landing page is just
- * bluepass.co — the nav still labels it "Discover", but the URL carries no
- * path. /discover is kept as a redirect to this page so older links survive.
+ * bluepass.co — the URL carries no path. /discover is kept as a redirect to this page so older
+ * links survive.
  */
 export default async function DiscoverPage() {
   // Real, published operator listings (e.g. from the Rezdy Agent sync) are appended after the
@@ -45,6 +47,7 @@ export default async function DiscoverPage() {
           the hero select, the rail and the grid are three views onto it. */}
       <DiscoverState trips={trips}>
         <DiscoverHero />
+        <TrustBanner />
         <RegionRail />
         <TripGrid />
         <TripSheet />

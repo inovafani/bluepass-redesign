@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
+import { lockScroll, unlockScroll } from "@/lib/lenis";
 import { reels } from "@/lib/data";
 
 const N = reels.length;
@@ -18,7 +20,33 @@ const mod = (i: number) => ((i % N) + N) % N;
 export default function ReelCarousel() {
   const ref = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
   const paused = useRef(false);
+
+  useEffect(() => setMounted(true), []);
+
+  /* The card is already centred once, so a second click means "play it" rather than "bring it to
+     centre again" - one click always does the thing that click hadn't already done. */
+  const onCardClick = (i: number) => {
+    if (i === index) setPlayingIndex(i);
+    else setIndex(i);
+  };
+
+  const closeLightbox = useCallback(() => setPlayingIndex(null), []);
+
+  useEffect(() => {
+    if (playingIndex === null) return;
+    lockScroll();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      unlockScroll();
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [playingIndex, closeLightbox]);
 
   const layout = useCallback((active: number, instant = false) => {
     const track = ref.current?.querySelector(".reels__track");
@@ -103,14 +131,14 @@ export default function ReelCarousel() {
     return () => window.removeEventListener("resize", onResize);
   }, [index, layout]);
 
-  /* autoplay, paused while the pointer is over the rig */
+  /* autoplay, paused while the pointer is over the rig or a video is open */
   useEffect(() => {
     if (reduced()) return;
     const id = window.setInterval(() => {
-      if (!paused.current) setIndex((i) => mod(i + 1));
+      if (!paused.current && playingIndex === null) setIndex((i) => mod(i + 1));
     }, 5200);
     return () => window.clearInterval(id);
-  }, []);
+  }, [playingIndex]);
 
   /* drag / swipe */
   useEffect(() => {
@@ -158,8 +186,10 @@ export default function ReelCarousel() {
                 key={card.img + i}
                 type="button"
                 className="reel"
-                onClick={() => setIndex(i)}
-                aria-label={`${card.name}: ${card.caption}`}
+                onClick={() => onCardClick(i)}
+                aria-label={
+                  i === index ? `Play ${card.name}: ${card.caption}` : `${card.name}: ${card.caption}`
+                }
               >
                 <Image src={card.imgSrc} alt="" fill sizes="300px" style={{ objectFit: "cover" }} />
 
@@ -216,6 +246,37 @@ export default function ReelCarousel() {
           />
         ))}
       </div>
+
+      {mounted && playingIndex !== null
+        ? createPortal(
+            <div className="reel-lightbox" role="dialog" aria-modal="true" aria-label={reels[playingIndex].name}>
+              <button
+                type="button"
+                className="reel-lightbox__backdrop"
+                aria-label="Close video"
+                onClick={closeLightbox}
+              />
+              <div className="reel-lightbox__frame">
+                <button type="button" className="reel-lightbox__close" aria-label="Close video" onClick={closeLightbox}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    <path d="M5 5l14 14M19 5L5 19" />
+                  </svg>
+                </button>
+                {/* Instagram's own embed page - a real player, not the raw .mp4: Instagram stopped
+                    exposing that URL to logged-out requests, so this is the one option that both
+                    plays and stays within Instagram's own terms for showing someone else's reel. */}
+                <iframe
+                  src={reels[playingIndex].embedUrl}
+                  title={`${reels[playingIndex].name} on Instagram`}
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                  className="reel-lightbox__iframe"
+                />
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

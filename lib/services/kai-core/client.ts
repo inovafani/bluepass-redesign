@@ -658,6 +658,54 @@ export async function listKaiCorePmsBookingLedger(
   }));
 }
 
+/**
+ * The AU/Boattime side of a creator's earnings — scoped by referralPartnerId rather than tenantSlug,
+ * since a creator's own dashboard has no tenant to ask about. See
+ * listPmsBookingLedgerEntriesForReferralPartner (Kai) for why this needed its own endpoint instead
+ * of a filter added to listKaiCorePmsBookingLedger above.
+ */
+export async function listKaiCorePmsBookingLedgerForReferralPartner(
+  input: { referralPartnerId: string; status?: "PENDING" | "FINALIZED" | "VOIDED"; take?: number },
+  env: KaiCoreClientEnv = process.env,
+  fetchImpl: FetchLike = fetch,
+): Promise<KaiCorePmsBookingLedgerEntry[]> {
+  const config = resolveKaiCoreConfig(env);
+  const adminToken = env.KAI_CORE_ADMIN_TOKEN?.trim();
+
+  if (!adminToken) {
+    throw new Error("Kai Core admin token is not configured.");
+  }
+
+  const params = new URLSearchParams({ take: String(input.take ?? 100) });
+  if (input.status) {
+    params.set("status", input.status);
+  }
+
+  const response = await fetchKaiCoreWithRetry(
+    fetchImpl,
+    `${config.baseUrl}/api/admin/referral-partners/${encodeURIComponent(input.referralPartnerId)}/pms-booking-ledger?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        ...buildKaiCoreHeaders(config),
+        authorization: `Bearer ${adminToken}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Kai Core referral-partner PMS booking ledger request failed.");
+  }
+
+  const data = (await response.json()) as { entries?: KaiCorePmsBookingLedgerEntryResponse[] };
+  return (data.entries ?? []).map((entry) => ({
+    ...entry,
+    attempt: entry.attempt ?? null,
+    payout: entry.payout ?? null,
+  }));
+}
+
 /** One tenant as Kai reports it alongside a traveller's booking — null if the row lost its join. */
 export type KaiCoreTravellerTenant = { slug: string; name: string } | null;
 
@@ -695,6 +743,8 @@ export type KaiCoreTravellerInquiry = {
 export type KaiCoreTravellerBookings = {
   auBookings: KaiCoreTravellerAuBooking[];
   indonesiaInquiries: KaiCoreTravellerInquiry[];
+  /** This traveller's own FINALIZED conservation contribution, by currency — never summed together. */
+  conservationByCurrency: { currency: string; amountCents: number }[];
 };
 
 /**
@@ -749,6 +799,7 @@ export async function listKaiCoreTravellerBookings(
   return {
     auBookings: data.auBookings ?? [],
     indonesiaInquiries: data.indonesiaInquiries ?? [],
+    conservationByCurrency: data.conservationByCurrency ?? [],
   };
 }
 
@@ -807,6 +858,48 @@ export async function listKaiCoreCronRuns(
 
   const data = (await response.json()) as { runs?: KaiCoreCronRun[] };
   return data.runs ?? [];
+}
+
+export type KaiCorePlatformRegionStats = {
+  totalsByKindAndCurrency: { kind: string; currency: string; amountCents: number }[];
+  bookingCount: number;
+};
+
+export type KaiCorePlatformStats = {
+  au: KaiCorePlatformRegionStats;
+  indonesia: KaiCorePlatformRegionStats;
+};
+
+/**
+ * The real revenue/booking totals behind the admin overview page — every FINALIZED ledger line,
+ * summed by kind and currency, across every tenant at once. See getPlatformStats (Kai) for why this
+ * needed its own aggregate endpoint rather than a per-tenant loop from this side.
+ */
+export async function getKaiCorePlatformStats(
+  env: KaiCoreClientEnv = process.env,
+  fetchImpl: FetchLike = fetch,
+): Promise<KaiCorePlatformStats> {
+  const config = resolveKaiCoreConfig(env);
+  const adminToken = env.KAI_CORE_ADMIN_TOKEN?.trim();
+
+  if (!adminToken) {
+    throw new Error("Kai Core admin token is not configured.");
+  }
+
+  const response = await fetchKaiCoreWithRetry(fetchImpl, `${config.baseUrl}/api/admin/stats`, {
+    method: "GET",
+    headers: {
+      ...buildKaiCoreHeaders(config),
+      authorization: `Bearer ${adminToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Kai Core platform stats request failed.");
+  }
+
+  return (await response.json()) as KaiCorePlatformStats;
 }
 
 /**

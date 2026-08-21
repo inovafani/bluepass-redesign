@@ -84,7 +84,7 @@ export default function PromiseGrid() {
   );
 
   return (
-    <section ref={ref} className="section shell cpromise">
+    <section ref={ref} id="where-it-goes" className="section shell cpromise">
       <div className="csplit">
         <div className="csplit__lead">
           <Words

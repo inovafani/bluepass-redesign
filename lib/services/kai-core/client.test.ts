@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   listKaiCoreCronRuns,
   listKaiCorePmsBookingLedger,
+  listKaiCorePmsBookingLedgerForReferralPartner,
   settleKaiCorePmsBooking,
 } from "./client";
 
@@ -126,6 +127,76 @@ describe("listKaiCorePmsBookingLedger", () => {
     await expect(
       listKaiCorePmsBookingLedger(
         { tenantSlug: "boattime" },
+        { KAI_CORE_BASE_URL: "https://kai.example" },
+        vi.fn() as unknown as typeof fetch,
+      ),
+    ).rejects.toThrow("Kai Core admin token is not configured.");
+  });
+});
+
+describe("listKaiCorePmsBookingLedgerForReferralPartner", () => {
+  it("calls the referral-partner's pms-booking-ledger endpoint with the admin bearer and status filter", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ entries: [pmsEntry({ kind: "CREATOR_COMMISSION_ESTIMATE" })] }));
+
+    const entries = await listKaiCorePmsBookingLedgerForReferralPartner(
+      { referralPartnerId: "partner_1", status: "FINALIZED" },
+      ENV,
+      fetchImpl as unknown as typeof fetch,
+    );
+
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe(
+      "https://kai.example/api/admin/referral-partners/partner_1/pms-booking-ledger?take=100&status=FINALIZED",
+    );
+    expect((init.headers as Record<string, string>).authorization).toBe("Bearer admin-token");
+    expect(init.method).toBe("GET");
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].kind).toBe("CREATOR_COMMISSION_ESTIMATE");
+    expect(entries[0].attempt?.productTitle).toBe("Whitsundays Day Sail");
+  });
+
+  it("url-encodes the referral partner id rather than pasting it into the path", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ entries: [] }));
+
+    await listKaiCorePmsBookingLedgerForReferralPartner(
+      { referralPartnerId: "weird/id" },
+      ENV,
+      fetchImpl as unknown as typeof fetch,
+    );
+
+    const [url] = fetchImpl.mock.calls[0] as unknown as [string];
+    expect(url).toContain("/api/admin/referral-partners/weird%2Fid/pms-booking-ledger");
+  });
+
+  it("returns an empty list when the response carries no entries array", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({}));
+
+    await expect(
+      listKaiCorePmsBookingLedgerForReferralPartner(
+        { referralPartnerId: "partner_1" },
+        ENV,
+        fetchImpl as unknown as typeof fetch,
+      ),
+    ).resolves.toEqual([]);
+  });
+
+  it("throws rather than returning empty when Kai rejects the request", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ error: { code: "ADMIN_TOKEN_REQUIRED" } }, 401));
+
+    await expect(
+      listKaiCorePmsBookingLedgerForReferralPartner(
+        { referralPartnerId: "partner_1" },
+        ENV,
+        fetchImpl as unknown as typeof fetch,
+      ),
+    ).rejects.toThrow("Kai Core referral-partner PMS booking ledger request failed.");
+  });
+
+  it("throws when the admin token is not configured", async () => {
+    await expect(
+      listKaiCorePmsBookingLedgerForReferralPartner(
+        { referralPartnerId: "partner_1" },
         { KAI_CORE_BASE_URL: "https://kai.example" },
         vi.fn() as unknown as typeof fetch,
       ),

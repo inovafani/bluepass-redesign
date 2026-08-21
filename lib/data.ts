@@ -58,9 +58,9 @@ export const boats: Boat[] = [
     imgSrc: "/yachts/alani/card.webp",
     name: "Alani",
     guests: "Up to 35 guests",
-    price: "$3,600",
+    price: "A$3,600",
     unit: "/ sunset · 2 hours",
-    sub: "or $10,800 / full day · 6 hours",
+    sub: "or A$10,800 / full day · 6 hours",
   },
   {
     loc: "GOLD COAST",
@@ -68,7 +68,7 @@ export const boats: Boat[] = [
     imgSrc: "/yachts/yolo/card.webp",
     name: "Yolo",
     guests: "Up to 36 guests",
-    price: "$700",
+    price: "A$700",
     unit: "/ hour",
     sub: "13.5m catamaran · whole boat",
   },
@@ -94,7 +94,7 @@ export const boats: Boat[] = [
     imgSrc: "/yachts/serrano/card.webp",
     name: "Serrano",
     guests: "Up to 20 guests",
-    price: "$420",
+    price: "A$420",
     unit: "/ hour",
     sub: "Sailing catamaran · whole boat",
   },
@@ -127,63 +127,108 @@ export const threeWays: Way[] = [
 export type Reel = {
   img: string;
   imgSrc: string;
+  /**
+   * Instagram's own `/embed/` page for this reel — a real, playable, ToS-compliant player (not the
+   * raw .mp4 URL: Instagram stopped exposing that to logged-out requests, which is why
+   * `/api/instagram/reel-video` 404s on every reel below despite the thumbnail proxy working fine).
+   * Opened in an iframe on click rather than scraped.
+   */
+  embedUrl: string;
   handle: string;
   name: string;
   caption: string;
   num: string;
 };
 
+const igReelThumbSrc = (shortcode: string) =>
+  "/api/instagram/reel-thumbnail?url=" + encodeURIComponent(`https://www.instagram.com/reel/${shortcode}/`);
+const igReelEmbedUrl = (shortcode: string) => `https://www.instagram.com/reel/${shortcode}/embed/`;
+
+/**
+ * Each creator's own highest-viewed reel at the time of writing (2026-08-20), hotlinked through
+ * `/api/instagram/reel-thumbnail` rather than stored — see the matching note in `lib/partners.ts`,
+ * whose `creators[].img` deliberately reuses the same shortcode per person.
+ */
 export const reels: Reel[] = [
   {
     img: "reel-1",
-    imgSrc: "https://picsum.photos/seed/bluepass-reel-1/700/1000",
-    handle: "@joseewq",
+    imgSrc: igReelThumbSrc("DZxAUoWzRmI"),
+    embedUrl: igReelEmbedUrl("DZxAUoWzRmI"),
+    handle: "@josiahwg",
     name: "Josiah William Gordon",
-    caption: "Cinematic coastlines through a fine-art lens",
-    num: "02",
+    caption: "A cenote dive, shot for his book 'Xibalba'",
+    num: "01",
   },
   {
     img: "reel-2",
-    imgSrc: "https://picsum.photos/seed/bluepass-reel-2/700/1000",
+    imgSrc: igReelThumbSrc("DBvwGTlPQsA"),
+    embedUrl: igReelEmbedUrl("DBvwGTlPQsA"),
     handle: "@camvaughne",
     name: "Cam Vaughne",
-    caption: "Remote Indonesia by sail, film, and sea",
-    num: "03",
+    caption: "A hidden paradise in Banda Neira, Indonesia",
+    num: "02",
   },
   {
     img: "reel-3",
-    imgSrc: "https://picsum.photos/seed/bluepass-reel-3/700/1000",
-    handle: "@camvaughne",
-    name: "Cam Vaughne",
-    caption: "Remote Indonesia by sail, film, and sea",
-    num: "04",
+    imgSrc: igReelThumbSrc("CjfrbyWDFJY"),
+    embedUrl: igReelEmbedUrl("CjfrbyWDFJY"),
+    handle: "@storyofsage",
+    name: "Story of Sage",
+    caption: "Diving the Blue Holes of Palau",
+    num: "03",
+  },
+];
+
+/**
+ * `href: "#"` marks a link with nowhere real to go yet (no page built, or - "Indonesia" - no AU
+ * scope for it right now). Left as `#` deliberately rather than removed outright per the 2026-08-20
+ * decision on the ones still under discussion (Gift cards, Pricing, Support); "Indonesia",
+ * "Become an operator" and "List your boat" were dropped entirely the same day, and "Affiliates"
+ * was folded into "Creator program" rather than kept as a second link to the same place.
+ */
+export const footerColumns: { title: string; links: { label: string; href: string }[] }[] = [
+  {
+    title: "Trips",
+    links: [
+      { label: "Australia", href: "/" },
+      { label: "All trips", href: "/" },
+      { label: "Gift cards", href: "#" },
+    ],
   },
   {
-    img: "reel-4",
-    imgSrc: "https://picsum.photos/seed/bluepass-reel-4/700/1000",
-    handle: "@joseewq",
-    name: "Josiah William Gordon",
-    caption: "Sailing the Flores Sea at golden hour",
-    num: "05",
+    title: "Conservation",
+    links: [
+      { label: "Where it goes", href: "/conservation#where-it-goes" },
+      { label: "Partners we fund", href: "/conservation#partners" },
+      { label: "Impact report", href: "/conservation#impact-report" },
+    ],
+  },
+  {
+    title: "Partners",
+    links: [{ label: "Creator program", href: "/partners/apply" }],
+  },
+  {
+    title: "For operators",
+    links: [
+      { label: "Pricing", href: "#" },
+      { label: "Support", href: "#" },
+    ],
   },
 ];
 
-export const footerColumns = [
-  { title: "Discover", links: ["Indonesia", "Australia", "All trips", "Gift cards"] },
-  { title: "Conservation", links: ["Where it goes", "Partners we fund", "Impact report"] },
-  { title: "Partners", links: ["Become an operator", "Creator program", "Affiliates"] },
-  { title: "For operators", links: ["List your boat", "Pricing", "Support"] },
-];
-
-/* Discover is the landing page and sits at "/" itself — the label carries the
-   name so the URL doesn't have to. Explore sits last on its own /explore route:
-   it opens on the boat grid rather than a hero now, so it reads as a destination
-   alongside the others instead of the landing page they all hang off. */
+/* Trips is the landing page and sits at "/" itself — the label carries the name so the URL
+   doesn't have to (still internally called "Discover" in file/component names - only the visible
+   label changed). Charters sits last on its own /explore route: it opens on the boat grid rather
+   than a hero now, so it reads as a destination alongside the others instead of the landing page
+   they all hang off.
+   Renamed from "Discover"/"Explore" 2026-08-21 (Tony's UX audit, §1): the two read as unrelated
+   products under those labels - Trips is per-guest multi-day trips, Charters is whole-boat by the
+   hour. Same nav item, same href, only the label changed - no redirects needed. */
 export const navLinks: { label: string; href: string }[] = [
-  { label: "Discover", href: "/" },
+  { label: "Trips", href: "/" },
   { label: "Conservation", href: "/conservation" },
   { label: "Partners", href: "/partners" },
-  { label: "Explore", href: "/explore" },
+  { label: "Charters", href: "/explore" },
 ];
 
 /* Full-bleed section photography, served from /public. */

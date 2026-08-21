@@ -5,7 +5,7 @@ import { useRef } from "react";
 import { gsap, useGSAP, reduced } from "@/lib/gsap";
 import { partners, partnersBackdrop } from "@/lib/conservation";
 import ParallaxMedia from "../ui/ParallaxMedia";
-import { MaskLines, Words, Rail } from "../ui/Text";
+import { Words, Rail } from "../ui/Text";
 
 export default function PartnerEvidence() {
   const ref = useRef<HTMLElement>(null);
@@ -74,14 +74,12 @@ export default function PartnerEvidence() {
             text="Partner evidence"
             style={{ color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: 3 }}
           />
-          <MaskLines
-            lines={["The promise gets stronger", "when the names are visible."]}
-            className="ds-display-lg"
-            style={{ marginTop: 16 }}
-          />
+          {/* Demoted from a display headline to body copy, same reasoning as ReportAnatomy.tsx -
+              §4.4 of Tony's audit: one headline-level claim per page ("Conservation you can
+              audit, not just trust"), everything else reads as support, not a second headline. */}
           <Words
-            className="ds-body csplit__support"
-            text="Every partner is named, every report has a date, and the work is tied back to the bookings that funded it."
+            className="ds-body-lg csplit__support"
+            text="The promise gets stronger when the names are visible. Every partner is named, every report has a date, and the work is tied back to the bookings that funded it."
             style={{ color: "rgba(255,255,255,0.68)" }}
           />
         </div>

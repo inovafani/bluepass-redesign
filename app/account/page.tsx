@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteFooter from "@/components/SiteFooter";
 import TripList from "@/components/account/TripList";
+import SavedTripList from "@/components/account/SavedTripList";
 import { requireSignedInOrRedirect } from "@/lib/services/account/guard";
 import { loadTravellerTrips } from "@/lib/services/account/traveller-bookings";
+import { loadSavedTripSummaries } from "@/lib/services/account/saved-trips";
 
 export const metadata: Metadata = {
   title: "Your trips | Bluepass",
@@ -27,7 +29,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function AccountPage() {
   const traveller = await requireSignedInOrRedirect("/account");
-  const trips = await loadTravellerTrips(traveller.accountId);
+  const [trips, savedTrips] = await Promise.all([
+    loadTravellerTrips(traveller.accountId),
+    loadSavedTripSummaries(traveller.accountId).catch(() => []),
+  ]);
 
   return (
     <main className="acctpage">
@@ -40,6 +45,19 @@ export default async function AccountPage() {
             the world it was.
           </p>
         </header>
+
+        {trips.ok && trips.data.conservation.length > 0 ? (
+          <div className="acctpage__impact" role="note">
+            <p className="ds-micro acctpage__impact-eyebrow">Your conservation contribution</p>
+            <p className="ds-body-lg acctpage__impact-amounts">
+              {trips.data.conservation.map((row) => row.amount).join(" + ")}
+            </p>
+            <p className="ds-caption acctpage__impact-body">
+              Set aside from your bookings and enquiries and put toward marine conservation — thank
+              you.
+            </p>
+          </div>
+        ) : null}
 
         {!trips.ok ? (
           /* Distinct from "you have no trips", and deliberately so: an unreachable Kai must never
@@ -54,7 +72,7 @@ export default async function AccountPage() {
               up for you.
             </p>
           </div>
-        ) : trips.data.length === 0 ? (
+        ) : trips.data.trips.length === 0 ? (
           <div className="acctpage__panel">
             <p className="ds-body-lg acctpage__empty-title">No trips yet.</p>
             <p className="ds-body-sm acctpage__empty-body">
@@ -66,8 +84,15 @@ export default async function AccountPage() {
             </Link>
           </div>
         ) : (
-          <TripList trips={trips.data} />
+          <TripList trips={trips.data.trips} />
         )}
+
+        {savedTrips.length > 0 ? (
+          <section className="acctpage__saved">
+            <h2 className="ds-body-lg acctpage__saved-title">Saved trips</h2>
+            <SavedTripList trips={savedTrips} />
+          </section>
+        ) : null}
       </div>
 
       <SiteFooter />

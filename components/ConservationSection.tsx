@@ -7,7 +7,7 @@ import { threeWays, conservationImage } from "@/lib/data";
 import ParallaxMedia from "./ui/ParallaxMedia";
 import { MaskLines, Words, Rail } from "./ui/Text";
 
-const money = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+const money = (n: number) => "A$" + Math.round(n).toLocaleString("en-AU");
 
 export default function ConservationSection() {
   const ref = useRef<HTMLElement>(null);
@@ -144,6 +144,11 @@ export default function ConservationSection() {
               padding: 24,
             }}
           >
+            {/* A real boat's real published rate (Alani, lib/data.ts's boats[]), not an invented
+                figure - and an AU one, since this section only ever renders on the AU-only
+                /explore page. Was "Komodo liveaboard" until 2026-08-21 (Tony's UX audit, §1):
+                mixing an Indonesia example into an Australia-only page was a real, live bug, not
+                a metaphor. Keep this in sync with Alani's own entry if that price ever changes. */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span
                 className="ds-micro"
@@ -168,7 +173,7 @@ export default function ConservationSection() {
             </div>
 
             <div className="ds-headline" style={{ color: "#ffffff", marginTop: 16 }}>
-              Komodo liveaboard · 5 nights
+              Gold Coast full-day charter
             </div>
             <div style={{ borderTop: "1px solid var(--color-hairline-soft)", margin: "18px 0" }} />
 
@@ -176,16 +181,16 @@ export default function ConservationSection() {
               <span className="ds-body" style={{ color: "rgba(255,255,255,0.6)" }}>
                 Your fare
               </span>
-              <span className="ds-body" style={{ color: "#ffffff" }} data-count="3450">
-                $3,450
+              <span className="ds-body" style={{ color: "#ffffff" }} data-count="10800">
+                A$10,800
               </span>
             </div>
             <div className="fare__row" style={{ display: "flex", justifyContent: "space-between", marginTop: 10 }}>
               <span className="ds-body" style={{ color: "rgba(255,255,255,0.6)" }}>
                 Gives back (5%)
               </span>
-              <span className="ds-body" style={{ color: "var(--color-semantic-success)" }} data-count="172">
-                $172
+              <span className="ds-body" style={{ color: "var(--color-semantic-success)" }} data-count="540">
+                A$540
               </span>
             </div>
             <div className="fare__note ds-micro" style={{ color: "rgba(255,255,255,0.45)", marginTop: 14 }}>

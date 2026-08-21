@@ -38,13 +38,27 @@ export type TravellerTrip = {
   cancelledAt: string | null;
 };
 
+export type TravellerConservationSummary = { currency: string; amount: string }[];
+
+/** Formats Kai's raw per-currency cents into display strings, in the order Kai already sorted them. */
+export function formatTravellerConservation(
+  data: Pick<KaiCoreTravellerBookings, "conservationByCurrency">,
+): TravellerConservationSummary {
+  return data.conservationByCurrency.map((row) => ({
+    currency: row.currency,
+    amount: formatMoneyFromCents(row.amountCents, row.currency),
+  }));
+}
+
 /**
  * Merges and sorts. Pure, so the ordering and the field-mapping are testable without a network.
  *
  * Newest first by `createdAt`, which is the only field both sides share and the only ordering a
  * traveller would expect. Kai already sorts each list; interleaving them is what this adds.
  */
-export function mergeTravellerTrips(data: KaiCoreTravellerBookings): TravellerTrip[] {
+export function mergeTravellerTrips(
+  data: Pick<KaiCoreTravellerBookings, "auBookings" | "indonesiaInquiries">,
+): TravellerTrip[] {
   const au: TravellerTrip[] = data.auBookings.map((booking) => ({
     id: booking.id,
     kind: "au-booking",
@@ -85,8 +99,14 @@ export function mergeTravellerTrips(data: KaiCoreTravellerBookings): TravellerTr
   );
 }
 
+export type TravellerTripsAndImpact = {
+  trips: TravellerTrip[];
+  conservation: TravellerConservationSummary;
+};
+
 /**
- * Loads one traveller's trips, capturing a Kai failure rather than throwing.
+ * Loads one traveller's trips and their own conservation contribution in the one Kai call, capturing
+ * a failure rather than throwing.
  *
  * Same discipline as the admin payouts page, and for the same reason: an unreachable Kai rendered
  * as an empty list would tell a traveller with real, paid bookings that they have none. "We could
@@ -95,8 +115,9 @@ export function mergeTravellerTrips(data: KaiCoreTravellerBookings): TravellerTr
  */
 export async function loadTravellerTrips(
   travellerAccountId: string,
-): Promise<SectionResult<TravellerTrip[]>> {
-  return section(async () =>
-    mergeTravellerTrips(await listKaiCoreTravellerBookings({ travellerAccountId })),
-  );
+): Promise<SectionResult<TravellerTripsAndImpact>> {
+  return section(async () => {
+    const data = await listKaiCoreTravellerBookings({ travellerAccountId });
+    return { trips: mergeTravellerTrips(data), conservation: formatTravellerConservation(data) };
+  });
 }

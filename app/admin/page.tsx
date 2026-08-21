@@ -1,15 +1,20 @@
 import Link from "next/link";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import OverviewStats from "@/components/admin/OverviewStats";
 import { ADMIN_SECTIONS } from "@/lib/services/admin/sections";
+import { loadAdminOverviewStats } from "@/lib/services/admin/overview";
 import { countPendingApprovals } from "@/lib/services/admin/review-queue";
 
 /**
- * The section index — the door, not a dashboard. It lists what the console can
- * do and how much of it is waiting, and deliberately reports nothing it would
- * have to invent: the one number here is a real count of pending rows.
+ * The section index plus, as of 2026-08-19, a real overview above it: what Kai has actually
+ * settled, in real money, across both regions. Still reports nothing it would have to invent — an
+ * unreachable Kai shows as unreachable (OverviewStats), not as zero revenue.
  */
 export default async function AdminIndexPage() {
-  const pendingApprovals = await countPendingApprovals();
+  const [pendingApprovals, overviewStats] = await Promise.all([
+    countPendingApprovals(),
+    loadAdminOverviewStats(),
+  ]);
   const counters = { pendingApprovals };
 
   return (
@@ -19,6 +24,8 @@ export default async function AdminIndexPage() {
         title="Admin"
         support="The parts of Bluepass that need a person: who gets to take money as an operator, who earns commission as a partner, and what their payouts are attached to."
       />
+
+      <OverviewStats stats={overviewStats} />
 
       <div className="adm-grid">
         {ADMIN_SECTIONS.map((section) => {

@@ -1,9 +1,15 @@
 import { prisma } from "@/lib/db/prisma";
-import { buildReferralShareUrl } from "@/lib/services/referrals/application-approval";
 import {
-  listCommissionLedgerEntries,
-  type CommissionLedgerEntryRow,
-} from "@/lib/services/referrals/commission-ledger";
+  listKaiCorePmsBookingLedgerForReferralPartner,
+  type KaiCorePmsBookingLedgerEntry,
+} from "@/lib/services/kai-core/client";
+import { buildReferralShareUrl } from "@/lib/services/referrals/application-approval";
+import { listCommissionLedgerEntries } from "@/lib/services/referrals/commission-ledger";
+
+type AuLedgerLoader = (input: {
+  referralPartnerId: string;
+  take?: number;
+}) => Promise<KaiCorePmsBookingLedgerEntry[]>;
 
 export type CreatorReferralLink = {
   id: string;
@@ -41,27 +47,73 @@ export async function loadCreatorReferralLinks(referralPartnerId: string | null)
   );
 }
 
+/**
+ * One commission line, whichever region it came from. Indonesia's `CommissionLedgerEntry` and AU's
+ * `PmsBookingLedgerEntry` are two different tables with two different extra fields (account vs.
+ * attempt/booking), but the dashboard only ever displays the five fields both already share — so
+ * this is what both get normalised down to, rather than forcing one shape to pretend it's the other.
+ */
+export type CreatorCommissionEntryRow = {
+  id: string;
+  region: "indonesia" | "au";
+  kind: string;
+  amountCents: number;
+  currency: string;
+  status: string;
+  createdAt: Date;
+  /** The booking this line came from, when the source has one to name (AU's `attempt.productTitle`). */
+  label: string | null;
+};
+
 export type CreatorCommissionSummary = {
-  entries: CommissionLedgerEntryRow[];
+  entries: CreatorCommissionEntryRow[];
   totalCentsByCurrency: Record<string, number>;
 };
 
 /**
- * This creator's own commission lines, newest first — the Indonesia marketplace side of it.
+ * This creator's own commission lines, newest first, across both regions.
  *
- * The AU/Boattime side (`PmsBookingLedgerEntry`'s `CREATOR_COMMISSION_ESTIMATE`, in Kai) carries the
- * same `referralPartnerId` as of 2026-08-19 but isn't queried here yet: Kai's ledger endpoints are
- * tenant-scoped, not referral-partner-scoped, so pulling a creator's AU earnings needs a new lookup
- * on that side first rather than a filter added to an existing call. Flagged, not silently omitted.
+ * The two sources are genuinely different systems (Indonesia's own Prisma table here vs. a network
+ * call to Kai for AU), so they're fetched independently and merged after - one being slow or down
+ * shouldn't blank out the other's real numbers. AU wiring landed 2026-08-19 (see
+ * listPmsBookingLedgerEntriesForReferralPartner in Kai and the dashboard note that used to live here
+ * flagging this gap).
  */
 export async function loadCreatorCommissionSummary(
   referralPartnerId: string | null,
+  listAuLedger: AuLedgerLoader = listKaiCorePmsBookingLedgerForReferralPartner,
 ): Promise<CreatorCommissionSummary> {
   if (!referralPartnerId) {
     return { entries: [], totalCentsByCurrency: {} };
   }
 
-  const entries = await listCommissionLedgerEntries({ referralPartnerId, take: 100 });
+  const [indonesiaEntries, auEntries] = await Promise.all([
+    listCommissionLedgerEntries({ referralPartnerId, take: 100 }),
+    listAuLedger({ referralPartnerId, take: 100 }).catch(() => []),
+  ]);
+
+  const entries: CreatorCommissionEntryRow[] = [
+    ...indonesiaEntries.map((entry) => ({
+      id: entry.id,
+      region: "indonesia" as const,
+      kind: entry.kind,
+      amountCents: entry.amountCents,
+      currency: entry.currency,
+      status: entry.status,
+      createdAt: entry.createdAt,
+      label: null,
+    })),
+    ...auEntries.map((entry) => ({
+      id: entry.id,
+      region: "au" as const,
+      kind: entry.kind,
+      amountCents: entry.amountCents,
+      currency: entry.currency,
+      status: entry.status,
+      createdAt: new Date(entry.createdAt),
+      label: entry.attempt?.productTitle ?? null,
+    })),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const totalCentsByCurrency: Record<string, number> = {};
   for (const entry of entries) {

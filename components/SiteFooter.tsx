@@ -70,8 +70,8 @@ export default function SiteFooter() {
                 {col.title}
               </div>
               {col.links.map((link) => (
-                <Link key={link} href="#" className="footer__link ds-body-sm">
-                  {link}
+                <Link key={link.label} href={link.href} className="footer__link ds-body-sm">
+                  {link.label}
                 </Link>
               ))}
             </div>
@@ -88,10 +88,10 @@ export default function SiteFooter() {
             © 2026 Bluepass
           </span>
           <div style={{ display: "flex", gap: 20 }}>
-            <Link href="#" className="footer__link ds-micro">
+            <Link href="/privacy" className="footer__link ds-micro">
               Privacy
             </Link>
-            <Link href="#" className="footer__link ds-micro">
+            <Link href="/terms" className="footer__link ds-micro">
               Terms
             </Link>
           </div>

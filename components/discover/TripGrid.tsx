@@ -225,7 +225,20 @@ export default function TripGrid() {
             <Button variant="primary" onClick={clearFilters}>
               Show all {allTrips.length} trips
             </Button>
-            <Button variant="translucent" onClick={() => changeFilter("All")}>
+            <Button
+              variant="translucent"
+              onClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent("kai:open", {
+                    detail: {
+                      message: `I'm looking for a ${
+                        category !== "All" ? category.toLowerCase() + " " : ""
+                      }trip in ${region === ALL_REGIONS ? "Australia" : region}.`,
+                    },
+                  }),
+                )
+              }
+            >
               Ask Kai →
             </Button>
           </div>
@@ -308,27 +321,18 @@ export default function TripGrid() {
                 <span className="trip__dot">·</span> {t.detail}
               </div>
 
-              <div className="trip__impact ds-micro">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 14c2-2.5 4-2.5 6 0s4 2.5 6 0 4-2.5 6 0" />
-                  <path d="M12 4c2 2.5 2 5 0 7-2-2-2-4.5 0-7z" />
-                </svg>
-                <span>
-                  <b>5%</b> {t.impact}
-                </span>
-              </div>
-
-              {t.quote ? <p className="trip__quote ds-body-sm">“{t.quote}”</p> : null}
-
+              {/* Impact line, "never a markup" and the per-card testimonial all moved out
+                  (Tony's 2026-08-12 UX audit, §4.3 "card diet"): the same three claims were
+                  repeating on every one of 6 cards, on top of the hero and (once built) the
+                  trust banner saying the same thing once, for the whole page. The impact figure
+                  still lives on the trip's own detail sheet ("What the 5% does here"); the
+                  no-markup claim moved to the trust banner below the hero. */}
               {t.scarcity ? <span className="trip__scarcity ds-micro">{t.scarcity}</span> : null}
 
               <div className="trip__foot">
-                <div>
-                  <div className="trip__price">
-                    <span className="ds-display-md">{aud(t.price)}</span>
-                    <span className="ds-micro">/guest</span>
-                  </div>
-                  <div className="ds-micro trip__rate">Operator&apos;s rate, never a markup</div>
+                <div className="trip__price">
+                  <span className="ds-display-md">{aud(t.price)}</span>
+                  <span className="ds-micro">/guest</span>
                 </div>
                 <span className="trip__cta">
                   <Button variant="translucent" magnetic={false} onClick={() => open(t)}>

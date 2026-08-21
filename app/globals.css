@@ -496,6 +496,54 @@ html.lenis body {
   }
 }
 
+/* Reel lightbox - the real Instagram embed a centred reel's play button opens. */
+.reel-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reel-lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgba(6, 6, 5, 0.82);
+  backdrop-filter: blur(18px);
+  cursor: pointer;
+}
+.reel-lightbox__frame {
+  position: relative;
+  width: min(400px, 92vw);
+  height: min(710px, 86vh);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #000000;
+}
+.reel-lightbox__iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+.reel-lightbox__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100px;
+  border: none;
+  background: rgba(6, 6, 5, 0.55);
+  color: #ffffff;
+  cursor: pointer;
+}
+
 /* Conservation rows ------------------------------------------------------- */
 @property --rule {
   syntax: "<percentage>";
@@ -852,6 +900,37 @@ html.lenis body {
   .dsearch__submit .btn {
     width: 100%;
   }
+}
+
+/* Trust banner -------------------------------------------------------------
+   Thin strip, hero-to-grid, three claims said once (see components/discover/
+   TrustBanner.tsx for why). Deliberately not a full "section" - no Rail, no
+   parallax background, no headline - it's connective tissue, not a chapter. */
+.tbanner {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding-top: clamp(28px, 3.4vw, 44px);
+  padding-bottom: clamp(28px, 3.4vw, 44px);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+.tbanner__row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(20px, 4vw, 48px);
+}
+.tbanner__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.tbanner__item svg {
+  flex: none;
+  color: var(--color-semantic-success);
 }
 
 /* Region rail ------------------------------------------------------------- */
@@ -1380,27 +1459,6 @@ html.lenis body {
 .trip__meta {
   color: var(--color-ink-muted);
 }
-.trip__impact {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  color: var(--color-semantic-success);
-  line-height: 1.4;
-}
-.trip__impact svg {
-  flex: none;
-  margin-top: 1px;
-}
-.trip__impact b {
-  font-weight: 700;
-}
-.trip__quote {
-  color: var(--color-ink-muted);
-  font-style: italic;
-  padding-left: 12px;
-  border-left: 1px solid var(--color-hairline);
-  line-height: 1.45;
-}
 .trip__scarcity {
   align-self: flex-start;
   padding: 4px 10px;
@@ -1429,10 +1487,6 @@ html.lenis body {
 }
 .trip__price .ds-micro {
   color: var(--color-ink-muted);
-}
-.trip__rate {
-  color: var(--color-ink-muted);
-  margin-top: 3px;
 }
 
 /* ==========================================================================
@@ -1712,6 +1766,146 @@ html.lenis body {
   background: var(--color-surface-1);
   color: rgba(255, 255, 255, 0.8);
   letter-spacing: 0.2px;
+}
+.tsheet__incl-chip--muted {
+  border-style: dashed;
+  background: transparent;
+  color: var(--color-ink-muted);
+}
+
+.tsheet__know {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tsheet__know li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-top: 1px solid var(--color-hairline-soft);
+}
+.tsheet__know li:last-child {
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+.tsheet__know-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--color-hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: rgba(255, 255, 255, 0.75);
+}
+.tsheet__know-title {
+  color: #ffffff;
+  display: block;
+}
+.tsheet__know-desc {
+  color: var(--color-ink-muted);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+.tsheet__reviews-empty {
+  color: var(--color-ink-muted);
+  margin-top: 14px;
+  line-height: 1.5;
+}
+
+.tsheet__dep-note {
+  margin-top: 11px;
+  color: var(--color-ink-muted);
+}
+
+.tsheet__gallery {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.tsheet__gallery-item {
+  position: relative;
+  flex: none;
+  width: 220px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-hairline-soft);
+  cursor: pointer;
+  padding: 0;
+  background: var(--color-surface-1);
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+.tsheet__gallery-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-hairline);
+}
+.tsheet__gallery-item img {
+  transition: transform 0.5s ease;
+}
+.tsheet__gallery-item:hover img {
+  transform: scale(1.05);
+}
+
+.tsheet__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tsheet__lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(10, 10, 9, 0.92);
+  cursor: pointer;
+}
+.tsheet__lightbox-frame {
+  position: relative;
+  width: min(90vw, 1200px);
+  height: min(82vh, 800px);
+  z-index: 1;
+}
+.tsheet__lightbox-close {
+  position: absolute;
+  top: clamp(16px, 3vw, 28px);
+  right: clamp(16px, 3vw, 28px);
+  z-index: 2;
+}
+.tsheet__lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+.tsheet__lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.tsheet__lightbox-prev {
+  left: clamp(12px, 3vw, 32px);
+}
+.tsheet__lightbox-next {
+  right: clamp(12px, 3vw, 32px);
 }
 
 .tsheet__quote {
@@ -4267,6 +4461,137 @@ html.is-scroll-locked body {
   background: rgba(255, 255, 255, 0.08);
 }
 
+/* Wishlist toast - confirms a signed-in save/un-save. The signed-out case is a modal (.wauth
+   below), not this - a toast is too easy to miss while looking at a card near the top. */
+.wtoast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px 11px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(16, 16, 15, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-2);
+  max-width: calc(100vw - 32px);
+}
+.wtoast__text {
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.wtoast__close {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    background 0.3s ease;
+}
+.wtoast__close:hover {
+  color: var(--color-ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Wishlist sign-in prompt - a guest tapping the heart gets stopped here instead of a toast that's
+   easy to miss. Same dialog shape as .tsheet (fixed, portal, backdrop), centred rather than
+   bottom-sheet since this is a short decision, not a page of content to scroll. */
+.wauth {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wauth__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgba(6, 6, 5, 0.72);
+  backdrop-filter: blur(18px);
+  cursor: pointer;
+}
+.wauth__panel {
+  position: relative;
+  width: min(380px, calc(100vw - 40px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+}
+.wauth__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    background 0.3s ease;
+}
+.wauth__close:hover {
+  color: var(--color-ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+.wauth__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  margin-bottom: 4px;
+}
+.wauth__title {
+  color: var(--color-ink);
+}
+.wauth__body {
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+.wauth__actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+  width: 100%;
+}
+.wauth__actions a {
+  flex: 1;
+}
+.wauth__actions .btn-magnet,
+.wauth__actions .btn {
+  width: 100%;
+}
+
 /* ==========================================================================
    Kai panel — the Ask Kai conversation
    ========================================================================== */
@@ -6012,6 +6337,45 @@ html.is-scroll-locked body {
   }
 }
 
+/* Admin overview — /admin (OverviewStats) ------------------------------------
+   Layout/cards reuse the shared `.adm-*` system; these are only the pieces with no existing
+   equivalent: the headcount row and the per-currency money grid. */
+.ovr-counts {
+  display: flex;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+.ovr-count {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ovr-count__value {
+  color: var(--color-ink);
+}
+.ovr-count__label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ovr-money-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-md);
+}
+.ovr-money-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.ovr-money-card__currency {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 /* Traveller account — /account ---------------------------------------------- */
 /* Deliberately not `.adm`. The consoles own their whole viewport because staff live in them; a
    traveller checking their trips is still on bluepass.co, keeps the site nav and footer, and should
@@ -6072,6 +6436,30 @@ html.is-scroll-locked body {
 .acctpage__cta {
   margin-top: var(--space-sm);
   color: var(--color-ink);
+}
+
+.acctpage__impact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  padding: var(--space-lg);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-lg);
+}
+.acctpage__impact-eyebrow {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+}
+.acctpage__impact-amounts {
+  color: var(--color-ink);
+}
+.acctpage__impact-body {
+  color: var(--color-ink-muted);
+  max-width: 62ch;
 }
 
 /* One trip per card. A flat list rather than a grid: these are read top to bottom in date order,
@@ -6185,4 +6573,91 @@ html.is-scroll-locked body {
   .acct-trip__facts {
     gap: var(--space-md);
   }
+}
+
+/* Saved trips - the traveller's own shortlist, below their booking history. */
+.acctpage__saved {
+  margin-top: var(--space-xxl);
+}
+.acctpage__saved-title {
+  color: var(--color-ink);
+  margin-bottom: var(--space-md);
+}
+.acct-saved {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-md);
+}
+.acct-saved__link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+}
+.acct-saved__thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  background: var(--color-hairline);
+}
+.acct-saved__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+}
+.acct-saved__name {
+  color: var(--color-ink);
+}
+.acct-saved__meta {
+  color: var(--color-ink-muted);
+}
+.acct-saved__price {
+  color: var(--color-ink-muted);
+  margin-top: 2px;
+}
+
+/* Legal pages (Privacy, Terms) - reuses .acctpage's marketing-page rhythm, adds a narrower reading
+   column since this is long-form prose rather than cards. */
+.legalpage__inner {
+  max-width: 760px;
+}
+.legalpage__draft-note {
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(255, 138, 118, 0.1);
+  border: 1px solid rgba(255, 138, 118, 0.35);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-xl);
+  color: var(--color-ink);
+}
+.legalpage__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+.legalpage__body h2 {
+  color: var(--color-ink);
+  margin-bottom: var(--space-sm);
+}
+.legalpage__body p {
+  color: var(--color-ink-muted);
+  line-height: 1.6;
+}
+.legalpage__body a {
+  color: var(--color-ink);
+}
+.legalpage__list {
+  color: var(--color-ink-muted);
+  line-height: 1.6;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
 }

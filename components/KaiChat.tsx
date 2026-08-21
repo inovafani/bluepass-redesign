@@ -10,6 +10,7 @@ import { isConsolePathname } from "@/lib/services/pathname";
 export default function KaiChat() {
   const ref = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const [initialMessage, setInitialMessage] = useState<string | null>(null);
   const pathname = usePathname();
 
   /* Kai is the traveller's trip assistant, and it is pinned to the bottom-left
@@ -20,12 +21,18 @@ export default function KaiChat() {
      them, the same way Nav does. */
   const hidden = isConsolePathname(pathname);
 
-  /* Anything on the page can open the panel by dispatching `kai:open` — the hero's
-     "Ask Kai" CTA does. An event rather than lifted state because the pill lives in
-     the root layout while the callers are page sections, with no shared parent to
-     thread a prop through. Same event name bluepass-app's widget listens for. */
+  /* Anything on the page can open the panel by dispatching `kai:open` — the trip sheet's
+     "Request this trip"/"Ask Kai" buttons do (see TripSheet.tsx). An event rather than lifted
+     state because the pill lives in the root layout while the callers are page sections, with no
+     shared parent to thread a prop through. Same event name bluepass-app's widget listens for.
+     An optional `detail.message` carries what the caller already knows - which trip, which
+     departure - so the traveller isn't asked to retype it into a panel that just opened blank. */
   useEffect(() => {
-    const openPanel = () => setOpen(true);
+    const openPanel = (e: Event) => {
+      const message = (e as CustomEvent<{ message?: string }>).detail?.message;
+      if (message) setInitialMessage(message);
+      setOpen(true);
+    };
     window.addEventListener("kai:open", openPanel);
     return () => window.removeEventListener("kai:open", openPanel);
   }, []);
@@ -108,7 +115,12 @@ export default function KaiChat() {
         </span>
       </button>
 
-      <KaiPanel open={open} onClose={() => setOpen(false)} />
+      <KaiPanel
+        open={open}
+        onClose={() => setOpen(false)}
+        initialMessage={initialMessage}
+        onInitialMessageSent={() => setInitialMessage(null)}
+      />
     </>
   );
 }

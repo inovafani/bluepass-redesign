@@ -5,6 +5,9 @@
  * Ningaloo and South Australia have no location photography yet; both fall back
  * to the nearest reef / open-coast frame we hold.
  *
+ * `gallery` is a separate case: free Unsplash stock, not our own photography, standing in
+ * for a real operator-photo gallery that doesn't exist yet (see the field's own comment).
+ *
  * The per-trip editorial (summary, itinerary, departures, operator notes) is
  * placeholder copy written to the right shape and length for the trip sheet —
  * it is not sourced from real operators. Swap it wholesale when the real
@@ -29,17 +32,16 @@ export const categoryIcon: Record<Category, string> = {
 export type Region = {
   slug: string;
   name: string;
-  trips: number;
   img: string;
 };
 
 export const regions: Region[] = [
-  { slug: "great-barrier-reef", name: "Great Barrier Reef", trips: 1, img: "/great-barrier.jpg" },
-  { slug: "whitsundays", name: "Whitsundays", trips: 1, img: "/whitsundays-2.jpg" },
-  { slug: "hervey-bay", name: "Hervey Bay", trips: 1, img: "/hervey-bay-2.jpg" },
-  { slug: "ningaloo", name: "Ningaloo", trips: 1, img: "/great-barrier-3.jpg" },
-  { slug: "sydney-harbour", name: "Sydney Harbour", trips: 1, img: "/sidney.jpg" },
-  { slug: "south-australia", name: "South Australia", trips: 1, img: "/gold-coast-2.jpg" },
+  { slug: "great-barrier-reef", name: "Great Barrier Reef", img: "/great-barrier.jpg" },
+  { slug: "whitsundays", name: "Whitsundays", img: "/whitsundays-2.jpg" },
+  { slug: "hervey-bay", name: "Hervey Bay", img: "/hervey-bay-2.jpg" },
+  { slug: "ningaloo", name: "Ningaloo", img: "/great-barrier-3.jpg" },
+  { slug: "sydney-harbour", name: "Sydney Harbour", img: "/sidney.jpg" },
+  { slug: "south-australia", name: "South Australia", img: "/gold-coast-2.jpg" },
 ];
 
 /** One row of the day-by-day shape of a trip. */
@@ -77,6 +79,15 @@ export type Trip = {
   eco: boolean;
   scarcity?: string;
   img: string;
+  /**
+   * Below-the-hero photo strip in the trip sheet. None of these are operator-supplied —
+   * there's no real gallery content yet, only 0-4 generic regional stock frames in /public.
+   * Free Unsplash photos, picked per trip's theme, stand in so the gallery UI has something
+   * honest-looking to demo (2026-08-21, user's explicit call). Swap for real operator photos
+   * once they exist; delete the field entirely if that never happens rather than leave stock
+   * photography live in production.
+   */
+  gallery: string[];
 
   /* ---- sheet-only content ---------------------------------------------- */
   summary: string;
@@ -85,7 +96,7 @@ export type Trip = {
   /** Day-by-day shape of the trip. Section hides if empty - never fabricate a real itinerary. */
   itinerary: TripDay[];
   includes: string[];
-  /** Next open departures, in the same window as `whenOptions`. Block hides if empty. */
+  /** Next open departures. Block hides if empty. */
   departures: string[];
   /** Why this operator is on the platform. Optional - omit rather than invent a claim. */
   operatorNote?: string;
@@ -100,8 +111,6 @@ export const trips: Trip[] = [
     name: "Ribbon Reefs Run",
     category: "Dive",
     region: "Great Barrier Reef",
-    rating: 4.9,
-    reviews: 236,
     operator: "Coral Sea Lines",
     duration: "4 days",
     detail: "14 dives",
@@ -111,6 +120,12 @@ export const trips: Trip[] = [
     price: 2190,
     eco: true,
     img: "/great-barrier-5.jpg",
+    gallery: [
+      "https://images.unsplash.com/photo-1708649290066-5f617003b93f",
+      "https://images.unsplash.com/photo-1682687981630-cefe9cd73072",
+      "https://images.unsplash.com/photo-1637308109237-4ea1a7dd22f5",
+      "https://images.unsplash.com/photo-1682686581663-179efad3cd2f",
+    ],
     summary:
       "Four days running the outer ribbons north of Cairns, where the reef wall drops into blue water and the dive sites sit hours from the day-boat fleet. Fourteen dives, small groups, and a crew who plan the day around the tide rather than the timetable.",
     highlights: [
@@ -137,8 +152,6 @@ export const trips: Trip[] = [
     name: "Humpback Highway",
     category: "Wildlife",
     region: "Hervey Bay",
-    rating: 4.9,
-    reviews: 503,
     operator: "Hervey Bay Whale Co.",
     duration: "3 days",
     detail: "6 encounters",
@@ -148,6 +161,12 @@ export const trips: Trip[] = [
     price: 890,
     eco: true,
     img: "/hervey-bay-1.jpg",
+    gallery: [
+      "https://images.unsplash.com/photo-1568430462989-44163eb1752f",
+      "https://images.unsplash.com/photo-1698472505070-6d3b90afb530",
+      "https://images.unsplash.com/photo-1520646924857-261be3037bc7",
+      "https://images.unsplash.com/photo-1518399681705-1c1a55e5e883",
+    ],
     summary:
       "Hervey Bay is the one place on the east-coast migration where humpbacks stop to rest, and mothers bring calves close enough to look you in the eye. Three days in the bay with a research-grade hydrophone aboard and no fixed run sheet.",
     highlights: [
@@ -173,8 +192,6 @@ export const trips: Trip[] = [
     name: "Whitehaven Under Sail",
     category: "Sail & Yacht",
     region: "Whitsundays",
-    rating: 4.8,
-    reviews: 412,
     operator: "Saltline Sailing Co.",
     duration: "3 days",
     detail: "5 anchorages",
@@ -184,6 +201,12 @@ export const trips: Trip[] = [
     price: 1150,
     eco: true,
     img: "/whitsundays-3.jpg",
+    gallery: [
+      "https://images.unsplash.com/photo-1697050891362-17b55eb48346",
+      "https://images.unsplash.com/photo-1600085601598-e132cca43e36",
+      "https://images.unsplash.com/photo-1696583867312-5b05997a9912",
+      "https://images.unsplash.com/photo-1697186030107-441198759d38",
+    ],
     summary:
       "Three days under sail through the Whitsunday passage, timed so you reach Hill Inlet on the turning tide and Whitehaven at the hour the day-trippers leave. Five anchorages, no marina nights, and a boat small enough to take the quiet bays.",
     highlights: [
@@ -209,8 +232,6 @@ export const trips: Trip[] = [
     name: "Harbour Nights",
     category: "Sail & Yacht",
     region: "Sydney Harbour",
-    rating: 4.8,
-    reviews: 267,
     operator: "Harbourline Yachts",
     duration: "1 day",
     detail: "5 hours aboard",
@@ -220,6 +241,12 @@ export const trips: Trip[] = [
     price: 395,
     eco: true,
     img: "/australia-yacht.jpg",
+    gallery: [
+      "https://images.unsplash.com/photo-1515482758760-9535c2f0a18c",
+      "https://images.unsplash.com/photo-1599352318473-abbc53b44a9a",
+      "https://images.unsplash.com/photo-1598948485421-33a1655d3c18",
+      "https://images.unsplash.com/photo-1580723843692-137caf37ad17",
+    ],
     summary:
       "Five hours on the harbour from late afternoon into dark, out through the heads if the swell allows, back under the Bridge as the city comes on. A working yacht with a chef aboard, not a party boat.",
     highlights: [
@@ -246,8 +273,6 @@ export const trips: Trip[] = [
     name: "Whale Shark Interception",
     category: "Wildlife",
     region: "Ningaloo",
-    rating: 4.9,
-    reviews: 188,
     operator: "Ningaloo Drift",
     duration: "5 days",
     detail: "10 swims",
@@ -259,6 +284,12 @@ export const trips: Trip[] = [
     /* The sheet crops its hero to 16:8, which a portrait top-down aerial cannot
        survive — this frame reads as reef at any crop. */
     img: "/reef-conservation1.jpg",
+    gallery: [
+      "https://images.unsplash.com/photo-1540202404-b2979d19ed37",
+      "https://images.unsplash.com/photo-1544552866-49ce864ff896",
+      "https://images.unsplash.com/photo-1580580297368-c782fb65d271",
+      "https://images.unsplash.com/photo-1618266089457-8cbed84e2e53",
+    ],
     summary:
       "Five days on the Ningaloo coast with a spotter plane overhead and a boat that repositions to whatever the pilot finds. Ten in-water swims across the week, plus the fringing reef fifty metres off the beach for everything in between.",
     highlights: [
@@ -284,8 +315,6 @@ export const trips: Trip[] = [
     name: "Neptune Cage Week",
     category: "Expedition",
     region: "South Australia",
-    rating: 5,
-    reviews: 89,
     operator: "Southern Water Co.",
     duration: "4 days",
     detail: "9 cage drops",
@@ -296,6 +325,12 @@ export const trips: Trip[] = [
     eco: true,
     scarcity: "Only 3 left",
     img: "/gold-coast-3.jpg",
+    gallery: [
+      "https://images.unsplash.com/photo-1704694214588-24f4bae4757b",
+      "https://images.unsplash.com/photo-1637308111472-fdf4886a2e07",
+      "https://images.unsplash.com/photo-1563186627-0d185db94083",
+      "https://images.unsplash.com/photo-1548147433-ef30d17bf028",
+    ],
     summary:
       "Four days at the Neptune Islands in the only water in Australia where you can meet a white shark. Surface cage and ocean-floor cage, nine drops across the week, and a researcher aboard tagging as you watch.",
     highlights: [
@@ -352,7 +387,36 @@ export const partners = [
   "ECOCEAN",
 ];
 
+/**
+ * Universal to every trip on the platform - never a per-operator or per-trip claim, so it's safe
+ * to show even for a real synced trip with nothing else filled in yet (unlike rating/quote/gear,
+ * which stay hidden rather than fabricated - see the Trip type's own comment). Mirrors the live
+ * copy in app/terms/page.tsx §6 and the DEFAULT_CANCELLATION_POLICY_TIERS Kai's refund engine
+ * actually runs on - ported to prose here since bluepass-redesign has no shared package with Kai
+ * to import from (bluepass-redesign's own duplicate of the same tiers lives in
+ * lib/services/operator/payout-settings.ts's PLATFORM_DEFAULT_CANCELLATION_TIERS). Keep all three
+ * in sync if the tiers ever change. An operator's own published policy overrides this at checkout
+ * once they've set one (see components/operator/OperatorCancellationPolicy.tsx) - this is only
+ * the platform fallback, which is what every one of the 6 curated trips actually falls back to
+ * today, since none of them has a real OperatorProfile row.
+ */
+export const platformCancellationPolicy =
+  "Full refund 14+ days before departure. 50% refund 3–13 days before. No refund within 3 days. If the operator cancels, you get a full refund regardless of timing.";
+
+/** Also universal - real for every booking on the platform, not invented per trip. */
+export const standardExclusions = [
+  "International & domestic flights",
+  "Travel insurance",
+  "Gratuities for crew or guides",
+];
+
 export const discoverHero = "/whitsundays-1.jpg";
 
+/* Displayed on the hero search bar but not wired to a filter yet - there's no availability API to
+   send them to. Real integration would mean checking live Rezdy availability across every operator
+   in the catalogue at once (not just the one a traveller is already talking to Kai about), which is
+   its own project, tied to the same live-availability work item as the instant-book funnel split
+   (Tony's 2026-08-12 UX audit, §2). Kept visible per the user's explicit call (2026-08-21) even
+   though they're inert for now. */
 export const whenOptions = ["Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Flexible"];
 export const guestOptions = ["1 guest", "2 guests", "3 guests", "4 guests", "5+ guests"];

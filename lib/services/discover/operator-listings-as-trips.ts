@@ -58,6 +58,9 @@ export async function fetchSyncedTrips(): Promise<Trip[]> {
     // than claim a certification that hasn't actually been verified for this operator.
     eco: false,
     img: listing.heroImageUrl || FALLBACK_IMAGE,
+    // No stock-photo stand-in here, unlike the 6 curated demo trips (lib/discover.ts) - a real
+    // operator listing with no real gallery photos should show no gallery, not stock ones.
+    gallery: [],
     summary: listing.description,
     highlights: [],
     itinerary: [],

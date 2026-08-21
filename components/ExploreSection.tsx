@@ -312,7 +312,7 @@ export default function ExploreSection() {
         </Button>
       </div>
 
-      <Rail label="Explore" tone="dark" />
+      <Rail label="Charters" tone="dark" />
     </section>
   );
 }

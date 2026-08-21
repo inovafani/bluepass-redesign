@@ -272,6 +272,7 @@ model BluePassAccount {
   operatorProfile         OperatorProfile?
   operatorClaims          OperatorClaim[]
   commissionEntries       CommissionLedgerEntry[]
+  savedTrips              SavedTrip[]
 
   @@index([email])
   @@index([travellerId])
@@ -315,6 +316,23 @@ model BluePassAccountPasswordResetToken {
 
   @@index([accountId])
   @@index([expiresAt])
+}
+
+/**
+ * A traveller's shortlist. `tripSlug` matches `Trip.slug` from lib/discover.ts - the same identity
+ * already used to key the client-side `saved` state, whether the trip is one of the 6 curated
+ * examples or a real `OperatorListing.slug` synced from Rezdy. No separate Trip table exists to
+ * foreign-key against, so the slug is the only shared identifier there is.
+ */
+model SavedTrip {
+  id        String          @id @default(cuid())
+  accountId String
+  tripSlug  String
+  createdAt DateTime        @default(now())
+  account   BluePassAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, tripSlug])
+  @@index([accountId])
 }
 
 model CreatorProfile {
