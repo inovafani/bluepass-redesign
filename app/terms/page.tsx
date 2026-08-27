@@ -13,6 +13,9 @@ export const metadata: Metadata = {
  * fields - the entity itself is real (Bluepass Pty Ltd, ACN 701 302 463, ASIC certificate of
  * registration sighted 2026-08-21), but registered address, liability caps, accepted-currency
  * handling and a support contact email are still not filled in.
+ *
+ * Tony asked 2026-08-27 to keep the ACN itself off the public site - the body text below names
+ * just "Bluepass Pty Ltd", no number, even though this comment keeps the real one for reference.
  */
 export default function TermsPage() {
   return (
@@ -36,7 +39,7 @@ export default function TermsPage() {
           <section>
             <h2 className="ds-headline">1. Who you're agreeing with</h2>
             <p className="ds-body">
-              Bluepass is operated by <strong>Bluepass Pty Ltd (ACN 701 302 463)</strong>, registered
+              Bluepass is operated by <strong>Bluepass Pty Ltd</strong>, registered
               at <strong>[registered address]</strong>. By creating an account or booking a trip
               through bluepass.co, you agree to these terms.
             </p>

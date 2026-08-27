@@ -6,7 +6,6 @@ import Grain from "@/components/Grain";
 import Nav from "@/components/Nav";
 import KaiChat from "@/components/KaiChat";
 import ReferralTracker from "@/components/ReferralTracker";
-import WaitlistPopup from "@/components/WaitlistPopup";
 import SessionProvider from "@/components/auth/SessionProvider";
 import FlashNotice from "@/components/auth/FlashNotice";
 
@@ -51,13 +50,6 @@ export const viewport: Viewport = {
   themeColor: "#0a0a09",
 };
 
-/* Evaluated server-side at render time, not exposed to the client bundle - a Server Component
-   layout can read a plain (non-NEXT_PUBLIC) env var directly, since the check itself decides
-   whether <WaitlistPopup /> is even in the tree. Flip this off in Vercel once the platform is
-   ready to launch properly (populated with real operators) - no code change or redeploy needed
-   beyond the env var itself. */
-const waitlistEnabled = process.env.WAITLIST_POPUP_ENABLED === "true";
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geist.variable} ${inter.variable}`}>
@@ -73,7 +65,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <FlashNotice />
           {children}
           <KaiChat />
-          {waitlistEnabled ? <WaitlistPopup /> : null}
         </SessionProvider>
       </body>
     </html>

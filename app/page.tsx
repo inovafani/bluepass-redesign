@@ -7,9 +7,17 @@ import TripGrid from "@/components/discover/TripGrid";
 import TripSheet from "@/components/discover/TripSheet";
 import HowItWorks from "@/components/discover/HowItWorks";
 import PartnerMarquee from "@/components/discover/PartnerMarquee";
+import WaitlistGate from "@/components/discover/WaitlistGate";
 import SiteFooter from "@/components/SiteFooter";
 import { trips as curatedTrips } from "@/lib/discover";
 import { fetchSyncedTrips } from "@/lib/services/discover/operator-listings-as-trips";
+
+/* Evaluated server-side, before any trip data is fetched - a plain (non-NEXT_PUBLIC) env var read
+   in a Server Component decides whether the real Discover query even runs. Tony, 2026-08-27: trip
+   listings should be genuinely unreachable while Bluepass is still onboarding its first operators,
+   not just visually covered by something dismissible - so this gates the fetch itself, not just
+   what's rendered on top of it. Flip off in Vercel once ready to launch properly. */
+const waitlistGateEnabled = process.env.WAITLIST_POPUP_ENABLED === "true";
 
 export const revalidate = 300;
 
@@ -31,6 +39,20 @@ export const metadata: Metadata = {
  * links survive.
  */
 export default async function DiscoverPage() {
+  if (waitlistGateEnabled) {
+    return (
+      // No opaque background here (unlike the real Discover <main> below): WaitlistGate's own
+      // backdrop is `position: fixed`, so an opaque background on this box would paint over it
+      // everywhere main's own box reaches - which, since main isn't offset, is the full page
+      // including behind the transparent Nav. SiteFooter carries its own solid background, so
+      // leaving main transparent doesn't affect how the footer reads once scrolled to.
+      <main style={{ position: "relative" }}>
+        <WaitlistGate />
+        <SiteFooter />
+      </main>
+    );
+  }
+
   // Real, published operator listings (e.g. from the Rezdy Agent sync) are appended after the
   // curated 6 rather than replacing them - the page never looks sparse while real inventory is
   // still trickling in, and the curated trips keep showcasing the design at its best. Fails open:

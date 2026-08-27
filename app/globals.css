@@ -6711,32 +6711,48 @@ html.is-scroll-locked body {
 .legalpage__body a {
   color: var(--color-ink);
 }
-/* Waitlist popup ------------------------------------------------------------
- * Same backdrop recipe as .tsheet__backdrop (rgba(6,6,5,.72) + blur(18px)) so
- * it reads as the same overlay language, just centred instead of a bottom
- * sheet - this is a short interstitial, not a page's worth of content. */
-.wlpop {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
+/* Waitlist gate --------------------------------------------------------------
+ * The Trips page's entire content when gated (Tony, 2026-08-27): not a popup over
+ * blurred real content - the trip listings genuinely never render or get fetched
+ * (see app/page.tsx) - so this is styled as ordinary page content under the normal
+ * Nav, not an overlay. Same split-poster visual DNA as .ashell__aside/.tsheet__*,
+ * just without any backdrop/portal/close-button machinery, since there is nothing
+ * underneath to reveal. */
+.wlgate {
+  position: relative;
+  /* Margin (not padding) for the nav offset, kept entirely outside this box, so align-items:
+     center actually centers the card in the space below the nav rather than leaving unequal
+     padding eat more room off the top than the bottom. The backdrop below is deliberately NOT a
+     child affected by this margin - see .wlgate__backdrop's own comment. */
+  margin-top: 76px;
+  min-height: calc(100svh - 76px);
+  padding: var(--space-xl) var(--space-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-lg);
 }
-.wlpop__backdrop {
-  position: absolute;
-  inset: 0;
-  border: none;
-  padding: 0;
-  background: rgba(6, 6, 5, 0.72);
-  backdrop-filter: blur(18px);
-  cursor: pointer;
+/* `fixed`, not absolute - an absolutely-positioned child ignores its parent's margin, so
+   anchoring to .wlgate directly still left a 76px band of plain canvas colour showing through
+   Nav's own transparent surface (Nav really has no background of its own at rest - it looked
+   like a solid bar only because there was nothing blurred behind it to show through). Fixed to
+   the viewport instead, the same blurred wash now runs from the very top of the screen, behind
+   Nav too, all the way down - one continuous surface instead of a seam at the 76px mark. */
+.wlgate__backdrop {
+  position: fixed;
+  inset: -40px;
+  z-index: -1;
+  background-image: url("/great-barrier.jpg");
+  background-size: cover;
+  background-position: center;
+  /* Softened, not flattened - "terlalu pekat" the first pass: less blur radius and less
+     desaturation than before so tonal variation from the photo still comes through, rather than
+     reading as a single flat grey card. Still clearly "agak abu abu", not a vivid photo. */
+  filter: blur(34px) brightness(0.62) saturate(0.5);
+  transform: scale(1.1);
 }
-.wlpop__card {
+.wlgate__card {
   position: relative;
-  width: min(440px, 100%);
-  max-height: 90svh;
+  width: min(880px, 100%);
   background: var(--color-surface-1);
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-xxl);
@@ -6744,81 +6760,48 @@ html.is-scroll-locked body {
   display: flex;
   overflow: hidden;
 }
-/* Same split-poster shape as .ashell__aside, scaled down for a modal rather than a full page -
-   hidden below 720px, where a modal's height budget is too tight to spare room for a photo
-   without squeezing the form off-screen. */
-.wlpop__image {
+.wlgate__image {
   position: relative;
   display: none;
-  width: 300px;
+  width: 360px;
   flex-shrink: 0;
 }
-.wlpop__image-scrim {
+.wlgate__image-scrim {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(10, 10, 9, 0.05) 0%, rgba(10, 10, 9, 0.55) 100%);
 }
-@media (min-width: 720px) {
-  .wlpop__card {
-    width: min(760px, 100%);
-  }
-  .wlpop__image {
+@media (min-width: 780px) {
+  .wlgate__image {
     display: block;
   }
 }
-.wlpop__panel {
-  position: relative;
+.wlgate__panel {
   flex: 1;
   min-width: 0;
-  max-height: 90svh;
-  overflow-y: auto;
-  padding: clamp(28px, 4vw, 40px);
+  padding: clamp(32px, 5vw, 56px);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
-.wlpop__close {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-hairline);
-  background: transparent;
-  color: var(--color-ink-muted);
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-.wlpop__close:hover {
-  color: var(--color-ink);
-  border-color: var(--color-ink-muted);
-}
-.wlpop__title {
+.wlgate__title {
   margin-top: var(--space-xs);
   margin-bottom: 2px;
-  padding-right: 24px;
   /* Without this, a 2-line headline wraps greedily and can strand one short word
      ("soon.") alone on its own line - balance picks a break point that keeps both
      lines closer in length instead. Unsupported browsers just keep the old wrap. */
   text-wrap: balance;
 }
-.wlpop__title--lead {
-  margin-top: var(--space-lg);
-}
-.wlpop__body {
+.wlgate__body {
   color: var(--color-ink-muted);
 }
-.wlpop__roles {
+.wlgate__roles {
   display: flex;
   gap: var(--space-xs);
   flex-wrap: wrap;
   margin-top: var(--space-xs);
 }
-.wlpop__role {
+.wlgate__role {
   flex: 1;
   min-width: 100px;
   padding: 10px 14px;
@@ -6832,32 +6815,32 @@ html.is-scroll-locked body {
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
-.wlpop__role:hover {
+.wlgate__role:hover {
   border-color: var(--color-ink-muted);
 }
-.wlpop__role.is-active {
+.wlgate__role.is-active {
   background: var(--color-accent-blue);
   border-color: var(--color-accent-blue);
   color: #ffffff;
 }
-.wlpop__actions {
+.wlgate__actions {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
   margin-top: var(--space-xs);
 }
-.wlpop__actions .btn-magnet {
+.wlgate__actions .btn-magnet {
   width: 100%;
 }
-.wlpop__actions .btn {
+.wlgate__actions .btn {
   width: 100%;
 }
-.wlpop__terms {
+.wlgate__terms {
   text-align: center;
   color: var(--color-ink-muted);
 }
-.wlpop__done {
+.wlgate__done {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6865,7 +6848,7 @@ html.is-scroll-locked body {
   gap: var(--space-sm);
   padding: var(--space-md) 0;
 }
-.wlpop__done-glyph {
+.wlgate__done-glyph {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
@@ -6876,7 +6859,7 @@ html.is-scroll-locked body {
   justify-content: center;
 }
 @media (max-width: 480px) {
-  .wlpop__role {
+  .wlgate__role {
     min-width: 84px;
   }
 }

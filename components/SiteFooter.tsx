@@ -59,7 +59,10 @@ export default function SiteFooter() {
             <div className="ds-headline" style={{ color: "#ffffff" }}>
               Bluepass
             </div>
-            <div className="ds-body-sm" style={{ color: "var(--color-ink-muted)", marginTop: 10, maxWidth: 220 }}>
+            <div
+              className="ds-body-sm"
+              style={{ color: "var(--color-ink-muted)", marginTop: 10, maxWidth: 280, textWrap: "balance" }}
+            >
               Vetted operators for surf, sail and dive, booked at the price you see.
             </div>
           </div>
@@ -115,12 +118,12 @@ export default function SiteFooter() {
           className="footer__legal"
           style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}
         >
-          {/* Bluepass Pty Ltd, ACN 701 302 463 - real, from the ASIC certificate of registration
-              the user shared 2026-08-21 (registered Queensland, 12 Aug 2026). Not an ABN - a
-              company doesn't get one of those automatically on incorporation, and this cert
-              doesn't show one, so this stays ACN rather than guessing. */}
+          {/* Entity is real - Bluepass Pty Ltd, ACN 701 302 463, from the ASIC certificate of
+              registration the user shared 2026-08-21 (registered Queensland, 12 Aug 2026) - but
+              Tony asked 2026-08-27 to keep the ACN itself off the public site, so only the name
+              shows here. The number is still in /privacy and /terms's own history for reference. */}
           <span className="ds-micro" style={{ color: "var(--color-ink-muted)" }}>
-            © 2026 Bluepass Pty Ltd. ACN 701 302 463.
+            © 2026 Bluepass Pty Ltd.
           </span>
           <div style={{ display: "flex", gap: 20 }}>
             <Link href="/privacy" className="footer__link ds-micro">

@@ -14,6 +14,9 @@ export const metadata: Metadata = {
  * address, exact data-retention periods, hosting regions, and a real privacy contact email are
  * still not filled in. Ships anyway because a dead Privacy link was P0-1 in Tony's 2026-08-12 audit
  * - "the site collects payment details with dead legal links" - and an honest draft beats a 404.
+ *
+ * Tony asked 2026-08-27 to keep the ACN itself off the public site - the body text below names
+ * just "Bluepass Pty Ltd", no number, even though this comment keeps the real one for reference.
  */
 export default function PrivacyPage() {
   return (
@@ -40,7 +43,7 @@ export default function PrivacyPage() {
             <h2 className="ds-headline">1. Who this policy covers</h2>
             <p className="ds-body">
               This policy applies to bluepass.co and the Bluepass booking service, operated by{" "}
-              <strong>Bluepass Pty Ltd (ACN 701 302 463)</strong>, registered at{" "}
+              <strong>Bluepass Pty Ltd</strong>, registered at{" "}
               <strong>[registered address]</strong> (&ldquo;Bluepass&rdquo;, &ldquo;we&rdquo;). It
               covers travellers booking trips, operators listed on Bluepass, and creators/referral
               partners.

@@ -58,15 +58,16 @@ export default function PartnersHero() {
         <MaskLines
           as="h1"
           className="ds-display-xl"
-          lines={["Send your divers to", "Indonesia's best operators."]}
+          lines={["Send your community", "to Australia and Indonesia."]}
           mode="load"
           delay={0.6}
           stagger={0.14}
         />
 
         <p className="phero__copy ds-body-lg">
-          They pay the operator&apos;s own rate. You earn on every booking. Every trip funds reef
-          conservation in the exact place they dive.
+          Send your community to Australia and Indonesia&apos;s best marine experiences
+          <br />
+          and help fund conservation.
         </p>
 
         <div className="phero__ctas">
