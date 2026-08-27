@@ -7,6 +7,10 @@ import {
   type SectionResult,
 } from "@/lib/services/admin/payouts";
 import {
+  fetchRezdyAgentManualInquiries,
+  type RezdyAgentManualInquiry,
+} from "@/lib/services/discover/rezdy-agent-sync";
+import {
   listKaiCoreBluePassLedger,
   type KaiCoreBluePassLedgerEntry,
 } from "@/lib/services/kai-core/client";
@@ -58,15 +62,23 @@ export function operatorBookingSource(profile: {
 /**
  * The source, plus the rows when there are rows to have. Flattened onto the same `kind` the source
  * carries rather than nested under it, so one `switch` in the component covers both "which of the
- * three situations is this" and "did the fetch work".
+ * situations is this" and "did the fetch work".
+ *
+ * `rezdy-agent` carries a result too, unlike before - see the module comment on
+ * `loadRezdyAgentInquiries` for why this became a real, fetchable source instead of a permanent
+ * "cannot be read from here" dead end.
  */
 export type OperatorBookings =
   | (Extract<OperatorBookingSource, { kind: "kai-tenant" }> & {
       result: SectionResult<LedgerRowView[]>;
     })
-  | Extract<OperatorBookingSource, { kind: "rezdy-agent" | "unlinked" }>;
+  | (Extract<OperatorBookingSource, { kind: "rezdy-agent" }> & {
+      result: SectionResult<RezdyAgentManualInquiry[]>;
+    })
+  | Extract<OperatorBookingSource, { kind: "unlinked" }>;
 
 type LedgerLoader = typeof listKaiCoreBluePassLedger;
+type ManualInquiryLoader = typeof fetchRezdyAgentManualInquiries;
 
 /**
  * The operator's own ledger lines, newest first, across every status.
@@ -81,13 +93,21 @@ type LedgerLoader = typeof listKaiCoreBluePassLedger;
  * decision to pay is the admin console's; this page reports it.
  */
 export async function loadOperatorBookings(
-  profile: Pick<OperatorProfileView, "kaiTenantSlug" | "rezdySupplierId">,
+  profile: Pick<OperatorProfileView, "id" | "kaiTenantSlug" | "rezdySupplierId">,
   listLedger: LedgerLoader = listKaiCoreBluePassLedger,
+  listManualInquiries: ManualInquiryLoader = fetchRezdyAgentManualInquiries,
 ): Promise<OperatorBookings> {
   const source = operatorBookingSource(profile);
 
-  if (source.kind !== "kai-tenant") {
+  if (source.kind === "unlinked") {
     return source;
+  }
+
+  if (source.kind === "rezdy-agent") {
+    return {
+      ...source,
+      result: await section(() => loadRezdyAgentInquiries(profile.id, listManualInquiries)),
+    };
   }
 
   const { tenantSlug } = source;
@@ -104,6 +124,33 @@ export async function loadOperatorBookings(
   };
 }
 
+/**
+ * A Rezdy-Agent operator's "bookings" today are real ManualInquiry rows on Kai's canonical shared
+ * tenant (bookingMode MANUAL_INQUIRY, confirmed against production 2026-08-25), not ledger entries -
+ * see `OperatorListing.externalProductId`'s schema comment for the full picture. This is the query
+ * that turns that shared pool back into "this operator's inquiries": every product id their own live
+ * listings carry, sent to Kai, filtered there.
+ *
+ * A listing with no `externalProductId` yet (synced before this field existed, or manually re-synced
+ * has not happened since) simply contributes nothing rather than erroring - the operator still sees
+ * whatever their other listings' ids do turn up.
+ */
+async function loadRezdyAgentInquiries(
+  operatorProfileId: string,
+  listManualInquiries: ManualInquiryLoader,
+): Promise<RezdyAgentManualInquiry[]> {
+  const listings = await prisma.operatorListing.findMany({
+    where: { operatorProfileId, externalProductId: { not: null } },
+    select: { externalProductId: true },
+  });
+
+  const productIds = listings
+    .map((listing) => listing.externalProductId)
+    .filter((id): id is string => Boolean(id));
+
+  return listManualInquiries(productIds);
+}
+
 export type OperatorListingRow = {
   id: string;
   title: string;
@@ -112,6 +159,14 @@ export type OperatorListingRow = {
   category: string;
   priceSignal: string | null;
   publishedAt: Date | null;
+  /* Everything below is only read by the self-service listing editor (non-Rezdy operators) to
+     pre-fill an edit form for a DRAFT row - not shown anywhere on the read-only card. Cheap to
+     include for every operator since none of it is sensitive, unlike payout details. */
+  description: string;
+  heroImageUrl: string | null;
+  maxGuests: number | null;
+  priceFrom: number | null;
+  currency: string;
 };
 
 /**
@@ -133,6 +188,11 @@ export async function loadOperatorListings(operatorProfileId: string): Promise<O
       category: true,
       priceSignal: true,
       publishedAt: true,
+      description: true,
+      heroImageUrl: true,
+      maxGuests: true,
+      priceFrom: true,
+      currency: true,
     },
   });
 }

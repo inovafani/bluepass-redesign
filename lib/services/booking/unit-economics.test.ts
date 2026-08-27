@@ -2,24 +2,27 @@ import { describe, expect, it } from "vitest";
 import { splitBooking } from "./unit-economics";
 
 describe("splitBooking", () => {
-  it("splits an unreferred $1000 booking into the real 18% (5/0/3/10) breakdown, operator keeps 82%", () => {
+  // Indonesia was corrected from 18%/82% to 20%/80% on 2026-08-24 (Tony: "Indonesia ternyata 20%
+  // juga, bukan 18%"), matching AU's earlier 2026-08-05 move - so the no-market default below is now
+  // the same 20%/80% split as an explicit "AUSTRALIA"/"INDONESIA" market.
+  it("splits an unreferred $1000 booking into the real 20% (5/0/3/12) breakdown, operator keeps 80%", () => {
     const split = splitBooking(1000);
 
     expect(split.conservation).toBe(50);
     expect(split.creatorShare).toBe(0);
     expect(split.paymentProcessing).toBe(30);
-    expect(split.commission).toBe(100);
-    expect(split.operatorNet).toBe(820);
+    expect(split.commission).toBe(120);
+    expect(split.operatorNet).toBe(800);
   });
 
-  it("splits a referred $1000 booking into the real 18% (5/5/3/5) breakdown, operator still keeps 82%", () => {
+  it("splits a referred $1000 booking into the real 20% (5/5/3/7) breakdown, operator still keeps 80%", () => {
     const split = splitBooking(1000, true);
 
     expect(split.conservation).toBe(50);
     expect(split.creatorShare).toBe(50);
     expect(split.paymentProcessing).toBe(30);
-    expect(split.commission).toBe(50);
-    expect(split.operatorNet).toBe(820);
+    expect(split.commission).toBe(70);
+    expect(split.operatorNet).toBe(800);
   });
 
   it("splits a referred $1000 AU booking into 20% (5/5/3/7), operator keeps 80%", () => {
@@ -39,13 +42,14 @@ describe("splitBooking", () => {
     expect(split.operatorNet).toBe(800);
   });
 
-  it("does not change the default (no market) split - still exactly 18%/82%", () => {
+  it("gives the same split with no market, an explicit INDONESIA, or an explicit AUSTRALIA - all 20%/80% now", () => {
     const withoutMarket = splitBooking(1000, true);
     const explicitIndonesia = splitBooking(1000, true, "INDONESIA");
+    const explicitAustralia = splitBooking(1000, true, "AUSTRALIA");
 
-    for (const split of [withoutMarket, explicitIndonesia]) {
-      expect(split.commission).toBe(50);
-      expect(split.operatorNet).toBe(820);
+    for (const split of [withoutMarket, explicitIndonesia, explicitAustralia]) {
+      expect(split.commission).toBe(70);
+      expect(split.operatorNet).toBe(800);
     }
   });
 

@@ -27,6 +27,11 @@ export const ADMIN_SECTIONS: AdminSection[] = [
     counter: "pendingApprovals",
   },
   {
+    href: "/admin/operators",
+    label: "Operators",
+    blurb: "Every operator profile — open one to correct its details after onboarding.",
+  },
+  {
     href: "/admin/operators/new",
     label: "New operator",
     blurb:

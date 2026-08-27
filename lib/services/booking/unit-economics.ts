@@ -28,9 +28,12 @@ export type BookingSplit = {
 const roundCurrency = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 /**
- * `market` is opt-in only, same convention as kai's ledger.ts: undefined (and "INDONESIA") both mean
- * the original 18%/82% split, so every existing caller keeps its exact current numbers with zero
- * code change. Only an explicit "AUSTRALIA" opts into the new 20%/80% split.
+ * `market` is opt-in only, same convention as kai's ledger.ts. As of 2026-08-24 every market
+ * (AU, Indonesia, and no market at all) is on the same 20%/80% split - see economics.ts's comment
+ * for the full history, including why an earlier "Boattime stays frozen on the old rate" carve-out
+ * turned out to have no real source and was removed. `market` no longer changes the numbers this
+ * function returns; it's kept as a parameter only so kai's mirrored ledger.ts and this file stay
+ * structurally comparable, in case a real future region-specific split needs it again.
  */
 export function splitBooking(totalUsd: number, creatorAttributed = false, market?: BookingSplitMarket): BookingSplit {
   if (!Number.isFinite(totalUsd) || totalUsd < 0) {

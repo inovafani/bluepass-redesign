@@ -64,6 +64,28 @@ enum SignupRole {
   CREATOR
 }
 
+enum WaitlistRole {
+  OPERATOR
+  PARTNER
+  TRAVELLER
+}
+
+// The "we're still building this" popup's own lead capture - deliberately separate from
+// SignupLead. SignupLead's /api/signup is an account-bound real application (creates a real
+// OperatorProfile/CreatorProfile in PENDING_REVIEW); this is anonymous, pre-account interest
+// capture only ("just a form so if people are interested... they can join the waiting list" -
+// Tony, 2026-08-27), meant to be emailed once the platform is actually ready, not reviewed now.
+model WaitlistSignup {
+  id        String       @id @default(cuid())
+  email     String
+  name      String?
+  role      WaitlistRole
+  createdAt DateTime     @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
+
 enum BluePassAccountRole {
   TRAVELLER
   CREATOR
@@ -468,6 +490,13 @@ model OperatorListing {
   // have this set, and the Discover mapping treats that the same as "no price shown."
   priceFrom         Float?
   currency          String                @default("AUD")
+  // The Rezdy product code this listing was synced from (rezdy-agent-sync.ts's RezdyMarketplaceProduct.productCode)
+  // - null for listings an operator authored themselves. Join key back to Kai's ManualInquiry rows
+  // (Kai's PmsBookingPaymentAttempt.productExternalId is the same value on that side): the shared
+  // canonical "bluepass" tenant that powers Discover's Kai widget has no per-operator ledger, only a
+  // pool of manual inquiries, and this is what turns that pool back into "this operator's inquiries"
+  // (see lib/services/operator/dashboard.ts's rezdy-agent branch).
+  externalProductId String?
   status            OperatorListingStatus @default(DRAFT)
   publishedAt       DateTime?
   archivedAt        DateTime?

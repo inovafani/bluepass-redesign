@@ -10,6 +10,13 @@ export const operatorListingInputSchema = z.object({
   heroImageUrl: z.string().trim().max(500).optional(),
   maxGuests: z.coerce.number().int().positive().max(500).optional(),
   priceSignal: z.string().trim().max(120).optional(),
+  /* Not optional in practice, even though the column is nullable: fetchSyncedTrips() only ever
+     shows a listing with `priceFrom: { not: null }` on Discover, since Trip.price backs both the
+     "A$X/guest" display and the 5%-conservation-split math there, un-guarded. A self-service
+     listing with no priceFrom saves fine and shows on the operator's own dashboard, but never
+     reaches a traveller - discovered live (2026-08-24) the first time this schema was driven by a
+     real form instead of only the Rezdy sync, which always supplies one. */
+  priceFrom: z.coerce.number().positive().max(1_000_000).optional(),
   currency: z.string().trim().length(3).optional(),
 });
 
@@ -63,6 +70,10 @@ async function buildUniqueListingSlug(title: string) {
 }
 
 function listingWriteData(input: OperatorListingInput) {
+  const currency = input.currency?.trim().toUpperCase() || "AUD";
+  const priceSignal =
+    input.priceSignal?.trim() || (input.priceFrom ? `From ${currency} ${input.priceFrom}` : null);
+
   return {
     title: input.title.trim(),
     category: input.category.trim(),
@@ -70,8 +81,9 @@ function listingWriteData(input: OperatorListingInput) {
     description: input.description.trim(),
     heroImageUrl: normalizeOptionalUrl(input.heroImageUrl),
     maxGuests: input.maxGuests ?? null,
-    priceSignal: input.priceSignal?.trim() || null,
-    currency: input.currency?.trim().toUpperCase() || "AUD",
+    priceFrom: input.priceFrom ?? null,
+    priceSignal,
+    currency,
   };
 }
 

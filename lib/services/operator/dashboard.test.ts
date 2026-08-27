@@ -2,11 +2,34 @@ import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db/prisma";
 import type { KaiCoreBluePassLedgerEntry } from "@/lib/services/kai-core/client";
+import type { RezdyAgentManualInquiry } from "@/lib/services/discover/rezdy-agent-sync";
 import {
   loadOperatorBookings,
   loadOperatorListings,
   operatorBookingSource,
 } from "./dashboard";
+
+/** A stand-in for `loadOperatorBookings`'s third param, the same way `fakeLedger` stands in for the second. */
+function fakeManualInquiries(rows: (productExternalIds: string[]) => RezdyAgentManualInquiry[]) {
+  return vi.fn(async (productExternalIds: string[]) => rows(productExternalIds));
+}
+
+function inquiry(overrides: Partial<RezdyAgentManualInquiry> = {}): RezdyAgentManualInquiry {
+  return {
+    id: `inq_${randomUUID()}`,
+    status: "OPEN",
+    productExternalId: "AGT-1",
+    productTitle: "Reef Trip",
+    dateText: "Saturday",
+    guests: 2,
+    travellerName: "Alex",
+    travellerEmail: "alex@example.test",
+    travellerPhone: null,
+    travellerMessage: "I'd like to book this.",
+    createdAt: "2026-08-25T00:00:00.000Z",
+    ...overrides,
+  };
+}
 
 /**
  * The listings cases use real rows behind the usual prefix; the bookings cases inject a fake ledger
@@ -86,7 +109,7 @@ describe("loadOperatorBookings", () => {
     const listLedger = fakeLedger(() => [entry()]);
 
     const bookings = await loadOperatorBookings(
-      { kaiTenantSlug: "operator-dashboard-test", rezdySupplierId: null },
+      { id: "does-not-matter-for-kai-tenant", kaiTenantSlug: "operator-dashboard-test", rezdySupplierId: null },
       listLedger,
     );
 
@@ -107,7 +130,7 @@ describe("loadOperatorBookings", () => {
     const listLedger = fakeLedger(({ status }) => (status === "PENDING" ? [entry()] : []));
 
     const bookings = await loadOperatorBookings(
-      { kaiTenantSlug: "operator-dashboard-test", rezdySupplierId: null },
+      { id: "does-not-matter-for-kai-tenant", kaiTenantSlug: "operator-dashboard-test", rezdySupplierId: null },
       listLedger,
     );
 
@@ -127,7 +150,7 @@ describe("loadOperatorBookings", () => {
     });
 
     const bookings = await loadOperatorBookings(
-      { kaiTenantSlug: "operator-dashboard-test", rezdySupplierId: null },
+      { id: "does-not-matter-for-kai-tenant", kaiTenantSlug: "operator-dashboard-test", rezdySupplierId: null },
       listLedger,
     );
 
@@ -137,28 +160,83 @@ describe("loadOperatorBookings", () => {
     expect(bookings.result.message).toContain("ledger request failed");
   });
 
-  it("never calls Kai for a Rezdy-Agent operator", async () => {
+  it("never calls the ledger for a Rezdy-Agent operator, and asks Kai for this operator's own product ids", async () => {
     const listLedger = fakeLedger(() => [entry()]);
+    const listManualInquiries = fakeManualInquiries(() => [inquiry()]);
+    const operatorProfileId = await operatorProfile();
+    await prisma.operatorListing.createMany({
+      data: [
+        listing(operatorProfileId, { title: "Reef Trip", externalProductId: "AGT-1" }),
+        listing(operatorProfileId, { title: "Sunset Sail", externalProductId: "AGT-2" }),
+        listing(operatorProfileId, { title: "Draft With No Product Id Yet" }),
+      ],
+    });
 
     const bookings = await loadOperatorBookings(
-      { kaiTenantSlug: null, rezdySupplierId: "SUP-42" },
+      { id: operatorProfileId, kaiTenantSlug: null, rezdySupplierId: "SUP-42" },
       listLedger,
+      listManualInquiries,
     );
 
-    expect(bookings).toEqual({ kind: "rezdy-agent", rezdySupplierId: "SUP-42" });
     expect(listLedger).not.toHaveBeenCalled();
+    expect(listManualInquiries).toHaveBeenCalledTimes(1);
+    const [calledWith] = listManualInquiries.mock.calls[0];
+    expect(calledWith.sort()).toEqual(["AGT-1", "AGT-2"]);
+
+    if (bookings.kind !== "rezdy-agent" || !bookings.result.ok) throw new Error("expected inquiry rows");
+    expect(bookings.rezdySupplierId).toBe("SUP-42");
+    expect(bookings.result.data).toHaveLength(1);
   });
 
-  it("never calls Kai for an operator with no booking source at all", async () => {
-    const listLedger = fakeLedger(() => [entry()]);
+  it("asks Kai for an empty product id list rather than erroring when no listing has one yet", async () => {
+    const listLedger = fakeLedger(() => []);
+    const listManualInquiries = fakeManualInquiries(() => []);
+    const operatorProfileId = await operatorProfile();
+    await prisma.operatorListing.create({ data: listing(operatorProfileId, { title: "No Product Id" }) });
 
     const bookings = await loadOperatorBookings(
-      { kaiTenantSlug: null, rezdySupplierId: null },
+      { id: operatorProfileId, kaiTenantSlug: null, rezdySupplierId: "SUP-43" },
       listLedger,
+      listManualInquiries,
+    );
+
+    expect(listManualInquiries).toHaveBeenCalledWith([]);
+    if (bookings.kind !== "rezdy-agent" || !bookings.result.ok) throw new Error("expected an ok, empty result");
+    expect(bookings.result.data).toEqual([]);
+  });
+
+  it("reports an unreachable Kai as a failure for a Rezdy-Agent operator too, not an empty history", async () => {
+    const listLedger = fakeLedger(() => []);
+    const listManualInquiries = fakeManualInquiries(() => {
+      throw new Error("Kai manual-inquiries request failed with status 502.");
+    });
+    const operatorProfileId = await operatorProfile();
+
+    const bookings = await loadOperatorBookings(
+      { id: operatorProfileId, kaiTenantSlug: null, rezdySupplierId: "SUP-44" },
+      listLedger,
+      listManualInquiries,
+    );
+
+    if (bookings.kind !== "rezdy-agent") throw new Error("expected the rezdy-agent branch");
+    expect(bookings.result.ok).toBe(false);
+    if (bookings.result.ok) return;
+    expect(bookings.result.message).toContain("manual-inquiries request failed");
+  });
+
+  it("never calls Kai at all for an operator with no booking source", async () => {
+    const listLedger = fakeLedger(() => [entry()]);
+    const listManualInquiries = fakeManualInquiries(() => [inquiry()]);
+
+    const bookings = await loadOperatorBookings(
+      { id: "does-not-matter-for-unlinked", kaiTenantSlug: null, rezdySupplierId: null },
+      listLedger,
+      listManualInquiries,
     );
 
     expect(bookings).toEqual({ kind: "unlinked" });
     expect(listLedger).not.toHaveBeenCalled();
+    expect(listManualInquiries).not.toHaveBeenCalled();
   });
 });
 
@@ -213,7 +291,12 @@ async function operatorProfile() {
 
 function listing(
   operatorProfileId: string,
-  overrides: { title: string; status?: "DRAFT" | "LIVE" | "ARCHIVED"; priceSignal?: string },
+  overrides: {
+    title: string;
+    status?: "DRAFT" | "LIVE" | "ARCHIVED";
+    priceSignal?: string;
+    externalProductId?: string;
+  },
 ) {
   return {
     operatorProfileId,
@@ -224,5 +307,6 @@ function listing(
     description: "A test listing.",
     status: overrides.status ?? "DRAFT",
     priceSignal: overrides.priceSignal ?? null,
+    externalProductId: overrides.externalProductId ?? null,
   };
 }

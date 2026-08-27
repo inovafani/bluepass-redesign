@@ -1,4 +1,3 @@
-import type { ActorPayload } from "@/lib/services/booking/orchestrator";
 import { splitBooking } from "@/lib/services/booking/unit-economics";
 import {
   buildAcceptPayload,
@@ -7,14 +6,6 @@ import {
   buildOperatorInquiryParams,
   whatsappTemplateNames,
 } from "@/lib/services/whatsapp/templates";
-
-export type OperatorAction = "accept" | "decline" | "counter";
-
-export type OperatorDispatchInput = {
-  bookingId: string;
-  action: OperatorAction;
-  payload: ActorPayload;
-};
 
 export type DeclineReason =
   | "SOLD_OUT"
@@ -209,12 +200,4 @@ export function buildOperatorCounterPrompt(input: {
       "For now, BluePass will capture the message and prepare a structured counter flow.",
     ].join("\n"),
   };
-}
-
-export async function dispatchOperatorAction(
-  _input: OperatorDispatchInput,
-): Promise<void> {
-  void _input;
-
-  throw new Error("Not implemented yet");
 }

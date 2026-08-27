@@ -58,7 +58,7 @@ export default async function OperatorDashboardPage() {
         platformDefault={PLATFORM_DEFAULT_CANCELLATION_TIERS}
         usingDefault={savedTiers.length === 0}
       />
-      <OperatorListings listings={listings} />
+      <OperatorListings listings={listings} editable={!profile.rezdySupplierId} />
       <OperatorBookings bookings={bookings} />
     </>
   );

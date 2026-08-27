@@ -29,8 +29,8 @@ export default function PrivacyPage() {
           <p className="ds-body-sm">
             <strong>Draft — pending review.</strong> This page describes what Bluepass actually
             collects and does with it today, in plain terms. The remaining bracketed fields below
-            (registered address, retention periods, cross-border transfer basis, contact) have not
-            yet been filled in by Bluepass's own team and should be treated as placeholders until
+            (registered address, retention periods, cross-border transfer basis) have not yet been
+            filled in by Bluepass's own team and should be treated as placeholders until
             they are.
           </p>
         </div>
@@ -147,8 +147,9 @@ export default function PrivacyPage() {
             <p className="ds-body">
               You can ask to see, correct, or delete the personal data we hold about you, or ask us
               to stop processing it, by contacting{" "}
-              <strong>[privacy contact email]</strong>. Deleting your account does not retroactively
-              remove records we are legally required to keep (e.g. completed transaction records).
+              <a href="mailto:admin@bluepass.co">admin@bluepass.co</a>. Deleting your account does
+              not retroactively remove records we are legally required to keep (e.g. completed
+              transaction records).
             </p>
           </section>
 
@@ -184,7 +185,8 @@ export default function PrivacyPage() {
           <section>
             <h2 className="ds-headline">11. Contact</h2>
             <p className="ds-body">
-              Questions about this policy or your data: <strong>[privacy contact email]</strong>.
+              Questions about this policy or your data:{" "}
+              <a href="mailto:admin@bluepass.co">admin@bluepass.co</a>.
             </p>
           </section>
         </div>

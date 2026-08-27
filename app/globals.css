@@ -6711,6 +6711,176 @@ html.is-scroll-locked body {
 .legalpage__body a {
   color: var(--color-ink);
 }
+/* Waitlist popup ------------------------------------------------------------
+ * Same backdrop recipe as .tsheet__backdrop (rgba(6,6,5,.72) + blur(18px)) so
+ * it reads as the same overlay language, just centred instead of a bottom
+ * sheet - this is a short interstitial, not a page's worth of content. */
+.wlpop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+.wlpop__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgba(6, 6, 5, 0.72);
+  backdrop-filter: blur(18px);
+  cursor: pointer;
+}
+.wlpop__card {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: 90svh;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-xxl);
+  box-shadow: var(--shadow-2), 0 30px 80px rgba(0, 0, 0, 0.5);
+  display: flex;
+  overflow: hidden;
+}
+/* Same split-poster shape as .ashell__aside, scaled down for a modal rather than a full page -
+   hidden below 720px, where a modal's height budget is too tight to spare room for a photo
+   without squeezing the form off-screen. */
+.wlpop__image {
+  position: relative;
+  display: none;
+  width: 300px;
+  flex-shrink: 0;
+}
+.wlpop__image-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 10, 9, 0.05) 0%, rgba(10, 10, 9, 0.55) 100%);
+}
+@media (min-width: 720px) {
+  .wlpop__card {
+    width: min(760px, 100%);
+  }
+  .wlpop__image {
+    display: block;
+  }
+}
+.wlpop__panel {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  max-height: 90svh;
+  overflow-y: auto;
+  padding: clamp(28px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.wlpop__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-hairline);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.wlpop__close:hover {
+  color: var(--color-ink);
+  border-color: var(--color-ink-muted);
+}
+.wlpop__title {
+  margin-top: var(--space-xs);
+  margin-bottom: 2px;
+  padding-right: 24px;
+  /* Without this, a 2-line headline wraps greedily and can strand one short word
+     ("soon.") alone on its own line - balance picks a break point that keeps both
+     lines closer in length instead. Unsupported browsers just keep the old wrap. */
+  text-wrap: balance;
+}
+.wlpop__title--lead {
+  margin-top: var(--space-lg);
+}
+.wlpop__body {
+  color: var(--color-ink-muted);
+}
+.wlpop__roles {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-top: var(--space-xs);
+}
+.wlpop__role {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface-2);
+  color: var(--color-ink-muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.wlpop__role:hover {
+  border-color: var(--color-ink-muted);
+}
+.wlpop__role.is-active {
+  background: var(--color-accent-blue);
+  border-color: var(--color-accent-blue);
+  color: #ffffff;
+}
+.wlpop__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+.wlpop__actions .btn-magnet {
+  width: 100%;
+}
+.wlpop__actions .btn {
+  width: 100%;
+}
+.wlpop__terms {
+  text-align: center;
+  color: var(--color-ink-muted);
+}
+.wlpop__done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) 0;
+}
+.wlpop__done-glyph {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: rgba(34, 197, 94, 0.14);
+  color: var(--color-semantic-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 480px) {
+  .wlpop__role {
+    min-width: 84px;
+  }
+}
+
 .legalpage__list {
   color: var(--color-ink-muted);
   line-height: 1.6;

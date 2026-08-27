@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db/prisma";
 import {
+  fetchRezdyAgentManualInquiries,
   fetchRezdyAgentMarketplaceProducts,
   syncRezdyAgentMarketplaceProducts,
   type RezdyMarketplaceProduct,
@@ -215,6 +216,28 @@ describe("syncRezdyAgentMarketplaceProducts", () => {
     expect(listing.currency).toBe("AUD");
     expect(listing.priceSignal).toBeNull();
   });
+
+  it("stores the Rezdy product code as externalProductId, and keeps it in sync on re-runs", async () => {
+    const p = product();
+
+    await syncRezdyAgentMarketplaceProducts([p]);
+
+    const profile = await prisma.operatorProfile.findUniqueOrThrow({ where: { rezdySupplierId: p.supplierId } });
+    const listing = await prisma.operatorListing.findFirstOrThrow({
+      where: { operatorProfileId: profile.id, title: p.name },
+    });
+    expect(listing.externalProductId).toBe(p.productCode);
+
+    // Re-synced with a different productCode (Rezdy could in principle reassign it) - the stored
+    // value must track whatever the feed says now, same as every other synced field.
+    const reassigned = { ...p, productCode: `AGT-${randomUUID()}` };
+    await syncRezdyAgentMarketplaceProducts([reassigned]);
+
+    const updated = await prisma.operatorListing.findFirstOrThrow({
+      where: { operatorProfileId: profile.id, title: p.name },
+    });
+    expect(updated.externalProductId).toBe(reassigned.productCode);
+  });
 });
 
 describe("fetchRezdyAgentMarketplaceProducts", () => {
@@ -243,6 +266,46 @@ describe("fetchRezdyAgentMarketplaceProducts", () => {
 
     await expect(
       fetchRezdyAgentMarketplaceProducts({ REZDY_AGENT_SYNC_TOKEN: "secret" }, fetchImpl as unknown as typeof fetch),
+    ).rejects.toThrow("status 401");
+  });
+});
+
+describe("fetchRezdyAgentManualInquiries", () => {
+  it("sends the joined product ids and the internal token, returning the parsed inquiries array", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ inquiries: [{ id: "inq_1" }] }), { status: 200 }));
+
+    const inquiries = await fetchRezdyAgentManualInquiries(
+      ["AGT-1", "AGT-2"],
+      { REZDY_AGENT_SYNC_TOKEN: "secret", KAI_CORE_BASE_URL: "https://kai.example" },
+      fetchImpl as unknown as typeof fetch,
+    );
+
+    expect(inquiries).toEqual([{ id: "inq_1" }]);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://kai.example/api/internal/rezdy-agent/manual-inquiries?productExternalIds=AGT-1%2CAGT-2");
+    expect((init.headers as Record<string, string>)["x-kai-internal-token"]).toBe("secret");
+  });
+
+  it("returns no rows without a network call for an empty product id list", async () => {
+    const fetchImpl = vi.fn();
+
+    const inquiries = await fetchRezdyAgentManualInquiries([], { REZDY_AGENT_SYNC_TOKEN: "secret" }, fetchImpl as unknown as typeof fetch);
+
+    expect(inquiries).toEqual([]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("throws when REZDY_AGENT_SYNC_TOKEN is not configured", async () => {
+    await expect(
+      fetchRezdyAgentManualInquiries(["AGT-1"], {}, vi.fn() as unknown as typeof fetch),
+    ).rejects.toThrow("REZDY_AGENT_SYNC_TOKEN is not configured.");
+  });
+
+  it("throws with the response status when Kai's endpoint rejects the request", async () => {
+    const fetchImpl = vi.fn(async () => new Response("", { status: 401 }));
+
+    await expect(
+      fetchRezdyAgentManualInquiries(["AGT-1"], { REZDY_AGENT_SYNC_TOKEN: "secret" }, fetchImpl as unknown as typeof fetch),
     ).rejects.toThrow("status 401");
   });
 });

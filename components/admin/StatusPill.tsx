@@ -30,8 +30,21 @@ const PAYOUT_TONES: Record<string, PillTone> = {
   FAILURE: "bad",
 };
 
+// OPEN and OPERATOR_NOTIFIED both still read as "needs a look" from an operator's own dashboard -
+// the distinction between "Bluepass hasn't told you yet" and "Bluepass told you" isn't the operator's
+// to track, only "is this handled" is (CLOSED).
+const MANUAL_INQUIRY_TONES: Record<string, PillTone> = {
+  OPEN: "warn",
+  OPERATOR_NOTIFIED: "warn",
+  CLOSED: "muted",
+};
+
 export function ledgerTone(status: string): PillTone {
   return LEDGER_TONES[status] ?? "muted";
+}
+
+export function manualInquiryTone(status: string): PillTone {
+  return MANUAL_INQUIRY_TONES[status] ?? "muted";
 }
 
 export function cronTone(status: string): PillTone {

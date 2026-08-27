@@ -6,6 +6,12 @@ import {
   updateOperatorCancellationPolicy,
   updateOperatorPayoutDetails,
 } from "@/lib/services/operator/payout-settings";
+import {
+  createDraftListing,
+  operatorListingInputSchema,
+  publishListing,
+  updateDraftListing,
+} from "@/lib/services/operators/operator-listing-service";
 
 export type OperatorSettingsState =
   | { status: "idle" }
@@ -125,6 +131,125 @@ export async function updateCancellationPolicyAction(
     status: "done",
     message: "Cancellation policy saved. It applies to cancellations from now on.",
   };
+}
+
+function listingFieldsFromForm(formData: FormData) {
+  const text = (field: string) => {
+    const value = formData.get(field);
+    return typeof value === "string" && value.trim() ? value.trim() : undefined;
+  };
+
+  return {
+    title: text("title") ?? "",
+    category: text("category") ?? "",
+    region: text("region") ?? "",
+    description: text("description") ?? "",
+    heroImageUrl: text("heroImageUrl"),
+    maxGuests: text("maxGuests"),
+    priceFrom: text("priceFrom"),
+    priceSignal: text("priceSignal"),
+    currency: text("currency"),
+  };
+}
+
+/**
+ * Listings are only self-editable for an operator with no Rezdy link: a Rezdy-synced operator's
+ * listing content is meant to come from the daily sync (see rezdy-agent-sync.ts), and letting them
+ * hand-edit the same row here would just have their edit overwritten by the next sync run. This is
+ * a UI-level restriction too (OperatorListings only renders the editor when unlinked), checked again
+ * here since a server action must not trust that the page enforced it.
+ */
+function requireEditableOperator(access: Extract<Awaited<ReturnType<typeof currentOperatorAccess>>, { ok: true }>) {
+  if (access.profile.rezdySupplierId) {
+    return {
+      status: "error" as const,
+      message: "This operator's listing is managed by the Rezdy sync, not this form.",
+    };
+  }
+
+  return null;
+}
+
+export async function createListingAction(
+  _previous: OperatorSettingsState,
+  formData: FormData,
+): Promise<OperatorSettingsState> {
+  const { access, failure } = await requireOperator();
+  if (failure) return failure;
+
+  const blocked = requireEditableOperator(access);
+  if (blocked) return blocked;
+
+  const parsed = operatorListingInputSchema.safeParse(listingFieldsFromForm(formData));
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return {
+      status: "error",
+      message: issue?.message ?? "Please check these details and try again.",
+      field: typeof issue?.path[0] === "string" ? issue.path[0] : undefined,
+    };
+  }
+
+  try {
+    await createDraftListing({ ...parsed.data, accountId: access.account.id });
+  } catch (err) {
+    return { status: "error", message: err instanceof Error ? err.message : "Could not create the listing." };
+  }
+
+  revalidatePath("/operator");
+  return { status: "done", message: "Draft listing created. Publish it when you're ready for travellers to see it." };
+}
+
+export async function updateListingAction(
+  listingId: string,
+  _previous: OperatorSettingsState,
+  formData: FormData,
+): Promise<OperatorSettingsState> {
+  const { access, failure } = await requireOperator();
+  if (failure) return failure;
+
+  const blocked = requireEditableOperator(access);
+  if (blocked) return blocked;
+
+  const parsed = operatorListingInputSchema.safeParse(listingFieldsFromForm(formData));
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return {
+      status: "error",
+      message: issue?.message ?? "Please check these details and try again.",
+      field: typeof issue?.path[0] === "string" ? issue.path[0] : undefined,
+    };
+  }
+
+  try {
+    await updateDraftListing({ ...parsed.data, listingId, accountId: access.account.id });
+  } catch (err) {
+    return { status: "error", message: err instanceof Error ? err.message : "Could not save the listing." };
+  }
+
+  revalidatePath("/operator");
+  return { status: "done", message: "Draft saved." };
+}
+
+export async function publishListingAction(
+  listingId: string,
+  _previous: OperatorSettingsState,
+  _formData: FormData,
+): Promise<OperatorSettingsState> {
+  const { access, failure } = await requireOperator();
+  if (failure) return failure;
+
+  const blocked = requireEditableOperator(access);
+  if (blocked) return blocked;
+
+  try {
+    await publishListing({ listingId, accountId: access.account.id });
+  } catch (err) {
+    return { status: "error", message: err instanceof Error ? err.message : "Could not publish the listing." };
+  }
+
+  revalidatePath("/operator");
+  return { status: "done", message: "Published — travellers can see this listing now." };
 }
 
 /**

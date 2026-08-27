@@ -53,6 +53,55 @@ export async function fetchRezdyAgentMarketplaceProducts(
   return Array.isArray(body.products) ? (body.products as RezdyMarketplaceProduct[]) : [];
 }
 
+export type RezdyAgentManualInquiry = {
+  id: string;
+  status: "OPEN" | "OPERATOR_NOTIFIED" | "CLOSED";
+  productExternalId: string | null;
+  productTitle: string | null;
+  dateText: string | null;
+  guests: number | null;
+  travellerName: string | null;
+  travellerEmail: string | null;
+  travellerPhone: string | null;
+  travellerMessage: string;
+  createdAt: string;
+};
+
+/**
+ * A Rezdy-Agent-synced operator's own manual-inquiry history (see OperatorListing.externalProductId's
+ * schema comment for why this - not a ledger - is what these operators actually have today). Same
+ * shared-secret pattern as fetchRezdyAgentMarketplaceProducts above; empty input returns no rows
+ * without a network call, matching Kai's own fail-closed behaviour for an empty id list.
+ */
+export async function fetchRezdyAgentManualInquiries(
+  externalProductIds: string[],
+  env: RezdyAgentSyncEnv = process.env,
+  fetchImpl: FetchLike = fetch,
+): Promise<RezdyAgentManualInquiry[]> {
+  if (externalProductIds.length === 0) {
+    return [];
+  }
+
+  const token = env.REZDY_AGENT_SYNC_TOKEN;
+  if (!token) {
+    throw new Error("REZDY_AGENT_SYNC_TOKEN is not configured.");
+  }
+  const baseUrl = (env.KAI_CORE_BASE_URL ?? "http://127.0.0.1:3107").replace(/\/$/, "");
+  const params = new URLSearchParams({ productExternalIds: externalProductIds.join(",") });
+
+  const response = await fetchImpl(`${baseUrl}/api/internal/rezdy-agent/manual-inquiries?${params.toString()}`, {
+    headers: { "x-kai-internal-token": token },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Kai manual-inquiries request failed with status ${response.status}.`);
+  }
+
+  const body = (await response.json()) as { inquiries?: unknown };
+  return Array.isArray(body.inquiries) ? (body.inquiries as RezdyAgentManualInquiry[]) : [];
+}
+
 async function buildUniqueListingSlug(title: string) {
   const base = normalizeSlug(title) || "operator";
 
@@ -169,6 +218,10 @@ async function upsertListingForProduct(operatorProfileId: string, product: Rezdy
     // this exists separately (the Discover page needs a real number, priceSignal is free text).
     priceFrom: product.priceFrom,
     currency: product.currency || "AUD",
+    // Kai-side join key for this operator's manual-inquiry history - see the schema field's own
+    // comment. Kept in sync on every run, same as everything else in this object, since a product's
+    // code never changes once assigned in Rezdy.
+    externalProductId: product.productCode,
   };
 
   if (existing) {

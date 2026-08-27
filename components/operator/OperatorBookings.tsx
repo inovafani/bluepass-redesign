@@ -1,5 +1,5 @@
 import SectionError from "@/components/admin/SectionError";
-import StatusPill, { ledgerTone } from "@/components/admin/StatusPill";
+import StatusPill, { ledgerTone, manualInquiryTone } from "@/components/admin/StatusPill";
 import {
   formatDateTime,
   formatMoneyFromCents,
@@ -7,15 +7,16 @@ import {
   OPERATOR_PAYOUT_KIND,
   type LedgerRowView,
 } from "@/lib/services/admin/payouts";
+import type { RezdyAgentManualInquiry } from "@/lib/services/discover/rezdy-agent-sync";
 import type { OperatorBookings as OperatorBookingsData } from "@/lib/services/operator/dashboard";
 
 /**
- * Bookings and the money attached to them, with three genuinely different things to say.
+ * Bookings and the money attached to them, with genuinely different things to say depending on
+ * where an operator's bookings actually come from.
  *
- * The two non-ledger branches are the reason this is not just a table. A Rezdy-Agent operator's
- * bookings are real and are simply not readable from here, and an unlinked operator has no booking
- * source at all — rendering either as an empty table would tell a working business that it has no
- * bookings, which is both false and exactly the kind of thing they would believe.
+ * The unlinked branch is why this is not just a table: an operator with no booking source at all
+ * has nothing to show, and rendering that as an empty table would tell a working business it has no
+ * bookings — false, and exactly the kind of thing they would believe.
  */
 export default function OperatorBookings({ bookings }: { bookings: OperatorBookingsData }) {
   return (
@@ -23,8 +24,9 @@ export default function OperatorBookings({ bookings }: { bookings: OperatorBooki
       <header className="adm-block__head">
         <h2 className="ds-headline adm-block__title">Bookings &amp; payouts</h2>
         <p className="ds-caption adm-block__note">
-          Every line Bluepass holds against your bookings, newest first — what is still pending and
-          what has been finalised.
+          {bookings.kind === "rezdy-agent"
+            ? "Trip enquiries Bluepass has passed along on your behalf, newest first — these come through as enquiries today, not paid bookings."
+            : "Every line Bluepass holds against your bookings, newest first — what is still pending and what has been finalised."}
         </p>
       </header>
 
@@ -35,17 +37,33 @@ export default function OperatorBookings({ bookings }: { bookings: OperatorBooki
 
 function Body({ bookings }: { bookings: OperatorBookingsData }) {
   if (bookings.kind === "rezdy-agent") {
+    if (!bookings.result.ok) {
+      return (
+        <SectionError
+          message={bookings.result.message}
+          hint="Nothing is wrong with your enquiries — Bluepass could not reach the system holding them. Try again shortly, and tell your Bluepass contact if it persists."
+        />
+      );
+    }
+
+    if (bookings.result.data.length === 0) {
+      return (
+        <div className="adm-card adm-empty">
+          <p className="ds-body-sm adm-empty__title">No enquiries yet.</p>
+          <p className="ds-body-sm adm-empty__body">
+            Your account is connected (supplier {bookings.rezdySupplierId}) and reachable — there is
+            simply nothing recorded against it so far. A traveller enquiry made through Bluepass will
+            appear here.
+          </p>
+        </div>
+      );
+    }
+
     return (
-      <div className="adm-card adm-empty">
-        <p className="ds-body-sm adm-empty__title">
-          Booking history isn&rsquo;t available for your account yet.
-        </p>
-        <p className="ds-body-sm adm-empty__body">
-          Your bookings come through Rezdy (supplier {bookings.rezdySupplierId}), and Bluepass
-          cannot yet read a single operator&rsquo;s history from that side — the reporting it exposes
-          is per-region, not per-operator. This is a gap on our side, not a sign that you have no
-          bookings. Rezdy remains the accurate record in the meantime.
-        </p>
+      <div className="adm-ledger">
+        {bookings.result.data.map((inquiry) => (
+          <InquiryRow key={inquiry.id} inquiry={inquiry} />
+        ))}
       </div>
     );
   }
@@ -127,6 +145,48 @@ function BookingRow({ row }: { row: LedgerRowView }) {
 
       <footer className="adm-ledger__foot">
         <span className="ds-micro adm-ledger__created">Created {formatDateTime(row.createdAt)}</span>
+      </footer>
+    </article>
+  );
+}
+
+function InquiryRow({ inquiry }: { inquiry: RezdyAgentManualInquiry }) {
+  const contactFacts = [
+    inquiry.travellerName ? { label: "Traveller", value: inquiry.travellerName } : null,
+    inquiry.travellerEmail ? { label: "Email", value: inquiry.travellerEmail } : null,
+    inquiry.travellerPhone ? { label: "Phone", value: inquiry.travellerPhone } : null,
+    inquiry.dateText ? { label: "Requested date", value: inquiry.dateText } : null,
+    inquiry.guests != null ? { label: "Guests", value: String(inquiry.guests) } : null,
+  ].filter((fact): fact is { label: string; value: string } => fact !== null);
+
+  return (
+    <article className="adm-card adm-ledger__row">
+      <header className="adm-ledger__head">
+        <div className="adm-ledger__ident">
+          <h3 className="ds-body-lg adm-ledger__title">{inquiry.productTitle ?? "Untitled trip"}</h3>
+          <span className="ds-micro adm-ledger__kind">Enquiry</span>
+        </div>
+
+        <div className="adm-ledger__pills">
+          <StatusPill tone={manualInquiryTone(inquiry.status)}>{inquiry.status}</StatusPill>
+        </div>
+      </header>
+
+      {contactFacts.length ? (
+        <dl className="adm-facts">
+          {contactFacts.map((f) => (
+            <div className="adm-facts__row" key={`${f.label}-${f.value}`}>
+              <dt className="ds-micro adm-facts__label">{f.label}</dt>
+              <dd className="ds-body-sm adm-facts__value">{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+
+      <p className="ds-body-sm adm-empty__body">{inquiry.travellerMessage}</p>
+
+      <footer className="adm-ledger__foot">
+        <span className="ds-micro adm-ledger__created">Created {formatDateTime(inquiry.createdAt)}</span>
       </footer>
     </article>
   );

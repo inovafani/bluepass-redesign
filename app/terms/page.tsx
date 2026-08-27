@@ -27,8 +27,8 @@ export default function TermsPage() {
         <div className="legalpage__draft-note" role="note">
           <p className="ds-body-sm">
             <strong>Draft — pending review.</strong> The remaining bracketed fields below (registered
-            address, liability caps, accepted-currency handling, support contact) have not yet been
-            filled in by Bluepass's own team and should be treated as placeholders until they are.
+            address, liability caps, accepted-currency handling) have not yet been filled in by
+            Bluepass's own team and should be treated as placeholders until they are.
           </p>
         </div>
 
@@ -163,7 +163,8 @@ export default function TermsPage() {
           <section>
             <h2 className="ds-headline">13. Contact</h2>
             <p className="ds-body">
-              Questions about these terms: <strong>[legal/support contact email]</strong>.
+              Questions about these terms:{" "}
+              <a href="mailto:admin@bluepass.co">admin@bluepass.co</a>.
             </p>
           </section>
         </div>
