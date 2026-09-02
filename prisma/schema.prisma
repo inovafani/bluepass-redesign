@@ -114,6 +114,12 @@ enum OperatorLeadStatus {
   LIVE
   DECLINED
   MANUAL_REVIEW
+  // BD outreach states. The values above describe the self-service claim funnel a lead can be put
+  // through; these two cover the manual path BD actually works day to day - someone was called or
+  // emailed (CONTACTED), and they answered and a conversation is open (IN_DISCUSSION). A lead that
+  // signs still lands on APPROVED, so both paths converge.
+  CONTACTED
+  IN_DISCUSSION
 }
 
 enum OperatorPmsReadinessStatus {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type KeyboardEvent } from "react";
+import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 
 /**
  * The form field for the auth pages.
@@ -40,6 +40,8 @@ export default function Field({
    * server-action forms in the admin console) is unaffected.
    */
   onKeyDown,
+  /** A decorative leading icon (e.g. a magnifier for a search field) — purely visual, so it's not a button. */
+  icon,
 }: {
   label: string;
   /** Required for uncontrolled use — it is the key in the posted FormData. */
@@ -56,6 +58,7 @@ export default function Field({
   inputMode?: "text" | "email" | "tel" | "url" | "numeric";
   reveal?: boolean;
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+  icon?: ReactNode;
 }) {
   const id = useId();
   const [shown, setShown] = useState(false);
@@ -72,6 +75,11 @@ export default function Field({
         {hint ? <span className="ds-micro afield__hint">{hint}</span> : null}
       </span>
       <span className="afield__well">
+        {icon ? (
+          <span className="afield__icon" aria-hidden="true">
+            {icon}
+          </span>
+        ) : null}
         <input
           id={id}
           name={name}

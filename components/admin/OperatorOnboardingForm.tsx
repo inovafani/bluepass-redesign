@@ -60,10 +60,17 @@ const EMPTY = {
  * makes "you already have this operator, confirm to continue" a usable answer
  * rather than a dead end.
  */
-export default function OperatorOnboardingForm() {
+export default function OperatorOnboardingForm({
+  leadId,
+  initialValues,
+}: {
+  /** Set when this form was opened from an outreach lead — see app/admin/leads/[id]/page.tsx. */
+  leadId?: string;
+  initialValues?: Partial<typeof EMPTY>;
+} = {}) {
   const [state, formAction, pending] = useActionState(onboardOperatorAction, IDLE);
   const [payoutMethod, setPayoutMethod] = useState<PayoutMethod>("MANUAL_BANK_TRANSFER");
-  const [values, setValues] = useState(EMPTY);
+  const [values, setValues] = useState({ ...EMPTY, ...initialValues });
   const [confirmDuplicate, setConfirmDuplicate] = useState(false);
 
   const set = (field: keyof typeof EMPTY) => (value: string) =>
@@ -118,6 +125,7 @@ export default function OperatorOnboardingForm() {
 
   return (
     <form action={formAction} className="adm-form">
+      {leadId ? <input type="hidden" name="leadId" value={leadId} /> : null}
       {error ? <Notice tone="error">{error.message}</Notice> : null}
 
       {error?.duplicate ? (

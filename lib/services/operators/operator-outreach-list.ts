@@ -4,23 +4,29 @@ import { prisma } from "@/lib/db/prisma";
 export type OperatorOutreachFilter =
   | "all"
   | "needs_outreach"
-  | "pending_claim"
+  | "contacted"
+  | "in_discussion"
   | "approved"
   | "declined";
 
+/* Grouped by where a lead sits in the BD conversation, not by which mechanism moved it there: a lead
+   sent a self-service claim link and a lead someone rang are both simply "contacted" from the
+   outreach desk's point of view, so each group spans the manual status and its claim-funnel
+   equivalent. */
 export const operatorOutreachFilterOptions: {
   key: OperatorOutreachFilter;
   label: string;
   statuses?: OperatorLeadStatus[];
 }[] = [
   { key: "all", label: "All leads" },
-  { key: "needs_outreach", label: "Needs outreach", statuses: ["IMPORTED"] },
+  { key: "needs_outreach", label: "Not contacted", statuses: ["IMPORTED"] },
+  { key: "contacted", label: "Contacted", statuses: ["CONTACTED", "CLAIM_LINK_REQUESTED"] },
   {
-    key: "pending_claim",
-    label: "Pending claim",
-    statuses: ["CLAIM_LINK_REQUESTED", "CLAIM_SUBMITTED", "MANUAL_REVIEW"],
+    key: "in_discussion",
+    label: "In discussion",
+    statuses: ["IN_DISCUSSION", "CLAIM_SUBMITTED", "MANUAL_REVIEW"],
   },
-  { key: "approved", label: "Approved / live", statuses: ["APPROVED", "LIVE"] },
+  { key: "approved", label: "Signed / live", statuses: ["APPROVED", "LIVE"] },
   { key: "declined", label: "Declined", statuses: ["DECLINED"] },
 ];
 
@@ -62,14 +68,27 @@ export function buildOperatorOutreachPaginationItems(
   ];
 }
 
+/* Where a lead came from, as the outreach desk thinks of it. The table holds two unrelated
+   populations - the 2026 Indonesian dive-centre list and the Australian operators scraped off Rezdy
+   and FareHarbor - and someone working the AU campaign should not have to scroll past the other. */
+export const OUTREACH_SOURCE_OPTIONS: { key: string; label: string; sources?: string[] }[] = [
+  { key: "all", label: "Everywhere" },
+  { key: "australia", label: "Australia", sources: ["rezdy-scrape", "fareharbor-scrape"] },
+  { key: "rezdy", label: "AU · Rezdy", sources: ["rezdy-scrape"] },
+  { key: "fareharbor", label: "AU · FareHarbor", sources: ["fareharbor-scrape"] },
+  { key: "indonesia", label: "Indonesia", sources: ["csv"] },
+];
+
 export async function loadOperatorOutreachList({
   filter = "all",
+  source = "all",
   q = "",
   page = "1",
   pageSize = 20,
   baseUrl,
 }: {
   filter?: string;
+  source?: string;
   q?: string;
   page?: string | number;
   pageSize?: string | number;
@@ -83,7 +102,11 @@ export async function loadOperatorOutreachList({
   const filterOption = operatorOutreachFilterOptions.find(
     (option) => option.key === activeFilter,
   );
+  const activeSource = OUTREACH_SOURCE_OPTIONS.some((option) => option.key === source) ? source : "all";
+  const sourceOption = OUTREACH_SOURCE_OPTIONS.find((option) => option.key === activeSource);
+
   const where = {
+    ...(sourceOption?.sources?.length ? { source: { in: sourceOption.sources } } : {}),
     ...(filterOption?.statuses?.length
       ? { status: { in: filterOption.statuses } }
       : {}),
@@ -101,8 +124,11 @@ export async function loadOperatorOutreachList({
   };
 
   const [statusGroups, filteredTotal, leads] = await Promise.all([
+    /* Counted within the selected source, not across the whole table: the tallies above the filter
+       chips have to describe the list underneath them, or they read as wrong. */
     prisma.operatorLead.groupBy({
       by: ["status"],
+      where: sourceOption?.sources?.length ? { source: { in: sourceOption.sources } } : {},
       _count: { _all: true },
       orderBy: { status: "asc" },
     }),
@@ -120,6 +146,8 @@ export async function loadOperatorOutreachList({
         region: true,
         email: true,
         phone: true,
+        websiteUrl: true,
+        source: true,
         status: true,
         lastOutreachAt: true,
         updatedAt: true,
@@ -133,17 +161,20 @@ export async function loadOperatorOutreachList({
 
   return {
     activeFilter,
+    activeSource,
     search,
     page: currentPage,
     pageSize: normalizedPageSize,
     filteredTotal,
     totalPages: Math.max(1, Math.ceil(filteredTotal / normalizedPageSize)),
     filterOptions: operatorOutreachFilterOptions,
+    sourceOptions: OUTREACH_SOURCE_OPTIONS,
     totals: {
       all: sumStatuses(countsByStatus),
       needsOutreach: sumStatuses(countsByStatus, ["IMPORTED"]),
-      pendingClaim: sumStatuses(countsByStatus, [
-        "CLAIM_LINK_REQUESTED",
+      contacted: sumStatuses(countsByStatus, ["CONTACTED", "CLAIM_LINK_REQUESTED"]),
+      inDiscussion: sumStatuses(countsByStatus, [
+        "IN_DISCUSSION",
         "CLAIM_SUBMITTED",
         "MANUAL_REVIEW",
       ]),

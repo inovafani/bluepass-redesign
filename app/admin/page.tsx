@@ -46,6 +46,20 @@ export default async function AdminIndexPage() {
             </Link>
           );
         })}
+
+        {/* Its own tool for its own team (BD outreach), deliberately not one of ADMIN_SECTIONS - that
+            list also drives the sidebar, and Kirby working a call list has no reason to see Payouts
+            & Ledger in her nav. Same admin login, its own frame - see app/crm/layout.tsx. */}
+        <Link href="/crm" className="adm-card adm-card--link">
+          <span className="adm-card__top">
+            <span className="ds-headline adm-card__title">Outreach CRM</span>
+          </span>
+          <span className="ds-body-sm adm-card__blurb">
+            The BD call list — operators found on Rezdy and FareHarbor who are not on Bluepass yet.
+            Opens as its own tool, not part of this console.
+          </span>
+          <span className="ds-caption adm-card__go">Open →</span>
+        </Link>
       </div>
     </>
   );

@@ -13,6 +13,15 @@ export async function currentAdminPathname(fallback = "/admin") {
   return pathname && pathname.startsWith("/admin") ? pathname : fallback;
 }
 
+/** Same idea, for the CRM - it sits outside /admin (no shared sidebar), on its own auth gate, but
+    should still send an unauthenticated visitor back to the exact lead they clicked through to. */
+export async function currentCrmPathname(fallback = "/crm") {
+  const requestHeaders = await headers();
+  const pathname = requestHeaders.get(CONSOLE_PATHNAME_HEADER);
+
+  return pathname && pathname.startsWith("/crm") ? pathname : fallback;
+}
+
 /**
  * The gate every admin surface sits behind.
  *

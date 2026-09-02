@@ -8,6 +8,7 @@ import {
   type DuplicateMatch,
   type ManualOperatorInput,
 } from "@/lib/services/admin/operator-onboarding";
+import { markLeadSigned } from "@/lib/services/admin/lead-outreach";
 
 export type OnboardOperatorState =
   | { status: "idle" }
@@ -89,6 +90,26 @@ export async function onboardOperatorAction(
           ? result.duplicate
           : undefined,
     };
+  }
+
+  /* Opened from an outreach lead: close that loop now the profile really exists, so the lead leaves
+     the call list and its history says where it went. Deliberately after the create and never
+     blocking it — a failure to update the CRM must not make a real, already-created operator look
+     like it failed. */
+  const leadId = text("leadId");
+  if (leadId) {
+    const marked = await markLeadSigned({
+      leadId,
+      operatorProfileId: result.operatorProfileId,
+      actorEmail: admin.email,
+    });
+
+    if (!marked.ok) {
+      console.warn("admin.onboard_operator.lead_mark_failed", { leadId, message: marked.message });
+    }
+
+    revalidatePath(`/crm/${leadId}`);
+    revalidatePath("/crm");
   }
 
   /* The rail's counter is unaffected (a manually onboarded operator is LIVE,

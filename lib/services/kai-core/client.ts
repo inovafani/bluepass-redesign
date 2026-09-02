@@ -41,6 +41,10 @@ export type KaiCoreResumedSession = {
 type KaiCoreMessageResponse = {
   assistantMessage?: {
     content?: string;
+    // Set by Kai's /api/widget/messages route on every reply - normally identical to the
+    // conversationId this turn was sent with, except right after a cross-tenant AU operator
+    // handoff, where it points at the new tenant's conversation instead.
+    conversationId?: string;
   };
   bluepassMatches?: KaiCoreBluePassMatch[];
   productCards?: KaiCoreProductCard[] | null;
@@ -283,7 +287,10 @@ export async function handleKaiCoreWebChat(
   const data = (await response.json()) as KaiCoreMessageResponse;
 
   return {
-    sessionId: conversationId,
+    // Prefer whatever conversationId Kai's response actually used - after a cross-tenant AU
+    // operator handoff (see Kai's /api/widget/messages route), that's a different conversation
+    // than the one this turn was sent to, and the next turn must follow it or it 404s.
+    sessionId: data.assistantMessage?.conversationId ?? conversationId,
     region,
     reply: data.assistantMessage?.content ?? "Kai Core did not return a reply.",
     ...(data.contactRequest ? { contactRequest: data.contactRequest } : {}),

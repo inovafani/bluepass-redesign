@@ -22,5 +22,5 @@ export function middleware(request: NextRequest) {
    zero-middleware request path. `:path*` matches zero segments too, so `/admin`, `/operator`, and
    `/creator` themselves are covered. */
 export const config = {
-  matcher: ["/admin/:path*", "/operator/:path*", "/creator/:path*"],
+  matcher: ["/admin/:path*", "/operator/:path*", "/creator/:path*", "/crm/:path*"],
 };

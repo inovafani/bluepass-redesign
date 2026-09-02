@@ -4130,6 +4130,16 @@ html.is-scroll-locked body {
     color 0.3s ease,
     background 0.3s ease;
 }
+.afield__icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-left: 3px;
+  color: var(--color-ink-muted);
+}
 .afield__reveal:hover {
   color: var(--color-ink);
   background: rgba(255, 255, 255, 0.06);
@@ -5187,6 +5197,70 @@ html.is-scroll-locked body {
   margin: 0 auto;
 }
 
+/* CRM frame ------------------------------------------------------------------
+   Deliberately its own shell, not `.adm` + AdminNav - a top bar rather than a
+   sidebar built for switching between unrelated console sections. Content
+   inside still borrows the `.adm-*` table/form/pill vocabulary for now; this
+   block is what a future visual pass for this page would replace first. */
+.crm {
+  min-height: 100svh;
+  background: var(--color-canvas);
+}
+
+.crm-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  padding: var(--space-md) var(--page-gutter);
+  border-bottom: 1px solid var(--color-hairline);
+  background: var(--color-surface-1);
+}
+
+.crm-topbar__brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.crm-topbar__wordmark {
+  color: var(--color-ink);
+}
+
+.crm-topbar__eyebrow {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+}
+
+.crm-topbar__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.crm-topbar__signed-in {
+  color: var(--color-ink-muted);
+}
+
+.crm-topbar__exit {
+  color: var(--color-ink-muted);
+}
+.crm-topbar__exit:hover {
+  color: var(--color-ink);
+}
+
+.crm__main {
+  padding: clamp(28px, 4vw, 56px) var(--page-gutter) clamp(64px, 8vw, 120px);
+}
+
+/* No max-width: .crm-topbar has none either (just .crm__main's shared --page-gutter padding), so
+   the table gets the full viewport to work with and its edges line up with the topbar above it. */
+.crm__inner {
+  width: 100%;
+}
+
 /* Rail --------------------------------------------------------------------- */
 .adm-nav {
   display: flex;
@@ -5939,6 +6013,90 @@ html.is-scroll-locked body {
   padding-top: var(--space-xs);
 }
 
+/* CRM filter group - label stacked above its pill row rather than beside it (.adm-filter's layout),
+   so Market and Stage read as proportional blocks instead of a label-plus-pills line. Reuses
+   .adm-filter__options/.adm-filter__option for the pills themselves - only the outer wrapper differs. */
+.crm-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: fit-content;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-lg);
+}
+.crm-filter__label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+}
+
+/* Stage sits level with Search rather than search getting its own full-width row below both
+   filters - align-items: flex-end keeps the pill row and the input box on the same baseline even
+   though Field's label+hint isn't always the same height as a bare "Stage" label. */
+.crm-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+.crm-filter-row .crm-filter {
+  margin-bottom: 0;
+}
+.crm-filter-row__search {
+  margin-left: auto;
+  width: 100%;
+  min-width: 220px;
+  max-width: 420px;
+}
+
+/* Pagination - individual pills with real air between them, not the segmented .adm-filter__options
+   look: that treatment reads well for a handful of mutually-exclusive filter labels, but crams into
+   awkward tight circles once the labels are bare single-digit numbers. */
+.adm-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-lg);
+}
+.adm-pagination__label {
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  margin-right: var(--space-xs);
+}
+.adm-pagination__gap {
+  color: var(--color-ink-muted);
+}
+
+/* Generic timestamped activity log - a lead's outreach history today, reusable anywhere a page
+   needs a plain "when, what happened" list without a table's column structure. */
+.adm-log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.adm-log__row {
+  display: flex;
+  gap: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+.adm-log__row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.adm-log__when {
+  flex: none;
+  width: 84px;
+  color: var(--color-ink-muted);
+}
+.adm-log__body {
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
 /* Status filter ------------------------------------------------------------ */
 .adm-filter {
   display: flex;
@@ -6166,6 +6324,9 @@ html.is-scroll-locked body {
 }
 .adm-table__num {
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.adm-table__nowrap {
   white-space: nowrap;
 }
 

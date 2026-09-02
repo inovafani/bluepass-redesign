@@ -21,9 +21,11 @@ export const CONSOLE_PATHNAME_HEADER = "x-bluepass-pathname";
  * chrome has to stand aside for all of them, and there is now more than one — `/operator` shipped
  * after `/admin` and inherited none of its treatment, so the marketing nav painted over the
  * operator rail and the Kai launcher floated across an operator's own payout figures. `/creator`
- * repeated the same miss when it shipped after this comment was already written above it.
+ * repeated the same miss when it shipped after this comment was already written above it. `/crm`
+ * has its own topbar for the same reason (app/crm/layout.tsx) even though it sits behind the same
+ * admin login as `/admin` — it is still a console, not a marketing page.
  */
-const CONSOLE_PATHNAME_PREFIXES = ["/admin", "/operator", "/creator"];
+const CONSOLE_PATHNAME_PREFIXES = ["/admin", "/operator", "/creator", "/crm"];
 
 /**
  * Whether `pathname` is inside a console area.

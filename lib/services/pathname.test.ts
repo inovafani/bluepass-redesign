@@ -13,12 +13,14 @@ describe("isConsolePathname", () => {
   it("matches each console section root", () => {
     expect(isConsolePathname("/admin")).toBe(true);
     expect(isConsolePathname("/operator")).toBe(true);
+    expect(isConsolePathname("/crm")).toBe(true);
   });
 
   it("matches pages nested under a console section", () => {
     expect(isConsolePathname("/admin/operators/new")).toBe(true);
     expect(isConsolePathname("/admin/payouts")).toBe(true);
     expect(isConsolePathname("/operator/listings")).toBe(true);
+    expect(isConsolePathname("/crm/abc123")).toBe(true);
   });
 
   it("leaves marketing and auth routes alone", () => {

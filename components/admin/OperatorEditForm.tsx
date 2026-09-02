@@ -6,6 +6,7 @@ import Field from "@/components/auth/Field";
 import Notice from "@/components/auth/Notice";
 import Button from "@/components/ui/Button";
 import StatusPill, { type PillTone } from "@/components/admin/StatusPill";
+import OperatorLoginInvite from "@/components/admin/OperatorLoginInvite";
 import {
   updateOperatorBasicInfoAction,
   updateOperatorPayoutAction,
@@ -70,6 +71,12 @@ export default function OperatorEditForm({ operator }: { operator: OperatorEditV
             <dd className="ds-body-sm adm-facts__value">{operator.hasPayoutDetails ? "Yes" : "No"}</dd>
           </div>
         </dl>
+
+        {/* Onboarding only ever showed this once, right when the profile was created - an admin
+            working through a batch of operators (or one whose invite email bounced or was typed
+            wrong) had no way back to it afterwards. Same component the onboarding form uses;
+            it's already safe to press more than once. */}
+        <OperatorLoginInvite operatorProfileId={operator.id} email={operator.accountEmail} />
       </section>
 
       <BasicInfoSection operator={operator} />
