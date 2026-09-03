@@ -1,10 +1,12 @@
 import Link from "next/link";
-import Field from "@/components/auth/Field";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import StatusPill, { type PillTone } from "@/components/admin/StatusPill";
+import LeadCategorySelect from "@/components/crm/LeadCategorySelect";
+import LeadSearchField from "@/components/crm/LeadSearchField";
 import { requireAdminOrRedirect } from "@/lib/services/admin/guard";
 import { BD_STATUS_LABELS } from "@/lib/services/admin/lead-outreach";
 import {
+  buildLeadsHref,
   buildOperatorOutreachPaginationItems,
   loadOperatorOutreachList,
 } from "@/lib/services/operators/operator-outreach-list";
@@ -39,7 +41,7 @@ function formatSource(source: string) {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; source?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ filter?: string; source?: string; category?: string; q?: string; page?: string }>;
 }) {
   await requireAdminOrRedirect("/crm");
 
@@ -47,6 +49,7 @@ export default async function LeadsPage({
   const list = await loadOperatorOutreachList({
     filter: params.filter,
     source: params.source,
+    category: params.category,
     q: params.q ?? "",
     page: params.page ?? "1",
   });
@@ -54,23 +57,17 @@ export default async function LeadsPage({
   const buildHref = (next: {
     filter?: string;
     source?: string;
+    category?: string;
     q?: string;
     page?: number | string;
-  }) => {
-    const query = new URLSearchParams();
-    const filter = next.filter ?? list.activeFilter;
-    const source = next.source ?? list.activeSource;
-    const q = next.q ?? list.search;
-    const page = next.page ?? 1;
-
-    if (filter && filter !== "all") query.set("filter", filter);
-    if (source && source !== "all") query.set("source", source);
-    if (q) query.set("q", q);
-    if (Number(page) > 1) query.set("page", String(page));
-
-    const qs = query.toString();
-    return qs ? `/crm?${qs}` : "/crm";
-  };
+  }) =>
+    buildLeadsHref({
+      filter: next.filter ?? list.activeFilter,
+      source: next.source ?? list.activeSource,
+      category: next.category ?? list.activeCategory,
+      q: next.q ?? list.search,
+      page: next.page ?? 1,
+    });
 
   return (
     <>
@@ -80,20 +77,31 @@ export default async function LeadsPage({
         support={`${list.totals.all} lead${list.totals.all === 1 ? "" : "s"} in the pipeline — ${list.totals.needsOutreach} still untouched, ${list.totals.contacted} contacted, ${list.totals.inDiscussion} in discussion, ${list.totals.approved} signed.`}
       />
 
-      <div className="crm-filter" role="group" aria-label="Lead market filter">
-        <span className="ds-micro crm-filter__label">Market</span>
-        <div className="adm-filter__options">
-          {list.sourceOptions.map((option) => (
-            <Link
-              key={option.key}
-              href={buildHref({ source: option.key, page: 1 })}
-              className={`ds-body-sm adm-filter__option ${option.key === list.activeSource ? "is-active" : ""}`}
-              aria-current={option.key === list.activeSource ? "true" : undefined}
-              scroll={false}
-            >
-              {option.label}
-            </Link>
-          ))}
+      <div className="crm-filter-row crm-filter-row--tight">
+        <div className="crm-filter" role="group" aria-label="Lead market filter">
+          <span className="ds-micro crm-filter__label">Market</span>
+          <div className="adm-filter__options">
+            {list.sourceOptions.map((option) => (
+              <Link
+                key={option.key}
+                href={buildHref({ source: option.key, page: 1 })}
+                className={`ds-body-sm adm-filter__option ${option.key === list.activeSource ? "is-active" : ""}`}
+                aria-current={option.key === list.activeSource ? "true" : undefined}
+                scroll={false}
+              >
+                {option.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="crm-filter-row__search">
+          <LeadSearchField
+            defaultValue={list.search}
+            filter={list.activeFilter}
+            source={list.activeSource}
+            category={list.activeCategory}
+          />
         </div>
       </div>
 
@@ -115,24 +123,16 @@ export default async function LeadsPage({
           </div>
         </div>
 
-        <form action="/crm" method="get" className="crm-filter-row__search">
-          {list.activeFilter !== "all" ? <input type="hidden" name="filter" value={list.activeFilter} /> : null}
-          {list.activeSource !== "all" ? <input type="hidden" name="source" value={list.activeSource} /> : null}
-          <Field
-            label="Search"
-            name="q"
-            defaultValue={list.search}
-            placeholder="Business name, region, category, email…"
-            hint={list.search ? `Showing “${list.search}” — clear to see everyone` : undefined}
-            autoComplete="off"
-            icon={
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
-              </svg>
-            }
+        <div className="crm-filter crm-filter-row__trailing" role="group" aria-label="Lead category filter">
+          <span className="ds-micro crm-filter__label">Category</span>
+          <LeadCategorySelect
+            options={list.categoryOptions}
+            value={list.activeCategory}
+            filter={list.activeFilter}
+            source={list.activeSource}
+            q={list.search}
           />
-        </form>
+        </div>
       </div>
 
       {list.leads.length === 0 ? (

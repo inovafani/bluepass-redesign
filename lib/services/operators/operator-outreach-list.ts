@@ -30,6 +30,29 @@ export const operatorOutreachFilterOptions: {
   { key: "declined", label: "Declined", statuses: ["DECLINED"] },
 ];
 
+/* Pure and fully parameterized (no closure over a loaded list) so it can be imported by both the
+   server-rendered page and the client components that navigate on their own - a category select
+   that auto-submits, a search box that auto-searches - without passing a function across the
+   server/client boundary, which Next.js can't serialize. */
+export function buildLeadsHref(params: {
+  filter?: string;
+  source?: string;
+  category?: string;
+  q?: string;
+  page?: number | string;
+}) {
+  const query = new URLSearchParams();
+
+  if (params.filter && params.filter !== "all") query.set("filter", params.filter);
+  if (params.source && params.source !== "all") query.set("source", params.source);
+  if (params.category && params.category !== "all") query.set("category", params.category);
+  if (params.q) query.set("q", params.q);
+  if (params.page && Number(params.page) > 1) query.set("page", String(params.page));
+
+  const qs = query.toString();
+  return qs ? `/crm?${qs}` : "/crm";
+}
+
 export type OperatorOutreachPaginationItem = number | "ellipsis";
 
 export function buildOperatorOutreachPaginationItems(
@@ -82,6 +105,7 @@ export const OUTREACH_SOURCE_OPTIONS: { key: string; label: string; sources?: st
 export async function loadOperatorOutreachList({
   filter = "all",
   source = "all",
+  category = "all",
   q = "",
   page = "1",
   pageSize = 20,
@@ -89,6 +113,7 @@ export async function loadOperatorOutreachList({
 }: {
   filter?: string;
   source?: string;
+  category?: string;
   q?: string;
   page?: string | number;
   pageSize?: string | number;
@@ -104,12 +129,15 @@ export async function loadOperatorOutreachList({
   );
   const activeSource = OUTREACH_SOURCE_OPTIONS.some((option) => option.key === source) ? source : "all";
   const sourceOption = OUTREACH_SOURCE_OPTIONS.find((option) => option.key === activeSource);
+  const sourceWhere = sourceOption?.sources?.length ? { source: { in: sourceOption.sources } } : {};
+  const activeCategory = category.trim() || "all";
 
   const where = {
-    ...(sourceOption?.sources?.length ? { source: { in: sourceOption.sources } } : {}),
+    ...sourceWhere,
     ...(filterOption?.statuses?.length
       ? { status: { in: filterOption.statuses } }
       : {}),
+    ...(activeCategory !== "all" ? { category: activeCategory } : {}),
     ...(search
       ? {
           OR: [
@@ -123,14 +151,21 @@ export async function loadOperatorOutreachList({
       : {}),
   };
 
-  const [statusGroups, filteredTotal, leads] = await Promise.all([
+  const [statusGroups, categoryGroups, filteredTotal, leads] = await Promise.all([
     /* Counted within the selected source, not across the whole table: the tallies above the filter
        chips have to describe the list underneath them, or they read as wrong. */
     prisma.operatorLead.groupBy({
       by: ["status"],
-      where: sourceOption?.sources?.length ? { source: { in: sourceOption.sources } } : {},
+      where: sourceWhere,
       _count: { _all: true },
       orderBy: { status: "asc" },
+    }),
+    /* Same scoping as the status tallies above - the category dropdown only offers categories that
+       actually exist within the selected market, not every category across both AU and Indonesia. */
+    prisma.operatorLead.groupBy({
+      by: ["category"],
+      where: { ...sourceWhere, category: { not: null } },
+      orderBy: { category: "asc" },
     }),
     prisma.operatorLead.count({ where }),
     prisma.operatorLead.findMany({
@@ -162,6 +197,7 @@ export async function loadOperatorOutreachList({
   return {
     activeFilter,
     activeSource,
+    activeCategory,
     search,
     page: currentPage,
     pageSize: normalizedPageSize,
@@ -169,6 +205,9 @@ export async function loadOperatorOutreachList({
     totalPages: Math.max(1, Math.ceil(filteredTotal / normalizedPageSize)),
     filterOptions: operatorOutreachFilterOptions,
     sourceOptions: OUTREACH_SOURCE_OPTIONS,
+    categoryOptions: categoryGroups
+      .map((group) => group.category)
+      .filter((value): value is string => Boolean(value)),
     totals: {
       all: sumStatuses(countsByStatus),
       needsOutreach: sumStatuses(countsByStatus, ["IMPORTED"]),

@@ -6030,9 +6030,10 @@ html.is-scroll-locked body {
   letter-spacing: 1.6px;
 }
 
-/* Stage sits level with Search rather than search getting its own full-width row below both
-   filters - align-items: flex-end keeps the pill row and the input box on the same baseline even
-   though Field's label+hint isn't always the same height as a bare "Stage" label. */
+/* Two rows, each pairing a pill-group filter on the left with a free-form control pushed to the
+   far right - Market+Search, then Stage+Category - rather than stacking every control into one row
+   that wraps unpredictably. align-items: flex-end keeps each pair on the same baseline even though
+   Field's label+hint isn't always the same height as a bare "Stage"/"Category" label. */
 .crm-filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -6040,14 +6041,50 @@ html.is-scroll-locked body {
   gap: var(--space-lg);
   margin-bottom: var(--space-xl);
 }
+.crm-filter-row--tight {
+  margin-bottom: var(--space-md);
+}
 .crm-filter-row .crm-filter {
   margin-bottom: 0;
+}
+/* Pushes whichever control sits second in a row - Search on the Market row, Category on the Stage
+   row - to the far right, so both rows' right edges line up into one visual column. */
+.crm-filter-row__trailing {
+  margin-left: auto;
 }
 .crm-filter-row__search {
   margin-left: auto;
   width: 100%;
   min-width: 220px;
   max-width: 420px;
+}
+
+/* Category filter - a dropdown rather than .adm-filter__options pills, since there are far too many
+   categories (~25) to lay out as pills without wrapping into a mess. Matches .afield__well's box
+   language (surface-1, hairline, radius-md) so it reads as part of the same input family as Search. */
+.crm-select {
+  padding: 9px var(--space-md);
+  min-height: 38px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  cursor: pointer;
+  max-width: 280px;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
+}
+.crm-select:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+}
+.crm-select:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.34);
+  background: var(--color-surface-2);
+  box-shadow: var(--shadow-3);
 }
 
 /* Pagination - individual pills with real air between them, not the segmented .adm-filter__options
