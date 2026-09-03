@@ -6086,6 +6086,48 @@ html.is-scroll-locked body {
   background: var(--color-surface-2);
   box-shadow: var(--shadow-3);
 }
+.crm-select:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+/* The spinner sits beside the select as a plain flex sibling rather than absolutely positioned
+   over it - overlaying it collided with the select's own native dropdown arrow (different position
+   per browser/OS), which read as a rendering glitch rather than a loading state. */
+.crm-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* A loading state for every filter interaction (Market/Stage pills, pagination, Category, Search) -
+   without it, picking a filter looked like nothing happened until the new list quietly appeared. */
+@keyframes crm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.crm-spinner {
+  display: inline-block;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-hairline);
+  border-top-color: var(--color-ink-muted);
+  border-radius: 50%;
+  animation: crm-spin 0.6s linear infinite;
+}
+.crm-pill__spinner {
+  width: 10px;
+  height: 10px;
+  margin-left: var(--space-xxs);
+  border-width: 1.6px;
+  vertical-align: -1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .crm-spinner {
+    animation: none;
+  }
+}
 
 /* Pagination - individual pills with real air between them, not the segmented .adm-filter__options
    look: that treatment reads well for a handful of mutually-exclusive filter labels, but crams into

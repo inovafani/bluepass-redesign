@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Field from "@/components/auth/Field";
 import { buildLeadsHref } from "@/lib/services/operators/operator-outreach-list";
@@ -11,6 +11,9 @@ const DEBOUNCE_MS = 350;
  * Searches as you type rather than waiting for Enter/submit - the debounce is what makes that
  * survive fast typing without firing a navigation per keystroke. Enter still works, flushing
  * immediately instead of waiting out the debounce.
+ *
+ * isPending swaps the magnifier for a spinner while the new result set is loading - without it,
+ * someone typing a search sees the list just sit there for a beat with no sign anything happened.
  */
 export default function LeadSearchField({
   defaultValue,
@@ -24,6 +27,7 @@ export default function LeadSearchField({
   category: string;
 }) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [value, setValue] = useState(defaultValue);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -38,7 +42,10 @@ export default function LeadSearchField({
   }, []);
 
   const navigate = (q: string) => {
-    router.replace(buildLeadsHref({ filter, source, category, q, page: 1 }), { scroll: false });
+    const href = buildLeadsHref({ filter, source, category, q, page: 1 });
+    startTransition(() => {
+      router.replace(href, { scroll: false });
+    });
   };
 
   const handleChange = (next: string) => {
@@ -63,10 +70,14 @@ export default function LeadSearchField({
       hint={value ? `Showing “${value}” — clear to see everyone` : undefined}
       autoComplete="off"
       icon={
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
+        isPending ? (
+          <span className="crm-spinner" aria-hidden="true" />
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.3-4.3" />
+          </svg>
+        )
       }
     />
   );

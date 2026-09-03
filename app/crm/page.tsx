@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import StatusPill, { type PillTone } from "@/components/admin/StatusPill";
+import FilterPillLabel from "@/components/crm/FilterPillLabel";
 import LeadCategorySelect from "@/components/crm/LeadCategorySelect";
 import LeadSearchField from "@/components/crm/LeadSearchField";
 import { requireAdminOrRedirect } from "@/lib/services/admin/guard";
@@ -89,7 +90,7 @@ export default async function LeadsPage({
                 aria-current={option.key === list.activeSource ? "true" : undefined}
                 scroll={false}
               >
-                {option.label}
+                <FilterPillLabel>{option.label}</FilterPillLabel>
               </Link>
             ))}
           </div>
@@ -117,7 +118,7 @@ export default async function LeadsPage({
                 aria-current={option.key === list.activeFilter ? "true" : undefined}
                 scroll={false}
               >
-                {option.label}
+                <FilterPillLabel>{option.label}</FilterPillLabel>
               </Link>
             ))}
           </div>
@@ -200,7 +201,7 @@ export default async function LeadsPage({
                     aria-current={item === list.page ? "page" : undefined}
                     scroll={false}
                   >
-                    {item}
+                    <FilterPillLabel>{item}</FilterPillLabel>
                   </Link>
                 ),
               )}
