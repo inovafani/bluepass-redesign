@@ -7,6 +7,7 @@ import { lockScroll, unlockScroll } from "@/lib/lenis";
 import { useSession } from "./auth/SessionProvider";
 import { stripDuplicatedProductList } from "@/lib/services/kai-core/reply-product-list";
 import KaiMatchThumbPlaceholder from "./KaiMatchThumbPlaceholder";
+import KaiDateCalendar from "./KaiDateCalendar";
 
 /* Shapes transcribed from `app/api/kai/web-chat/route.ts`. */
 type Suggested = { label: string; message: string };
@@ -57,6 +58,10 @@ type PaymentIntent = {
   conversationId: string;
 };
 
+type TimeOption = { label: string };
+type TicketOption = { label: string; unitPriceCents: number };
+type ExtraOption = { label: string; unitPriceCents: number };
+
 type Msg = {
   id: number;
   role: "user" | "assistant" | "system";
@@ -88,6 +93,37 @@ const CONTEXT_MAX = 12;
 const WHATSAPP_HREF = "https://wa.me/628213143343";
 /** Tenant flag: when set, the payment step is a hosted checkout redirect, not a card form. */
 const HOSTED_CHECKOUT_FEATURE = "bluepass_stripe_pms_checkout";
+
+/**
+ * Kai sends payment links as plain text inside its reply (e.g. the Stripe checkout URL for a
+ * hosted-checkout tenant) - rendered as real, shortened links so a 300-character URL doesn't wrap
+ * across the whole bubble as raw text. Mirrors boattimeyachtcharters-redesign's KaiWidget, which
+ * has the same problem for the same reason (both read a reply straight from Kai's /api/widget
+ * /messages route). New tab, since this chat only lives in memory - navigating away would lose it.
+ */
+const URL_PATTERN = /(https?:\/\/[^\s]*[^\s.,;:!?)\]])/g;
+
+/** Checkout URLs run to 300+ characters; showing them raw buries the message. */
+function linkLabel(url: string) {
+  if (url.length <= 48) return url;
+  try {
+    return `${new URL(url).hostname}/…`;
+  } catch {
+    return `${url.slice(0, 45)}…`;
+  }
+}
+
+function withLinks(text: string) {
+  return text.split(URL_PATTERN).map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a key={i} className="kmsg__link" href={part} target="_blank" rel="noopener noreferrer">
+        {linkLabel(part)}
+      </a>
+    ) : (
+      part
+    ),
+  );
+}
 
 /* Names no region, so it never goes stale as operators come and go. Shown at once,
    then replaced by buildOpener() as soon as the live catalog's regions land.
@@ -197,6 +233,13 @@ export default function KaiPanel({
   const [contactRequest, setContactRequest] = useState<ContactRequest | null>(null);
   const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "" });
   const [contactError, setContactError] = useState<string | null>(null);
+
+  /* Generic-booking-flow (AU/Rezdy) choice prompts - same "latch-style" pattern as
+     contactRequest/paymentRequest above: absent in a reply means that step is no longer pending. */
+  const [dateOptions, setDateOptions] = useState<string[] | null>(null);
+  const [timeOptions, setTimeOptions] = useState<TimeOption[] | null>(null);
+  const [ticketOptions, setTicketOptions] = useState<TicketOption[] | null>(null);
+  const [extraOptions, setExtraOptions] = useState<ExtraOption[] | null>(null);
 
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
   const [paymentIntent, setPaymentIntent] = useState<PaymentIntent | null>(null);
@@ -310,7 +353,18 @@ export default function KaiPanel({
 
   useEffect(() => {
     if (open) scrollToEnd();
-  }, [messages, thinking, contactRequest, paymentRequest, open, scrollToEnd]);
+  }, [
+    messages,
+    thinking,
+    contactRequest,
+    paymentRequest,
+    dateOptions,
+    timeOptions,
+    ticketOptions,
+    extraOptions,
+    open,
+    scrollToEnd,
+  ]);
 
   const close = () => {
     if (closingRef.current) return;
@@ -398,6 +452,10 @@ export default function KaiPanel({
         suggestedReplies?: Suggested[];
         contactRequest?: ContactRequest | null;
         paymentRequest?: PaymentRequest | null;
+        dateOptions?: string[] | null;
+        timeOptions?: TimeOption[] | null;
+        ticketOptions?: TicketOption[] | null;
+        extraOptions?: ExtraOption[] | null;
         error?: string;
       };
 
@@ -442,6 +500,10 @@ export default function KaiPanel({
         }));
       }
       setPaymentRequest(data.paymentRequest ?? null);
+      setDateOptions(data.dateOptions ?? null);
+      setTimeOptions(data.timeOptions ?? null);
+      setTicketOptions(data.ticketOptions ?? null);
+      setExtraOptions(data.extraOptions ?? null);
     } catch {
       push("system", "That didn’t send. Check your connection and try again.");
     } finally {
@@ -695,7 +757,7 @@ export default function KaiPanel({
                 {/* Wrapped so the cards can be spaced off real text. `{m.content}` alone is a text
                     node, and a text node is not an element — `.kmatches:first-child` therefore
                     matched even when prose was present, which is what collapsed the gap. */}
-                {m.content ? <span className="kmsg__text">{m.content}</span> : null}
+                {m.content ? <span className="kmsg__text">{withLinks(m.content)}</span> : null}
 
                 {m.matches?.length ? (
                   <span className="kmatches">
@@ -810,6 +872,71 @@ export default function KaiPanel({
                 <i />
                 <i />
               </span>
+            </div>
+          ) : null}
+
+          {dateOptions && dateOptions.length > 0 && !thinking ? (
+            <KaiDateCalendar
+              dates={dateOptions}
+              disabled={thinking}
+              onSelect={(date) => void send(date)}
+            />
+          ) : null}
+
+          {timeOptions && timeOptions.length > 0 && !thinking ? (
+            <div className="ktime-chips">
+              {timeOptions.map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  className="kchip"
+                  onClick={() => void send(option.label)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {/* Ticket and extras selection share the same "pick option N, priced" shape - clicking
+              sends "option N" (1-indexed), the exact phrasing Kai's own reply text already teaches
+              ("You can say 'option 2'..."), so it parses the same way a typed reply would. */}
+          {ticketOptions && ticketOptions.length > 0 && !thinking ? (
+            <div className="koptions">
+              {ticketOptions.map((option, index) => (
+                <button
+                  key={`${option.label}-${index}`}
+                  type="button"
+                  className="koption ds-body-sm"
+                  onClick={() => void send(`option ${index + 1}`)}
+                >
+                  <span>{option.label}</span>
+                  <span className="koption__price">${(option.unitPriceCents / 100).toFixed(2)}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {extraOptions && extraOptions.length > 0 && !thinking ? (
+            <div className="koptions">
+              {extraOptions.map((option, index) => (
+                <button
+                  key={`${option.label}-${index}`}
+                  type="button"
+                  className="koption ds-body-sm"
+                  onClick={() => void send(`option ${index + 1}`)}
+                >
+                  <span>{option.label}</span>
+                  <span className="koption__price">${(option.unitPriceCents / 100).toFixed(2)}</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                className="koption koption--secondary ds-body-sm"
+                onClick={() => void send("no extras")}
+              >
+                <span>No extras</span>
+              </button>
             </div>
           ) : null}
 

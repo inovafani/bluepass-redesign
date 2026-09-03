@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  handleKaiCoreWebChat,
   listKaiCoreCronRuns,
   listKaiCorePmsBookingLedger,
   listKaiCorePmsBookingLedgerForReferralPartner,
@@ -301,5 +302,56 @@ describe("settleKaiCorePmsBooking", () => {
         fetchImpl as unknown as typeof fetch,
       ),
     ).rejects.toThrow("No Stripe Connect account.");
+  });
+});
+
+describe("handleKaiCoreWebChat", () => {
+  // Passing an explicit sessionId + region skips createKaiCoreSession's own fetch call entirely
+  // (see effectiveSessionId in client.ts), so these only need to mock the one /api/widget/messages
+  // request - same "just the contract, not the session bootstrap" scope as the tests above.
+  const CHAT_ENV = { KAI_CORE_ENABLED: "true", KAI_CORE_BASE_URL: "https://kai.example" };
+
+  it("passes dateOptions/timeOptions/ticketOptions/extraOptions through from Kai's response", async () => {
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse({
+        assistantMessage: { content: "Twilight Drift is not available for 2 guests on 2026-09-05.", conversationId: "conv_1" },
+        dateOptions: ["2026-09-06", "2026-09-11"],
+        timeOptions: [{ label: "5:00 PM" }],
+        ticketOptions: [{ label: "Adult", unitPriceCents: 7900 }],
+        extraOptions: [{ label: "Corona Bucket", unitPriceCents: 3000 }],
+      }),
+    );
+
+    const result = await handleKaiCoreWebChat(
+      { sessionId: "conv_1", region: "australia", message: "this saturday for 2" },
+      CHAT_ENV,
+      fetchImpl as unknown as typeof fetch,
+    );
+
+    expect(result).toMatchObject({
+      dateOptions: ["2026-09-06", "2026-09-11"],
+      timeOptions: [{ label: "5:00 PM" }],
+      ticketOptions: [{ label: "Adult", unitPriceCents: 7900 }],
+      extraOptions: [{ label: "Corona Bucket", unitPriceCents: 3000 }],
+    });
+  });
+
+  it("omits every choice field rather than sending empty arrays when Kai's reply has none", async () => {
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse({
+        assistantMessage: { content: "Hi, I am Kai. How can I help?", conversationId: "conv_1" },
+      }),
+    );
+
+    const result = await handleKaiCoreWebChat(
+      { sessionId: "conv_1", region: "australia", message: "hi" },
+      CHAT_ENV,
+      fetchImpl as unknown as typeof fetch,
+    );
+
+    expect(result).not.toHaveProperty("dateOptions");
+    expect(result).not.toHaveProperty("timeOptions");
+    expect(result).not.toHaveProperty("ticketOptions");
+    expect(result).not.toHaveProperty("extraOptions");
   });
 });

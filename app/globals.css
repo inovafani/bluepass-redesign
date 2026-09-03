@@ -4958,6 +4958,18 @@ html.is-scroll-locked body {
 .kmsg__text + .kmatches {
   margin-top: 14px;
 }
+/* Shortened payment/checkout links inside a reply's own text (see withLinks in KaiPanel.tsx) -
+   underlined rather than a color swap, since kmsg--user bubbles and kmsg--assistant bubbles sit on
+   different backgrounds and a single link color would fight one of them. */
+.kmsg__link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+.kmsg__link:hover {
+  opacity: 0.75;
+}
 /* The card is a container now, not a control. Its whole-card hover is gone with the wrapping
    link: highlighting on hover promised a click the card no longer accepts, and with two real
    actions inside it a lit-up surface competed with the thing you actually press. */
@@ -5075,7 +5087,8 @@ html.is-scroll-locked body {
    Both are steps the backend asks for mid-conversation, so they render in the
    log rather than as a separate screen. */
 .kform,
-.kpay {
+.kpay,
+.koptions {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -5084,6 +5097,130 @@ html.is-scroll-locked body {
   border-radius: var(--radius-xl);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--color-hairline-soft);
+}
+/* Ticket/extras selection - priced, single tap to send "option N" (see Kai's own reply text, which
+   teaches the same phrasing). Time selection reuses the plain .kchip pill instead, further down. */
+.koption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
+}
+.koption:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.koption:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.koption__price {
+  flex: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.koption--secondary {
+  color: rgba(255, 255, 255, 0.7);
+}
+.ktime-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: 31px;
+}
+/* Date-range calendar (real open dates from PmsAdapter.findAvailableDates on the Kai side),
+   attached to an unavailable-date reply so the traveller picks one instead of guessing again. */
+.kcal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 13px;
+  margin-left: 31px;
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-hairline-soft);
+}
+.kcal__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.kcal__nav-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-hairline);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+.kcal__nav-btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.kcal__nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.kcal__month {
+  color: var(--color-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.kcal__weekdays,
+.kcal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.kcal__weekdays span {
+  text-align: center;
+  color: var(--color-ink-muted);
+  font-size: var(--type-micro-size);
+}
+.kcal__cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-ink-muted);
+  font-family: var(--font-body);
+  font-size: var(--type-micro-size);
+  cursor: default;
+}
+.kcal__cell--blank {
+  border: none;
+}
+.kcal__cell--available {
+  border-color: var(--color-hairline);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
+}
+.kcal__cell--available:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.kcal__cell:disabled {
+  opacity: 0.5;
 }
 .kform__lede,
 .kpay__meta,
@@ -5158,7 +5295,10 @@ html.is-scroll-locked body {
     display: none;
   }
   .kform,
-  .kpay {
+  .kpay,
+  .koptions,
+  .ktime-chips,
+  .kcal {
     margin-left: 0;
   }
 }

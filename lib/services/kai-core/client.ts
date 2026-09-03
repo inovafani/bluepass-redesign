@@ -50,6 +50,28 @@ type KaiCoreMessageResponse = {
   productCards?: KaiCoreProductCard[] | null;
   contactRequest?: KaiCoreContactRequest | null;
   paymentRequest?: KaiCorePaymentRequest | null;
+  // The generic-booking-flow (AU/Rezdy) equivalents of productCards above - only ever present for
+  // that same flow, since BluePass's own Indonesia catalog has no PMS-backed date range search,
+  // times, tickets, or extras to offer. See boattimeyachtcharters-redesign's KaiWidget for the
+  // sibling implementation this mirrors.
+  dateOptions?: string[] | null;
+  timeOptions?: KaiCoreTimeOption[] | null;
+  ticketOptions?: KaiCoreTicketOption[] | null;
+  extraOptions?: KaiCoreExtraOption[] | null;
+};
+
+export type KaiCoreTimeOption = {
+  label: string;
+};
+
+export type KaiCoreTicketOption = {
+  label: string;
+  unitPriceCents: number;
+};
+
+export type KaiCoreExtraOption = {
+  label: string;
+  unitPriceCents: number;
 };
 
 // kai-conversation-flow-notes.md item 9: the AU/Boattime equivalent of KaiCoreBluePassMatch - the
@@ -210,6 +232,10 @@ export type KaiCoreWebChatResult = {
   matches?: (ReturnType<typeof toBluePassChatMatch> | ReturnType<typeof toProductCardMatch>)[];
   contactRequest?: KaiCoreContactRequest | null;
   paymentRequest?: KaiCorePaymentRequest | null;
+  dateOptions?: string[] | null;
+  timeOptions?: KaiCoreTimeOption[] | null;
+  ticketOptions?: KaiCoreTicketOption[] | null;
+  extraOptions?: KaiCoreExtraOption[] | null;
 };
 
 export async function handleKaiCoreWebChat(
@@ -300,6 +326,10 @@ export async function handleKaiCoreWebChat(
       : data.productCards && data.productCards.length > 0
         ? { matches: data.productCards.map(toProductCardMatch) }
         : {}),
+    ...(data.dateOptions && data.dateOptions.length > 0 ? { dateOptions: data.dateOptions } : {}),
+    ...(data.timeOptions && data.timeOptions.length > 0 ? { timeOptions: data.timeOptions } : {}),
+    ...(data.ticketOptions && data.ticketOptions.length > 0 ? { ticketOptions: data.ticketOptions } : {}),
+    ...(data.extraOptions && data.extraOptions.length > 0 ? { extraOptions: data.extraOptions } : {})
   };
 }
 
