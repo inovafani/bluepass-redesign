@@ -1,15 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import Field from "@/components/auth/Field";
 import Notice, { type NoticeTone } from "@/components/auth/Notice";
 import PhoneField from "@/components/auth/PhoneField";
 import Button from "@/components/ui/Button";
+import { partnerCategoryOptions } from "@/lib/partners";
 
 /**
- * The creator half of `/api/signup` (`roles: ["OPERATOR", "CREATOR"]` is a shared endpoint;
- * this page only ever submits `["CREATOR"]` — the operator side has its own funnel through
+ * The partner half of `/api/signup` (`roles: ["OPERATOR", "PARTNER"]` is a shared endpoint;
+ * this page only ever submits `["PARTNER"]` — the operator side has its own funnel through
  * `/admin/operators/new`, filed by Bluepass staff, not self-service).
  */
 export default function PartnerApplyForm({
@@ -20,8 +21,10 @@ export default function PartnerApplyForm({
   defaultPhone: string;
 }) {
   const router = useRouter();
+  const categoryFieldId = useId();
   const [name, setName] = useState(defaultName);
   const [phone, setPhone] = useState(defaultPhone);
+  const [partnerCategory, setPartnerCategory] = useState(partnerCategoryOptions[0].value);
   const [instagramUrl, setInstagramUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [tiktokUrl, setTiktokUrl] = useState("");
@@ -45,7 +48,8 @@ export default function PartnerApplyForm({
           instagramUrl: instagramUrl.trim() || undefined,
           youtubeUrl: youtubeUrl.trim() || undefined,
           tiktokUrl: tiktokUrl.trim() || undefined,
-          roles: ["CREATOR"],
+          partnerCategory,
+          roles: ["PARTNER"],
         }),
       });
     } catch {
@@ -89,6 +93,26 @@ export default function PartnerApplyForm({
         required
         disabled={busy}
       />
+      <label className="afield" htmlFor={categoryFieldId}>
+        <span className="afield__top">
+          <span className="ds-micro afield__label">What best describes you?</span>
+        </span>
+        <span className="afield__well">
+          <select
+            id={categoryFieldId}
+            className="afield__input"
+            value={partnerCategory}
+            onChange={(e) => setPartnerCategory(e.target.value)}
+            disabled={busy}
+          >
+            {partnerCategoryOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </span>
+      </label>
       <Field
         label="Instagram"
         value={instagramUrl}

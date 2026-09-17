@@ -8,7 +8,7 @@ export type OverviewMoneyRow = {
   conservationCents: number;
   operatorPayoutCents: number;
   platformCommissionCents: number;
-  creatorCommissionCents: number;
+  partnerCommissionCents: number;
 };
 
 export type AdminOverviewStats = {
@@ -16,14 +16,14 @@ export type AdminOverviewStats = {
   moneyByCurrency: OverviewMoneyRow[];
   bookingCount: number;
   liveOperatorCount: number;
-  approvedCreatorCount: number;
+  approvedPartnerCount: number;
 };
 
 const KIND_FIELD: Record<string, keyof Omit<OverviewMoneyRow, "currency">> = {
   CONSERVATION_ALLOCATION: "conservationCents",
   OPERATOR_PAYOUT_PLACEHOLDER: "operatorPayoutCents",
   BLUEPASS_PLATFORM_COMMISSION: "platformCommissionCents",
-  CREATOR_COMMISSION_ESTIMATE: "creatorCommissionCents",
+  PARTNER_COMMISSION_ESTIMATE: "partnerCommissionCents",
 };
 
 /**
@@ -56,7 +56,7 @@ export function foldMoneyByCurrency(stats: KaiCorePlatformStats): OverviewMoneyR
           conservationCents: 0,
           operatorPayoutCents: 0,
           platformCommissionCents: 0,
-          creatorCommissionCents: 0,
+          partnerCommissionCents: 0,
         } satisfies OverviewMoneyRow);
 
       row[field] += total.amountCents;
@@ -72,15 +72,15 @@ export function foldMoneyByCurrency(stats: KaiCorePlatformStats): OverviewMoneyR
  * as unreachable rather than as zero revenue) plus the two headcounts this app already owns locally.
  */
 export async function loadAdminOverviewStats(): Promise<AdminOverviewStats> {
-  const [kaiStats, liveOperatorCount, approvedCreatorCount] = await Promise.all([
+  const [kaiStats, liveOperatorCount, approvedPartnerCount] = await Promise.all([
     section(() => getKaiCorePlatformStats()),
     prisma.operatorProfile.count({ where: { status: "LIVE" } }),
-    prisma.creatorProfile.count({ where: { status: "APPROVED" } }),
+    prisma.partnerProfile.count({ where: { status: "APPROVED" } }),
   ]);
 
   const moneyByCurrency = kaiStats.ok ? foldMoneyByCurrency(kaiStats.data) : [];
   // AU only - see foldMoneyByCurrency's note on why Indonesia is excluded for now.
   const bookingCount = kaiStats.ok ? kaiStats.data.au.bookingCount : 0;
 
-  return { kaiStats, moneyByCurrency, bookingCount, liveOperatorCount, approvedCreatorCount };
+  return { kaiStats, moneyByCurrency, bookingCount, liveOperatorCount, approvedPartnerCount };
 }

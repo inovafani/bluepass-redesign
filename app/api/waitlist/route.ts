@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db/prisma";
  * Anonymous, pre-account interest capture for the "we're still building this" popup - see
  * WaitlistSignup's own schema comment for why this is deliberately not `/api/signup` (that route
  * requires a signed-in account and immediately creates a real, reviewable OperatorProfile/
- * CreatorProfile; this is just a name on a list to email once the platform is ready).
+ * PartnerProfile; this is just a name on a list to email once the platform is ready).
  */
 const waitlistSchema = z.object({
   email: z.string().trim().email().max(200),

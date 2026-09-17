@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  declinePartnerPayoutRequest,
+  markPartnerPayoutRequestPaid,
+  revealPartnerPayoutDetails,
+} from "@/lib/services/admin/partner-payouts";
 import { requireCurrentAdmin } from "@/lib/services/auth/admin";
 import {
   releaseKaiCoreBluePassLedgerEntryPayoutViaStripe,
@@ -10,6 +15,11 @@ import {
 export type PayoutActionState =
   | { status: "idle" }
   | { status: "done"; message: string }
+  | { status: "error"; message: string };
+
+export type RevealPartnerPayoutState =
+  | { status: "idle" }
+  | { status: "revealed"; bankDetails: string }
   | { status: "error"; message: string };
 
 /**
@@ -98,4 +108,97 @@ export async function releaseIndonesiaPayoutAction(
 
   revalidatePath("/admin/payouts");
   return { status: "done", message: "Payout released." };
+}
+
+/**
+ * Decrypts one partner's bank details, scoped to the specific pending request being handled - not
+ * a general "decrypt any partner" lookup. Re-checks admin status on every call, same as every other
+ * action in this file, since revealing real bank account data is exactly the kind of action a
+ * demoted session should never be able to replay.
+ */
+export async function revealPartnerPayoutDetailsAction(
+  _previous: RevealPartnerPayoutState,
+  formData: FormData,
+): Promise<RevealPartnerPayoutState> {
+  const admin = await requireCurrentAdmin();
+
+  if (!admin) {
+    return { status: "error", message: "Your admin session is no longer valid. Sign in again." };
+  }
+
+  const referralPartnerId = formData.get("referralPartnerId");
+
+  if (typeof referralPartnerId !== "string" || !referralPartnerId) {
+    return { status: "error", message: "That request was malformed. Reload the page and try again." };
+  }
+
+  const result = await revealPartnerPayoutDetails(referralPartnerId, admin.email);
+
+  if (!result.ok) {
+    return { status: "error", message: result.error };
+  }
+
+  return { status: "revealed", bankDetails: result.bankDetails };
+}
+
+export async function markPartnerPayoutPaidAction(
+  _previous: PayoutActionState,
+  formData: FormData,
+): Promise<PayoutActionState> {
+  const admin = await requireCurrentAdmin();
+
+  if (!admin) {
+    return { status: "error", message: "Your admin session is no longer valid. Sign in again." };
+  }
+
+  const requestId = formData.get("requestId");
+  const reference = formData.get("reference");
+
+  if (typeof requestId !== "string" || !requestId) {
+    return { status: "error", message: "That request was malformed. Reload the page and try again." };
+  }
+
+  const result = await markPartnerPayoutRequestPaid({
+    requestId,
+    reference: typeof reference === "string" ? reference : "",
+    paidByEmail: admin.email,
+  });
+
+  if (!result.ok) {
+    return { status: "error", message: result.error };
+  }
+
+  revalidatePath("/admin/payouts");
+  return { status: "done", message: "Marked as paid." };
+}
+
+export async function declinePartnerPayoutRequestAction(
+  _previous: PayoutActionState,
+  formData: FormData,
+): Promise<PayoutActionState> {
+  const admin = await requireCurrentAdmin();
+
+  if (!admin) {
+    return { status: "error", message: "Your admin session is no longer valid. Sign in again." };
+  }
+
+  const requestId = formData.get("requestId");
+  const reason = formData.get("reason");
+
+  if (typeof requestId !== "string" || !requestId) {
+    return { status: "error", message: "That request was malformed. Reload the page and try again." };
+  }
+
+  const result = await declinePartnerPayoutRequest({
+    requestId,
+    reason: typeof reason === "string" ? reason : "",
+    declinedByEmail: admin.email,
+  });
+
+  if (!result.ok) {
+    return { status: "error", message: result.error };
+  }
+
+  revalidatePath("/admin/payouts");
+  return { status: "done", message: "Request declined." };
 }

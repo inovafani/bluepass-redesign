@@ -142,8 +142,13 @@ export default async function LeadsPage({
         </div>
       ) : (
         <>
+          {/* `adm-table--cards` is what lets the same markup become a stacked card list on a phone.
+              Every cell carries its own `data-label` so the CSS can print the column heading next
+              to the value once the <thead> is gone — see the .adm-table--cards block in
+              globals.css. This page is worked from a phone more than any other in the console
+              (it is a call list), so the mobile layout is not a courtesy here. */}
           <div className="adm-table-wrap">
-            <table className="adm-table">
+            <table className="adm-table adm-table--cards">
               <thead>
                 <tr>
                   <th className="ds-micro">Business</th>
@@ -159,22 +164,22 @@ export default async function LeadsPage({
               <tbody>
                 {list.leads.map((lead) => (
                   <tr key={lead.id}>
-                    <td className="ds-body-sm">{lead.name}</td>
-                    <td>
+                    <td className="ds-body-sm crm-cell--name">{lead.name}</td>
+                    <td data-label="Status">
                       <StatusPill tone={STATUS_TONES[lead.status] ?? "muted"}>
                         {statusLabel(lead.status)}
                       </StatusPill>
                     </td>
-                    <td className="ds-body-sm adm-table__nowrap">{lead.category ?? "—"}</td>
-                    <td className="ds-body-sm adm-table__nowrap">{lead.region ?? "—"}</td>
-                    <td className="ds-body-sm adm-table__num">
+                    <td className="ds-body-sm adm-table__nowrap" data-label="Category">{lead.category ?? "—"}</td>
+                    <td className="ds-body-sm adm-table__nowrap" data-label="Location">{lead.region ?? "—"}</td>
+                    <td className="ds-body-sm adm-table__num" data-label="Phone">
                       {lead.phone ? <a href={`tel:${lead.phone}`}>{lead.phone}</a> : "—"}
                     </td>
-                    <td className="ds-body-sm adm-table__nowrap">{formatSource(lead.source)}</td>
-                    <td className="ds-body-sm adm-table__num">
+                    <td className="ds-body-sm adm-table__nowrap" data-label="Source">{formatSource(lead.source)}</td>
+                    <td className="ds-body-sm adm-table__num" data-label="Last contact">
                       {lead.lastOutreachAt ? lead.lastOutreachAt.toISOString().slice(0, 10) : "—"}
                     </td>
-                    <td className="ds-body-sm">
+                    <td className="ds-body-sm crm-cell--go">
                       <Link href={`/crm/${lead.id}`}>Open →</Link>
                     </td>
                   </tr>

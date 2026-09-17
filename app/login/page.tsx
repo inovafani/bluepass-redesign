@@ -59,19 +59,19 @@ const OPERATOR_NOTICES: Record<string, { tone: NoticeTone; text: string }> = {
   },
 };
 
-/** Same idea as OPERATOR_NOTICES, for `requireCreatorOrRedirect`. */
-const CREATOR_NOTICES: Record<string, { tone: NoticeTone; text: string }> = {
+/** Same idea as OPERATOR_NOTICES, for `requirePartnerOrRedirect`. */
+const PARTNER_NOTICES: Record<string, { tone: NoticeTone; text: string }> = {
   "signed-out": {
     tone: "info",
-    text: "Sign in to reach your creator dashboard.",
+    text: "Sign in to reach your partner dashboard.",
   },
-  "not-creator": {
+  "not-partner": {
     tone: "error",
-    text: "That account isn’t set up as a creator. If Bluepass sent you a login invite, sign in with the address it was sent to.",
+    text: "That account isn’t set up as a partner. If Bluepass sent you a login invite, sign in with the address it was sent to.",
   },
   "no-profile": {
     tone: "error",
-    text: "Your account is marked as a creator but has no creator profile attached, so there’s nothing for us to show you. Your Bluepass contact needs to fix that — signing in again won’t.",
+    text: "Your account is marked as a partner but has no partner profile attached, so there’s nothing for us to show you. Your Bluepass contact needs to fix that — signing in again won’t.",
   },
 };
 
@@ -93,7 +93,7 @@ const CREATOR_NOTICES: Record<string, { tone: NoticeTone; text: string }> = {
 function landingFor(roles: string[]) {
   if (roles.includes("ADMIN")) return "/admin";
   if (roles.includes("OPERATOR")) return "/operator";
-  if (roles.includes("CREATOR")) return "/creator";
+  if (roles.includes("PARTNER")) return "/partner-portal";
   return "/";
 }
 
@@ -123,9 +123,9 @@ export default function LoginPage() {
       return;
     }
 
-    const creatorReason = params.get("creator");
-    if (creatorReason && CREATOR_NOTICES[creatorReason]) {
-      setNotice(CREATOR_NOTICES[creatorReason]);
+    const partnerReason = params.get("partner");
+    if (partnerReason && PARTNER_NOTICES[partnerReason]) {
+      setNotice(PARTNER_NOTICES[partnerReason]);
       return;
     }
 

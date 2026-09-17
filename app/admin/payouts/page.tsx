@@ -3,7 +3,9 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import CommissionLedger from "@/components/admin/CommissionLedger";
 import CronHealth from "@/components/admin/CronHealth";
 import LedgerSection, { type LedgerTenantView } from "@/components/admin/LedgerSection";
+import PartnerPayoutRequests from "@/components/admin/PartnerPayoutRequests";
 import { requireAdminOrRedirect } from "@/lib/services/admin/guard";
+import { listPendingPartnerPayoutRequests } from "@/lib/services/admin/partner-payouts";
 import {
   isLedgerStatusFilter,
   loadAustraliaLedger,
@@ -41,11 +43,12 @@ export default async function PayoutsPage({
      this page is for. Kai's own endpoints default to FINALIZED, which is the opposite bias. */
   const status: LedgerStatusFilter = isLedgerStatusFilter(params.status) ? params.status : "PENDING";
 
-  const [cron, australia, indonesia, commission] = await Promise.all([
+  const [cron, australia, indonesia, commission, partnerPayoutRequests] = await Promise.all([
     loadCronHealth(),
     loadAustraliaLedger(status),
     loadIndonesiaLedger(status),
     loadCommissionLedger(),
+    listPendingPartnerPayoutRequests(),
   ]);
 
   return (
@@ -84,10 +87,12 @@ export default async function PayoutsPage({
 
       <LedgerSection
         title="Indonesia · BluePass"
-        blurb="Marketplace inquiries: creator commission, platform commission, conservation allocation, and the operator payout line."
+        blurb="Marketplace inquiries: partner commission, platform commission, conservation allocation, and the operator payout line."
         tenants={toViews(indonesia, toIndonesiaLedgerRow)}
         hint={KAI_HINT}
       />
+
+      <PartnerPayoutRequests requests={partnerPayoutRequests} />
 
       <CommissionLedger result={commission} />
     </>

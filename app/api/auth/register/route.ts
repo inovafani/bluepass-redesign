@@ -47,24 +47,12 @@ export async function POST(request: Request) {
 
   try {
     const name = parsed.data.name.trim();
-    const traveller = await prisma.traveller.upsert({
-      where: { whatsappE164: phone },
-      create: {
-        displayName: name,
-        email,
-        whatsappE164: phone,
-        emailVerifiedAt: null,
-        passwordHash,
-      },
-      update: {
-        displayName: name,
-        email,
-        emailVerifiedAt: null,
-        passwordHash,
-      },
-      select: { id: true },
-    });
 
+    /* No Traveller row created here anymore - it was a straight duplicate of the phone number
+       already stored on BluePassAccount.phone below, and nothing live reads it back:
+       getCurrentTraveller()'s account-side fallback makes every field identical whether
+       travellerId is set or not. Existing accounts that do have a travellerId from before this
+       change keep working via the legacy bootstrap paths in login.ts/session.ts, untouched. */
     const nextRoles = Array.from(
       new Set<BluePassAccountRole>([
         ...(existingEmail?.roles ?? []),
@@ -80,7 +68,6 @@ export async function POST(request: Request) {
             displayName: name,
             phone,
             roles: { set: nextRoles },
-            travellerId: traveller.id,
           },
           select: { id: true },
         })
@@ -92,20 +79,9 @@ export async function POST(request: Request) {
             displayName: name,
             phone,
             roles: ["TRAVELLER"],
-            travellerId: traveller.id,
           },
           select: { id: true },
         });
-
-    await prisma.traveller.update({
-      where: { id: traveller.id },
-      data: {
-        displayName: name,
-        whatsappE164: phone,
-        emailVerifiedAt: null,
-        passwordHash,
-      },
-    });
 
     const verification = await createAndSendEmailVerification({
       accountId: account.id,

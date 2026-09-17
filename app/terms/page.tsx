@@ -113,9 +113,9 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="ds-headline">8. Creators and referral partners</h2>
+            <h2 className="ds-headline">8. Referral partners</h2>
             <p className="ds-body">
-              If you join Bluepass's referral or creator program, your commission terms are set out
+              If you join Bluepass's referral or partner program, your commission terms are set out
               in the founding-partner terms you're shown when you apply. Bluepass tracks
               attribution (which link a traveller arrived through) to calculate what's owed; a
               disputed attribution is resolved by Bluepass acting in good faith on the data it

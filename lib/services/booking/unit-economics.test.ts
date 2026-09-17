@@ -9,7 +9,7 @@ describe("splitBooking", () => {
     const split = splitBooking(1000);
 
     expect(split.conservation).toBe(50);
-    expect(split.creatorShare).toBe(0);
+    expect(split.partnerShare).toBe(0);
     expect(split.paymentProcessing).toBe(30);
     expect(split.commission).toBe(120);
     expect(split.operatorNet).toBe(800);
@@ -19,7 +19,7 @@ describe("splitBooking", () => {
     const split = splitBooking(1000, true);
 
     expect(split.conservation).toBe(50);
-    expect(split.creatorShare).toBe(50);
+    expect(split.partnerShare).toBe(50);
     expect(split.paymentProcessing).toBe(30);
     expect(split.commission).toBe(70);
     expect(split.operatorNet).toBe(800);
@@ -29,7 +29,7 @@ describe("splitBooking", () => {
     const split = splitBooking(1000, true, "AUSTRALIA");
 
     expect(split.conservation).toBe(50);
-    expect(split.creatorShare).toBe(50);
+    expect(split.partnerShare).toBe(50);
     expect(split.paymentProcessing).toBe(30);
     expect(split.commission).toBe(70);
     expect(split.operatorNet).toBe(800);

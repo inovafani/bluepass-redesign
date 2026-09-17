@@ -98,14 +98,14 @@ export default function AccountMenu() {
   }
 
   /* Admin outranks the others for this badge: it's the highest-privilege role an account can
-     carry, and a staff member who also happens to hold an operator or creator profile is still
+     carry, and a staff member who also happens to hold an operator or partner profile is still
      signed in as staff first. */
   const roleLabel = traveller.roles.includes("ADMIN")
     ? "Admin"
     : traveller.operatorProfile
       ? (traveller.operatorProfile.companyName ?? "Operator")
-      : traveller.creatorProfile
-        ? `@${traveller.creatorProfile.handle ?? "creator"}`
+      : traveller.partnerProfile
+        ? `@${traveller.partnerProfile.handle ?? "partner"}`
         : "Traveller";
 
   return (
@@ -136,7 +136,7 @@ export default function AccountMenu() {
           <span className="acct__badge ds-micro">{roleLabel}</span>
 
           <div className="acct__rows">
-            {/* Admin has no profile row to gate on — unlike operator/creator, `requireCurrentAdmin`
+            {/* Admin has no profile row to gate on — unlike operator/partner, `requireCurrentAdmin`
                 only ever checks the role (or the `BLUEPASS_ADMIN_EMAILS` allowlist, which this
                 client-side menu can't see; an allowlisted-but-roleless admin can still reach
                 /admin directly by URL, just without this shortcut). Shown first: it's the
@@ -172,11 +172,11 @@ export default function AccountMenu() {
                 Your operator dashboard
               </Link>
             ) : null}
-            {/* Same reasoning, same gate shape, for /creator — resolveCreatorAccess requires the
+            {/* Same reasoning, same gate shape, for /partner — resolvePartnerAccess requires the
                 role and a profile row, same as the operator link above. */}
-            {traveller.roles.includes("CREATOR") && traveller.creatorProfile ? (
+            {traveller.roles.includes("PARTNER") && traveller.partnerProfile ? (
               <Link
-                href="/creator"
+                href="/partner-portal"
                 className="acct__row ds-body-sm"
                 role="menuitem"
                 onClick={() => setOpen(false)}
@@ -185,7 +185,7 @@ export default function AccountMenu() {
                   <path d="M18 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0z" />
                   <path d="M12 2v2M12 20v2M2 12h2M20 12h2" />
                 </svg>
-                Your creator dashboard
+                Your partner dashboard
               </Link>
             ) : null}
             {/* Every signed-in account gets this: `/account` shows only what belongs to the

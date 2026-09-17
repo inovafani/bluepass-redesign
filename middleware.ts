@@ -20,7 +20,10 @@ export function middleware(request: NextRequest) {
 
 /* Scoped to the signed-in consoles only — every other route on the site keeps its current
    zero-middleware request path. `:path*` matches zero segments too, so `/admin`, `/operator`, and
-   `/creator` themselves are covered. */
+   `/partner-portal` themselves are covered. `/creator` and `/partner` (the dashboard's two former
+   addresses - see the Creator -> Partner rename, then the /partner -> /partner-portal move to stop
+   it colliding with the public /partners page) are now just redirect stubs with no chrome to stand
+   aside for, so neither is in this list. */
 export const config = {
-  matcher: ["/admin/:path*", "/operator/:path*", "/creator/:path*", "/crm/:path*"],
+  matcher: ["/admin/:path*", "/operator/:path*", "/partner-portal/:path*", "/crm/:path*"],
 };

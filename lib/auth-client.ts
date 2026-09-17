@@ -18,7 +18,7 @@ export type Traveller = {
   email: string;
   phone: string | null;
   roles: string[];
-  creatorProfile: { status: string; handle: string | null } | null;
+  partnerProfile: { status: string; handle: string | null } | null;
   operatorProfile: { status: string; companyName: string | null } | null;
 };
 

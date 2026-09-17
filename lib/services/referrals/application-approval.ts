@@ -2,14 +2,14 @@ import type { ReferralPartnerRole } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeReferralCode } from "@/lib/services/referrals/attribution";
 
-type ApplicationKind = "creator" | "operator";
+type ApplicationKind = "partner" | "operator";
 
 export async function approveReferralApplication(input: {
   kind: ApplicationKind;
   id: string;
 }) {
-  if (input.kind === "creator") {
-    const profile = await prisma.creatorProfile.findUnique({
+  if (input.kind === "partner") {
+    const profile = await prisma.partnerProfile.findUnique({
       where: { id: input.id },
       include: {
         account: true,
@@ -18,11 +18,11 @@ export async function approveReferralApplication(input: {
     });
 
     if (!profile) {
-      throw new Error("Creator application not found.");
+      throw new Error("Partner application not found.");
     }
 
     if (profile.referralPartner) {
-      return prisma.creatorProfile.update({
+      return prisma.partnerProfile.update({
         where: { id: profile.id },
         data: { status: "APPROVED" },
         include: { referralPartner: { include: { links: true } }, account: true },
@@ -30,7 +30,7 @@ export async function approveReferralApplication(input: {
     }
 
     const partner = await createPartnerWithLink({
-      role: "CREATOR",
+      role: "PARTNER",
       name: profile.account.displayName ?? profile.handle ?? profile.account.email,
       handle: profile.handle,
       email: profile.account.email,
@@ -38,7 +38,7 @@ export async function approveReferralApplication(input: {
       targetPath: "/",
     });
 
-    return prisma.creatorProfile.update({
+    return prisma.partnerProfile.update({
       where: { id: profile.id },
       data: {
         status: "APPROVED",
@@ -91,8 +91,8 @@ export async function declineReferralApplication(input: {
   kind: ApplicationKind;
   id: string;
 }) {
-  if (input.kind === "creator") {
-    return prisma.creatorProfile.update({
+  if (input.kind === "partner") {
+    return prisma.partnerProfile.update({
       where: { id: input.id },
       data: { status: "DECLINED" },
     });
@@ -133,7 +133,7 @@ async function createPartnerWithLink(input: {
   });
 }
 
-async function buildUniqueReferralCode(source: string) {
+export async function buildUniqueReferralCode(source: string) {
   const base = normalizeReferralCode(source.replace(/^@/, "")) || "bluepass";
 
   for (let attempt = 0; attempt < 20; attempt += 1) {

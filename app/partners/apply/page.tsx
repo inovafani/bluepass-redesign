@@ -56,12 +56,12 @@ export default async function PartnersApplyPage() {
     select: {
       displayName: true,
       phone: true,
-      creatorProfile: { select: { status: true, handle: true } },
+      partnerProfile: { select: { status: true, handle: true } },
     },
   });
 
-  if (account.creatorProfile) {
-    return <PartnerApplyStatus status={account.creatorProfile.status} />;
+  if (account.partnerProfile) {
+    return <PartnerApplyStatus status={account.partnerProfile.status} />;
   }
 
   return (

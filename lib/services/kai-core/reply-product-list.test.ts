@@ -123,4 +123,43 @@ describe("stripDuplicatedProductList", () => {
     const reply = ["A few things to know:", "1. Bring sunscreen", "2. Arrive 15 minutes early"].join("\n");
     expect(stripDuplicatedProductList(reply, AU_NAMES)).toBe(reply);
   });
+
+  /**
+   * The real bug report: a 10-item reply where items 1-8 became cards and 9-10 (needing manual
+   * operator confirmation, so no card) didn't. Before the fix, the surviving text kept saying
+   * "9." and "10." with nothing numbered 1-8 anywhere in it - reading as though eight items had
+   * gone missing rather than having been shown a different way (as the cards above).
+   */
+  it("renumbers surviving list items from 1, so items that didn't become cards don't look like they picked up from nowhere", () => {
+    const reply = [
+      "Connecting you with Boattime Yacht Charters now.",
+      "",
+      "1. Gold Coast Whale Escape - live availability",
+      "2. Twilight Drift - live availability",
+      "3. Riverfire 2026 - live availability",
+      "4. Corporate Charter - operator confirmation required",
+      "5. Wedding Yacht Charter - operator confirmation required",
+    ].join("\n");
+
+    const out = stripDuplicatedProductList(reply, [
+      "Gold Coast Whale Escape",
+      "Twilight Drift",
+      "Riverfire 2026",
+    ]);
+
+    expect(out).toBe(
+      [
+        "Connecting you with Boattime Yacht Charters now.",
+        "",
+        "1. Corporate Charter - operator confirmation required",
+        "2. Wedding Yacht Charter - operator confirmation required",
+      ].join("\n"),
+    );
+  });
+
+  it("preserves each surviving line's own numbering style (. vs )) while renumbering", () => {
+    const reply = ["1) Gold Coast Whale Escape - live availability", "2) Corporate Charter"].join("\n");
+
+    expect(stripDuplicatedProductList(reply, ["Gold Coast Whale Escape"])).toBe("1) Corporate Charter");
+  });
 });

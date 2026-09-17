@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import {
-  encodeReferralAttribution,
   normalizeReferralCode,
+  resolveReferralAttribution,
   REFERRAL_ATTRIBUTION_COOKIE,
-  type ReferralAttribution,
 } from "@/lib/services/referrals/attribution";
 
 const trackReferralSchema = z.object({
@@ -36,34 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Referral code is invalid." }, { status: 400 });
   }
 
-  const referralLink = await prisma.referralLink.findUnique({
-    where: { code },
-    select: {
-      id: true,
-      code: true,
-      label: true,
-      active: true,
-      partner: {
-        select: {
-          id: true,
-          role: true,
-          name: true,
-          handle: true,
-        },
-      },
-    },
-  });
-
-  const attribution: ReferralAttribution =
-    referralLink && referralLink.active
-      ? {
-          code: referralLink.code,
-          referralLinkId: referralLink.id,
-          referralPartnerId: referralLink.partner.id,
-          role: referralLink.partner.role,
-          label: referralLink.label ?? referralLink.partner.handle ?? referralLink.partner.name,
-        }
-      : { code };
+  const { attribution } = await resolveReferralAttribution(code);
 
   await prisma.referralClick.create({
     data: {
@@ -82,7 +54,9 @@ export async function POST(request: Request) {
     resolved: Boolean(attribution.referralLinkId),
   });
 
-  response.cookies.set(REFERRAL_ATTRIBUTION_COOKIE, encodeReferralAttribution(attribution), {
+  // Only the code goes in the cookie - see getReferralAttributionFromCookies's own comment for why
+  // baking in referralPartnerId/role/label here (as an unsigned blob) was the actual vulnerability.
+  response.cookies.set(REFERRAL_ATTRIBUTION_COOKIE, code, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

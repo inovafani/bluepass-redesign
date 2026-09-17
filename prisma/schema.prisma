@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum OperatorStatus {
@@ -61,7 +62,7 @@ enum TransferStatus {
 
 enum SignupRole {
   OPERATOR
-  CREATOR
+  PARTNER
 }
 
 enum WaitlistRole {
@@ -72,7 +73,7 @@ enum WaitlistRole {
 
 // The "we're still building this" popup's own lead capture - deliberately separate from
 // SignupLead. SignupLead's /api/signup is an account-bound real application (creates a real
-// OperatorProfile/CreatorProfile in PENDING_REVIEW); this is anonymous, pre-account interest
+// OperatorProfile/PartnerProfile in PENDING_REVIEW); this is anonymous, pre-account interest
 // capture only ("just a form so if people are interested... they can join the waiting list" -
 // Tony, 2026-08-27), meant to be emailed once the platform is actually ready, not reviewed now.
 model WaitlistSignup {
@@ -88,7 +89,7 @@ model WaitlistSignup {
 
 enum BluePassAccountRole {
   TRAVELLER
-  CREATOR
+  PARTNER
   OPERATOR
   ADMIN
 }
@@ -164,11 +165,28 @@ enum WhatsAppOutboundStatus {
 }
 
 enum ReferralPartnerRole {
-  CREATOR
+  PARTNER
   OPERATOR
   DIVE_SHOP
   GROUP
   TRAVELLER
+}
+
+/// What kind of partner an applicant to the /partners funnel says they are. Descriptive only -
+/// it does not change commission math (splitBooking has no per-audience rule) or gate any
+/// dashboard feature, so this deliberately does not touch ReferralPartnerRole/PartnerProfile's
+/// approval flow. It exists so an admin reviewing a "Partners" application, and the applicant's
+/// own dashboard, can show something truer than the generic "Partner" role for a dive shop or
+/// travel agency that applied through the same funnel. CREATOR here means "creator/influencer" -
+/// a leaf category, distinct from (and not renamed alongside) the broader PARTNER role above.
+enum PartnerCategory {
+  CREATOR
+  DIVE_SHOP
+  TRAVEL_AGENCY
+  TRIP_LEADER
+  DIVE_INSTRUCTOR
+  ADVISOR
+  OCEAN_PARTNER
 }
 
 model Operator {
@@ -198,12 +216,47 @@ model ReferralPartner {
   clicks           ReferralClick[]
   kaiSessions      KaiSession[]
   bookingInquiries BookingInquiry[]
-  creatorProfiles  CreatorProfile[]
+  partnerProfiles  PartnerProfile[]
   operatorProfiles OperatorProfile[]
+  payoutRequests   PartnerPayoutRequest[]
 
   @@index([role])
   @@index([handle])
   @@index([email])
+}
+
+enum PartnerPayoutRequestStatus {
+  PENDING
+  PAID
+  DECLINED
+}
+
+/**
+ * A partner's own request to cash out their accrued referral commission - separate from
+ * CommissionLedgerEntry (which has no durable "paid" state of its own: rows are deleted+recreated
+ * per booking inquiry on every resync, see commission-ledger.ts's syncReferralCommissionLedger).
+ * "Available to request" is computed as the current PARTNER_COMMISSION_ESTIMATE total minus the sum
+ * of this partner's PENDING/PAID requests for the same currency - see
+ * lib/services/partner/payout-requests.ts.
+ */
+model PartnerPayoutRequest {
+  id                  String                     @id @default(cuid())
+  referralPartnerId   String
+  requestedByAccountId String
+  amountCents         Int
+  currency            String
+  status              PartnerPayoutRequestStatus @default(PENDING)
+  paidAt              DateTime?
+  paidBy              String?
+  paidReference       String?
+  declinedAt          DateTime?
+  declinedBy          String?
+  declineReason       String?
+  createdAt           DateTime                   @default(now())
+  referralPartner     ReferralPartner            @relation(fields: [referralPartnerId], references: [id], onDelete: Cascade)
+
+  @@index([referralPartnerId])
+  @@index([status])
 }
 
 model ReferralLink {
@@ -287,7 +340,12 @@ model BluePassAccount {
   emailVerifiedAt         DateTime?
   passwordHash            String
   displayName             String?
-  phone                   String?
+  // Made unique 2026-09-10: previously enforced only incidentally, via Traveller.whatsappE164's own
+  // unique constraint (register.ts upserted a Traveller keyed by phone before this field existed on
+  // the account directly). Now that registration no longer creates a Traveller row at all, this is
+  // the sole enforcement of "one phone number, one account" - Postgres treats multiple NULLs as
+  // distinct, so accounts with no phone on file don't conflict with each other.
+  phone                   String?                                 @unique
   roles                   BluePassAccountRole[]                   @default([TRAVELLER])
   travellerId             String?                                 @unique
   createdAt               DateTime                                @default(now())
@@ -296,7 +354,7 @@ model BluePassAccount {
   sessions                BluePassAccountSession[]
   emailVerificationTokens BluePassAccountEmailVerificationToken[]
   passwordResetTokens     BluePassAccountPasswordResetToken[]
-  creatorProfile          CreatorProfile?
+  partnerProfile          PartnerProfile?
   operatorProfile         OperatorProfile?
   operatorClaims          OperatorClaim[]
   commissionEntries       CommissionLedgerEntry[]
@@ -363,7 +421,7 @@ model SavedTrip {
   @@index([accountId])
 }
 
-model CreatorProfile {
+model PartnerProfile {
   id                String            @id @default(cuid())
   accountId         String            @unique
   referralPartnerId String?           @unique
@@ -373,6 +431,11 @@ model CreatorProfile {
   instagramUrl      String?
   youtubeUrl        String?
   tiktokUrl         String?
+  partnerCategory   PartnerCategory?
+  // Same encrypt-at-rest convention as OperatorProfile.encryptedPayoutDetails
+  // (lib/services/booking/adapters/credentials.ts's encryptCredentials/decryptCredentials) - real
+  // bank account data, never stored as plain JSON.
+  encryptedPayoutDetails String?
   notes             String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
@@ -883,4 +946,95 @@ model CronRunLog {
   finishedAt   DateTime      @default(now())
 
   @@index([jobName, finishedAt])
+}
+
+// Blog / editorial CMS ---------------------------------------------------------------------------
+// Added 2026-09-14. The whole point of this surface is organic search: a founder searching
+// "Bluepass" - or "best liveaboard Komodo" - should land on pages Bluepass itself owns. So the
+// model carries the SEO fields as first-class columns rather than a loose JSON blob: every one of
+// them ends up in a <title>, a <meta>, a canonical, or the JSON-LD, and a column is what lets the
+// admin list ask "which posts have no focus keyword yet" without reading every row's body.
+
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// Which schema.org type the article emits. Article is right for almost everything; the other two
+// exist because an FAQ or a step-by-step guide earns a rich result that a plain Article does not.
+enum BlogStructuredData {
+  ARTICLE
+  FAQ_PAGE
+  HOW_TO
+}
+
+model BlogCategory {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  // Sort key for the public category chips - lowest first, ties broken by name.
+  position    Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  posts       BlogPost[]
+
+  @@index([position])
+}
+
+model BlogPost {
+  id        String @id @default(cuid())
+  title     String
+  // The public URL. Unique because it *is* the address - two posts sharing one would make the
+  // second unreachable, and a 200 that serves the wrong article is worse for search than a 404.
+  slug      String @unique
+  // A display name, not a relation to BluePassAccount. The byline is editorial ("Bluepass Crew",
+  // a guest operator's name) and should survive the staff account that typed it being deleted.
+  authorName String @default("Bluepass")
+
+  // Body is Markdown, rendered server-side by lib/services/blog/markdown.ts. Stored as source
+  // rather than HTML so the renderer can be improved (heading anchors, link rel rules, JSON-LD
+  // extraction) without a migration over every published article.
+  bodyMarkdown String @default("")
+  excerpt      String?
+  tags         String[] @default([])
+
+  categoryId String?
+  category   BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  heroImageUrl String?
+  heroImageAlt String?
+
+  // Search appearance. Each falls back to a sensible source when empty (seoTitle -> title,
+  // metaDescription -> excerpt -> opening of the body), so a post is never *unshippable* for
+  // missing one - the editor's checklist nags instead.
+  focusKeyword    String?
+  seoTitle        String?
+  metaDescription String?
+  canonicalUrl    String?
+  structuredData  BlogStructuredData @default(ARTICLE)
+  // Landing pages and thin announcements that should exist but never rank. Drops the post from
+  // the sitemap as well as emitting noindex - a sitemap entry for a noindex page is a crawl
+  // budget leak, not a neutral no-op.
+  noindex         Boolean            @default(false)
+
+  shareTitle       String?
+  shareDescription String?
+  shareImageUrl    String?
+
+  status      BlogPostStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  // Derived from bodyMarkdown on every save. Denormalised because the listing pages sort and
+  // summarise on them, and recomputing a Markdown parse per row per request to print "12 min
+  // read" would be the most expensive thing on the page.
+  wordCount      Int @default(0)
+  readingMinutes Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@index([updatedAt])
 }

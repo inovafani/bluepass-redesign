@@ -226,9 +226,8 @@ describe("loadCronHealth", () => {
     expect(health.local.ok).toBe(true);
     if (health.local.ok) {
       const names = health.local.data.map((row) => row.jobName);
-      // Both expected local jobs appear even if one has never logged a run.
+      // The expected local job appears even if it has never logged a run.
       expect(names).toContain("rezdy-agent-sync");
-      expect(names).toContain("bokun-sync");
       for (const row of health.local.data) {
         expect(["SUCCESS", "PARTIAL", "FAILURE", "NEVER_RUN"]).toContain(row.status);
       }

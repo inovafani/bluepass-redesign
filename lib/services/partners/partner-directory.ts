@@ -3,15 +3,15 @@ import { prisma } from "@/lib/db/prisma";
 export type BluePassPartnerDirectoryEntry = {
   partnerId: string;
   partnerName: string;
-  partnerRole: "CREATOR" | "DIVE_SHOP" | "GROUP" | "TRAVELLER";
+  partnerRole: "PARTNER" | "DIVE_SHOP" | "GROUP" | "TRAVELLER";
   handle: string | null;
   whatsappPhone: string;
   status: "APPROVED" | "LIVE";
-  source: "creator_profile";
+  source: "partner_profile";
 };
 
 export async function listApprovedPartnerDirectory(): Promise<BluePassPartnerDirectoryEntry[]> {
-  const profiles = await prisma.creatorProfile.findMany({
+  const profiles = await prisma.partnerProfile.findMany({
     where: {
       status: { in: ["APPROVED", "LIVE"] },
     },
@@ -46,7 +46,7 @@ export async function listApprovedPartnerDirectory(): Promise<BluePassPartnerDir
         profile.handle?.trim() ||
         partner?.handle?.trim() ||
         "BluePass partner";
-      const partnerRole = partner?.role === "OPERATOR" ? "CREATOR" : partner?.role ?? "CREATOR";
+      const partnerRole = partner?.role === "OPERATOR" ? "PARTNER" : partner?.role ?? "PARTNER";
 
       if (!whatsappPhone) {
         return null;
@@ -59,7 +59,7 @@ export async function listApprovedPartnerDirectory(): Promise<BluePassPartnerDir
         handle: partner?.handle ?? profile.handle ?? null,
         whatsappPhone,
         status: profile.status,
-        source: "creator_profile" as const,
+        source: "partner_profile" as const,
       };
     })
     .filter((entry): entry is BluePassPartnerDirectoryEntry => Boolean(entry));

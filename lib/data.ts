@@ -184,7 +184,7 @@ export const reels: Reel[] = [
  * scope for it right now). Left as `#` deliberately rather than removed outright per the 2026-08-20
  * decision on the ones still under discussion (Gift cards, Pricing, Support); "Indonesia",
  * "Become an operator" and "List your boat" were dropped entirely the same day, and "Affiliates"
- * was folded into "Creator program" rather than kept as a second link to the same place.
+ * was folded into "Partner program" rather than kept as a second link to the same place.
  */
 export const footerColumns: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -205,7 +205,18 @@ export const footerColumns: { title: string; links: { label: string; href: strin
   },
   {
     title: "Partners",
-    links: [{ label: "Creator program", href: "/partners/apply" }],
+    links: [{ label: "Partner program", href: "/partners/apply" }],
+  },
+  /* The blog's only entry point in the site chrome, by design (2026-09-14). It belongs to people
+     who arrive from search, not to someone already mid-booking - putting it in the top nav would
+     spend a nav slot on the audience least likely to use it, while a footer link still gives every
+     page an internal link into /blog, which is what a crawler needs. */
+  {
+    title: "Journal",
+    links: [
+      { label: "Blog", href: "/blog" },
+      { label: "Conservation reports", href: "/conservation#impact-report" },
+    ],
   },
   {
     title: "For operators",

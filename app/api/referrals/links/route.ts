@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { normalizeReferralCode } from "@/lib/services/referrals/attribution";
 
 const referralLinkCreateSchema = z.object({
-  role: z.enum(["CREATOR", "OPERATOR", "DIVE_SHOP", "GROUP", "TRAVELLER"]),
+  role: z.enum(["PARTNER", "OPERATOR", "DIVE_SHOP", "GROUP", "TRAVELLER"]),
   name: z.string().trim().min(2).max(160),
   handle: z.string().trim().max(80).optional(),
   email: z.string().trim().email().max(180).optional(),

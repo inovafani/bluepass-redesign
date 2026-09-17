@@ -31,8 +31,8 @@ export default function OverviewStats({ stats }: { stats: AdminOverviewStats }) 
           <span className="ds-micro ovr-count__label">live operators</span>
         </div>
         <div className="ovr-count">
-          <span className="ds-display-md ovr-count__value">{stats.approvedCreatorCount}</span>
-          <span className="ds-micro ovr-count__label">approved creators</span>
+          <span className="ds-display-md ovr-count__value">{stats.approvedPartnerCount}</span>
+          <span className="ds-micro ovr-count__label">approved partners</span>
         </div>
       </div>
 
@@ -43,7 +43,7 @@ export default function OverviewStats({ stats }: { stats: AdminOverviewStats }) 
         </div>
       ) : stats.moneyByCurrency.length === 0 ? (
         <div className="adm-card">
-          <p className="ds-body-sm crt-empty">No finalised bookings yet.</p>
+          <p className="ds-body-sm ptr-empty">No finalised bookings yet.</p>
         </div>
       ) : (
         <div className="ovr-money-grid">
@@ -69,11 +69,11 @@ export default function OverviewStats({ stats }: { stats: AdminOverviewStats }) 
                     {formatMoneyFromCents(row.platformCommissionCents, row.currency)}
                   </dd>
                 </div>
-                {row.creatorCommissionCents > 0 ? (
+                {row.partnerCommissionCents > 0 ? (
                   <div className="adm-facts__row">
-                    <dt className="ds-micro adm-facts__label">Creator/partner commission</dt>
+                    <dt className="ds-micro adm-facts__label">Partner commission</dt>
                     <dd className="ds-body-sm adm-facts__value">
-                      {formatMoneyFromCents(row.creatorCommissionCents, row.currency)}
+                      {formatMoneyFromCents(row.partnerCommissionCents, row.currency)}
                     </dd>
                   </div>
                 ) : null}

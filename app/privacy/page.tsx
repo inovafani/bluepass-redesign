@@ -45,7 +45,7 @@ export default function PrivacyPage() {
               This policy applies to bluepass.co and the Bluepass booking service, operated by{" "}
               <strong>Bluepass Pty Ltd</strong>, registered at{" "}
               <strong>[registered address]</strong> (&ldquo;Bluepass&rdquo;, &ldquo;we&rdquo;). It
-              covers travellers booking trips, operators listed on Bluepass, and creators/referral
+              covers travellers booking trips, operators listed on Bluepass, and partners/referral
               partners.
             </p>
           </section>

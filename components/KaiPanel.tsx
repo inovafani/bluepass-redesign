@@ -13,6 +13,18 @@ import KaiDateCalendar from "./KaiDateCalendar";
 type Suggested = { label: string; message: string };
 type Region = "indonesia" | "australia";
 
+/** A real, still-unpaid checkout left behind by "Start a new conversation" - see
+ * forceNewSessionRef below. Not a Suggested chip: "Continue my order" has to switch the panel back
+ * to conversationId's own history, which a plain send(message) can't do. */
+type UnfinishedOrder = {
+  conversationId: string;
+  productTitle: string;
+  dateText: string;
+  guests: number;
+  grossAmountCents: number;
+  currency: string;
+};
+
 /**
  * A card Kai attached to a reply - either a BluePass yacht match (Indonesia) or an AU/Boattime
  * product card (kai-conversation-flow-notes.md item 9). The BluePass-only fields (region, tier,
@@ -217,6 +229,12 @@ export default function KaiPanel({
   /* Region is decided by Kai Core on the first message and must ride along on every
      follow-up call, including payment — it selects the tenant. */
   const regionRef = useRef<Region | undefined>(undefined);
+  /* Set by resetThread, consumed by the very next send() and cleared immediately after - tells the
+     server this session must be a real fresh conversation, not Kai Core's own "resume-or-create"
+     behaviour for a signed-in traveller (see createKaiCoreSession in kai-core/client.ts), which
+     otherwise silently reattaches the account's last conversation and defeats "Start a new
+     conversation" for anyone signed in. */
+  const forceNewSessionRef = useRef(false);
   const stripeRef = useRef<StripeLike | null>(null);
   const cardElementRef = useRef<StripeCardElement | null>(null);
   /* Cached so "new conversation" reopens with the same destination-aware opener
@@ -249,6 +267,9 @@ export default function KaiPanel({
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [cardholder, setCardholder] = useState("");
   const [hostedCheckout, setHostedCheckout] = useState(false);
+
+  const [unfinishedOrder, setUnfinishedOrder] = useState<UnfinishedOrder | null>(null);
+  const [resumingOrder, setResumingOrder] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -433,6 +454,9 @@ export default function KaiPanel({
       .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
 
     try {
+      const forceNewSession = forceNewSessionRef.current;
+      forceNewSessionRef.current = false;
+
       const res = await fetch("/api/kai/web-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -441,6 +465,7 @@ export default function KaiPanel({
           ...(sessionId ? { sessionId } : {}),
           ...(regionRef.current ? { region: regionRef.current } : {}),
           ...(context.length ? { recentMessages: context } : {}),
+          ...(forceNewSession ? { forceNewSession: true } : {}),
         }),
       });
 
@@ -456,6 +481,7 @@ export default function KaiPanel({
         timeOptions?: TimeOption[] | null;
         ticketOptions?: TicketOption[] | null;
         extraOptions?: ExtraOption[] | null;
+        unfinishedOrder?: UnfinishedOrder | null;
         error?: string;
       };
 
@@ -484,6 +510,18 @@ export default function KaiPanel({
         data.matches,
       );
       setSuggested(Array.isArray(data.suggestedReplies) ? data.suggestedReplies.slice(0, 4) : []);
+
+      /* Only ever present on the one reply that just created a forced-fresh conversation - see
+         forceNewSessionRef. A separate message (not folded into the reply above) so it reads as
+         Kai flagging something, not as part of whatever the traveller just asked. */
+      if (data.unfinishedOrder) {
+        const o = data.unfinishedOrder;
+        setUnfinishedOrder(o);
+        push(
+          "assistant",
+          `Before we go further — you still have an unfinished order: ${o.productTitle} on ${o.dateText} for ${o.guests} guest${o.guests === 1 ? "" : "s"}. Want to continue that order, or keep going with this new chat?`,
+        );
+      }
 
       /* Both are latch-style: absent in a reply means that step is no longer pending. */
       setContactRequest(data.contactRequest ?? null);
@@ -688,6 +726,7 @@ export default function KaiPanel({
     }
     setSessionId(undefined);
     regionRef.current = undefined;
+    forceNewSessionRef.current = true;
     seqRef.current = 1;
     const built = buildOpener(regionsRef.current);
     setMessages([{ id: 0, role: "assistant", content: built.content }]);
@@ -696,7 +735,53 @@ export default function KaiPanel({
     setContactForm({ name: "", email: "", phone: "" });
     setContactError(null);
     setPaymentRequest(null);
+    setUnfinishedOrder(null);
     inputRef.current?.focus();
+  };
+
+  /* "Continue my order" - unlike a Suggested chip, this can't just send a message into the current
+     (fresh) conversation, since that conversation has no memory of the old order at all. Instead it
+     switches the panel back to the old conversationId and its real history, via the account-wide
+     resume endpoint (dormant until this feature needed it - see resumeKaiCoreSession/Kai's
+     /api/kai/web-chat/resume, built for cross-device resume but never actually called from here
+     before now). */
+  const continueUnfinishedOrder = async () => {
+    if (!unfinishedOrder || resumingOrder) return;
+    setResumingOrder(true);
+    try {
+      const res = await fetch("/api/kai/web-chat/resume", { method: "POST" });
+      const data = (await res.json().catch(() => ({}))) as {
+        resumed?: boolean;
+        sessionId?: string;
+        region?: Region;
+        messages?: { role: "user" | "assistant"; content: string }[];
+      };
+
+      if (!res.ok || !data.resumed || !data.sessionId) {
+        push(
+          "system",
+          `I couldn't pull that order back up. Try again, or message us on WhatsApp: ${WHATSAPP_HREF}`,
+        );
+        return;
+      }
+
+      setSessionId(data.sessionId);
+      if (data.region) regionRef.current = data.region;
+      const restored = (data.messages ?? []).map((m, i) => ({ id: i, role: m.role, content: m.content }) as Msg);
+      seqRef.current = restored.length;
+      setMessages(
+        restored.length ? restored : [{ id: 0, role: "assistant", content: "Picking up where you left off." }],
+      );
+      setSuggested([]);
+      setUnfinishedOrder(null);
+    } catch {
+      push(
+        "system",
+        `I couldn't pull that order back up. Try again, or message us on WhatsApp: ${WHATSAPP_HREF}`,
+      );
+    } finally {
+      setResumingOrder(false);
+    }
   };
 
   if (!mounted || !open) return null;
@@ -1049,7 +1134,26 @@ export default function KaiPanel({
           ) : null}
         </div>
 
-        {suggested.length && !thinking ? (
+        {unfinishedOrder && !thinking ? (
+          <div className="kpanel__chips">
+            <button
+              type="button"
+              className="kchip"
+              onClick={() => void continueUnfinishedOrder()}
+              disabled={resumingOrder}
+            >
+              {resumingOrder ? "Pulling that up…" : "Continue my order"}
+            </button>
+            <button
+              type="button"
+              className="kchip"
+              onClick={() => setUnfinishedOrder(null)}
+              disabled={resumingOrder}
+            >
+              Start something new
+            </button>
+          </div>
+        ) : suggested.length && !thinking ? (
           <div className="kpanel__chips">
             {suggested.map((s) => (
               <button key={s.label} type="button" className="kchip" onClick={() => void send(s.message)}>

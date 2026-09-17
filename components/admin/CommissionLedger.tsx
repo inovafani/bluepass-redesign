@@ -4,7 +4,7 @@ import { formatDateTime, formatMoneyFromCents, type SectionResult } from "@/lib/
 import type { CommissionLedgerEntryRow } from "@/lib/services/referrals/commission-ledger";
 
 /**
- * This app's own CommissionLedgerEntry rows — referral and creator commission specifically, written
+ * This app's own CommissionLedgerEntry rows — referral and partner commission specifically, written
  * by syncReferralCommissionLedger off booking inquiries.
  *
  * Context rather than an action surface: these are estimates against inquiries, not money Kai has
@@ -21,7 +21,7 @@ export default function CommissionLedger({
       <header className="adm-block__head">
         <h2 className="ds-headline adm-block__title">Local commission ledger</h2>
         <p className="ds-caption adm-block__note">
-          This app&rsquo;s own referral/creator commission estimates, written against booking inquiries.
+          This app&rsquo;s own referral/partner commission estimates, written against booking inquiries.
           Read-only — releasing money happens on the Kai side.
         </p>
       </header>

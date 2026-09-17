@@ -66,14 +66,36 @@ export function stripDuplicatedProductList(reply: string, productNames: string[]
     return false;
   };
 
-  const withoutList = lines
-    .filter((_, index) => !removed[index] && !isOrphanedLeadIn(index))
+  const survivingLines = lines.filter((_, index) => !removed[index] && !isOrphanedLeadIn(index));
+
+  const withoutList = renumberSurvivingListItems(survivingLines)
     .join("\n")
     /* The removals leave behind the blank line that separated the prose from the list. */
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
   return dropChoosePrompt(withoutList);
+}
+
+/**
+ * Stripping the matched-to-a-card lines above leaves whichever numbered items didn't become
+ * cards (e.g. ones needing manual operator confirmation) still carrying their original position in
+ * the full list - "9. Corporate Charter", "10. Wedding Yacht Charter", with nothing numbered 1-8
+ * anywhere in the text since those became cards instead. Read on its own, that looks like items
+ * were lost rather than shown a different way. Renumbers whatever survives to start at 1, in order,
+ * preserving each line's own "." vs ")" style. Bulleted lines are untouched - only digit-prefixed
+ * ones ever implied a total count in the first place.
+ */
+function renumberSurvivingListItems(lines: string[]): string[] {
+  let next = 1;
+
+  return lines.map((line) => {
+    const match = line.match(/^(\s*)(\d+)([.)])(\s+.*)$/);
+    if (!match) return line;
+
+    const [, indent, , separator, rest] = match;
+    return `${indent}${next++}${separator}${rest}`;
+  });
 }
 
 /**

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BluePassAccountRole } from "@prisma/client";
+import { BluePassAccountRole, PartnerCategory } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentTraveller } from "@/lib/services/auth/session";
@@ -11,8 +11,9 @@ const signupSchema = z.object({
   youtubeUrl: z.string().trim().max(300).optional(),
   tiktokUrl: z.string().trim().max(300).optional(),
   websiteUrl: z.string().trim().max(300).optional(),
+  partnerCategory: z.nativeEnum(PartnerCategory).optional(),
   roles: z
-    .array(z.enum(["OPERATOR", "CREATOR"]))
+    .array(z.enum(["OPERATOR", "PARTNER"]))
     .min(1)
     .max(2),
 });
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       id: true,
       email: true,
       roles: true,
-      creatorProfile: { select: { status: true } },
+      partnerProfile: { select: { status: true } },
       operatorProfile: { select: { status: true } },
     },
   });
@@ -84,8 +85,8 @@ export async function POST(request: NextRequest) {
   });
 
   const requestedRoles = parsed.data.roles.map((role) =>
-    role === "CREATOR"
-      ? BluePassAccountRole.CREATOR
+    role === "PARTNER"
+      ? BluePassAccountRole.PARTNER
       : BluePassAccountRole.OPERATOR,
   );
   const nextRoles = Array.from(
@@ -106,8 +107,8 @@ export async function POST(request: NextRequest) {
     select: { id: true },
   });
 
-  if (parsed.data.roles.includes("CREATOR")) {
-    await prisma.creatorProfile.upsert({
+  if (parsed.data.roles.includes("PARTNER")) {
+    await prisma.partnerProfile.upsert({
       where: { accountId: account.id },
       create: {
         accountId: account.id,
@@ -116,17 +117,19 @@ export async function POST(request: NextRequest) {
         instagramUrl,
         youtubeUrl,
         tiktokUrl,
+        partnerCategory: parsed.data.partnerCategory,
         notes: `Applied from signup lead ${lead.id}.`,
       },
       update: {
         status:
-          account.creatorProfile?.status === "APPROVED"
+          account.partnerProfile?.status === "APPROVED"
             ? "APPROVED"
             : "PENDING_REVIEW",
         handle: buildHandle(name),
         instagramUrl,
         youtubeUrl,
         tiktokUrl,
+        partnerCategory: parsed.data.partnerCategory,
         notes: `Updated from signup lead ${lead.id}.`,
       },
     });

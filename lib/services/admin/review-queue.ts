@@ -1,4 +1,6 @@
+import type { PartnerCategory } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { partnerCategoryOptions } from "@/lib/partners";
 import {
   approveOperatorClaim,
   declineOperatorClaim,
@@ -13,7 +15,7 @@ import {
    trusting whatever string arrives in the POST body. */
 export const APPROVAL_KINDS = [
   "operator-claim",
-  "creator-application",
+  "partner-application",
   "operator-application",
 ] as const;
 export type ApprovalKind = (typeof APPROVAL_KINDS)[number];
@@ -58,9 +60,9 @@ export type PendingApprovals = {
 
 /** The nav badge's number. Counts only — the queue page does the full fetch. */
 export async function countPendingApprovals() {
-  const [claims, creators, operators] = await Promise.all([
+  const [claims, partners, operators] = await Promise.all([
     prisma.operatorClaim.count({ where: { status: "PENDING_REVIEW" } }),
-    prisma.creatorProfile.count({ where: { status: "PENDING_REVIEW" } }),
+    prisma.partnerProfile.count({ where: { status: "PENDING_REVIEW" } }),
     prisma.operatorProfile.count({
       where: {
         status: "PENDING_REVIEW",
@@ -69,17 +71,17 @@ export async function countPendingApprovals() {
     }),
   ]);
 
-  return claims + creators + operators;
+  return claims + partners + operators;
 }
 
 export async function listPendingApprovals(): Promise<PendingApprovals> {
-  const [claims, creatorProfiles, operatorProfiles] = await Promise.all([
+  const [claims, partnerProfiles, operatorProfiles] = await Promise.all([
     prisma.operatorClaim.findMany({
       where: { status: "PENDING_REVIEW" },
       orderBy: { createdAt: "asc" },
       include: { account: { select: { email: true, displayName: true, phone: true } } },
     }),
-    prisma.creatorProfile.findMany({
+    prisma.partnerProfile.findMany({
       where: { status: "PENDING_REVIEW" },
       orderBy: { createdAt: "asc" },
       include: { account: { select: { email: true, displayName: true, phone: true } } },
@@ -125,16 +127,17 @@ export async function listPendingApprovals(): Promise<PendingApprovals> {
       ]),
     })),
     applications: [
-      ...creatorProfiles.map((profile) => ({
-        kind: "creator-application" as const,
+      ...partnerProfiles.map((profile) => ({
+        kind: "partner-application" as const,
         id: profile.id,
         title: profile.handle ?? profile.account.displayName ?? profile.account.email,
-        subtitle: "Creator application",
+        subtitle: "Partner application",
         submittedAt: profile.createdAt,
         notes: profile.notes,
         facts: facts([
           ["Name", profile.account.displayName],
           ["Handle", profile.handle],
+          ["Partner type", partnerCategoryLabel(profile.partnerCategory)],
           ["Email", profile.account.email, mailto(profile.account.email)],
           ["Phone", profile.account.phone, tel(profile.account.phone)],
           ["Audience", profile.audienceUrl, profile.audienceUrl],
@@ -186,7 +189,7 @@ export async function resolveApproval(input: {
       : declineOperatorClaim({ claimId: input.id, reviewerEmail: input.reviewerEmail });
   }
 
-  const kind = input.kind === "creator-application" ? "creator" : "operator";
+  const kind = input.kind === "partner-application" ? "partner" : "operator";
 
   return input.decision === "approve"
     ? approveReferralApplication({ kind, id: input.id })
@@ -208,4 +211,8 @@ function mailto(email?: string | null) {
 
 function tel(phone?: string | null) {
   return phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : undefined;
+}
+
+function partnerCategoryLabel(category: PartnerCategory | null) {
+  return category ? (partnerCategoryOptions.find((option) => option.value === category)?.label ?? null) : null;
 }

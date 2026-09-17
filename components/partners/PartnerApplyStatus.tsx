@@ -28,7 +28,7 @@ const COPY: Record<string, { headline: string[]; support: string; detail: string
   },
 };
 
-/** What a signed-in visitor sees on `/partners/apply` once a `CreatorProfile` already exists. */
+/** What a signed-in visitor sees on `/partners/apply` once a `PartnerProfile` already exists. */
 export default function PartnerApplyStatus({ status }: { status: string }) {
   const copy = COPY[status] ?? COPY.PENDING_REVIEW;
 
@@ -45,7 +45,7 @@ export default function PartnerApplyStatus({ status }: { status: string }) {
 
       <div className="aactions">
         {status === "APPROVED" ? (
-          <Link href="/creator" style={{ textDecoration: "none" }}>
+          <Link href="/partner-portal" style={{ textDecoration: "none" }}>
             <Button variant="primary" large magnetic={false}>
               Go to your dashboard
             </Button>

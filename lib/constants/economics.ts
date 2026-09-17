@@ -1,7 +1,7 @@
 // The real split, confirmed against Bluepass's own pitch deck ("We charge a 20% commission... we
 // keep ~12% of every booking" - the unreferred case: 5% reef + 3% payments + 12% BluePass net = 20%)
 // - mirrored from kai's src/core/bluepass/ledger.ts so both repos' commission math never drift apart
-// again. Conservation and payment processing always apply; the partner/creator share only applies
+// again. Conservation and payment processing always apply; the partner share only applies
 // when a referral is attached, in which case BluePass's own platform fee is smaller so the
 // operator's net share never depends on whether a referral happened to be attached. No dollar cap.
 //

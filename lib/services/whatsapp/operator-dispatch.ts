@@ -61,7 +61,7 @@ export type OperatorBookingSummaryInput = {
   insurancePolicy?: string | null;
   arrivalFlight?: string | null;
   totalUsd: number;
-  creatorAttributed?: boolean;
+  partnerAttributed?: boolean;
   pmsReference?: string | null;
 };
 
@@ -143,7 +143,7 @@ export function buildOperatorInquiryFreeText(
 export function buildOperatorAcceptedFreeText(
   input: OperatorBookingSummaryInput,
 ): FreeTextMessage {
-  const split = splitBooking(input.totalUsd, input.creatorAttributed);
+  const split = splitBooking(input.totalUsd, input.partnerAttributed);
 
   return {
     type: "text",

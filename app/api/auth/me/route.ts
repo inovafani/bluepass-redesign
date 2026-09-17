@@ -8,7 +8,7 @@ export async function GET() {
     ? await prisma.bluePassAccount.findUnique({
         where: { id: traveller.accountId },
         select: {
-          creatorProfile: {
+          partnerProfile: {
             select: {
               status: true,
               handle: true,
@@ -34,7 +34,7 @@ export async function GET() {
           email: traveller.email,
           phone: traveller.phone,
           roles: traveller.roles,
-          creatorProfile: account?.creatorProfile ?? null,
+          partnerProfile: account?.partnerProfile ?? null,
           operatorProfile: account?.operatorProfile ?? null,
         }
       : null,

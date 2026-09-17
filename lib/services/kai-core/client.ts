@@ -20,6 +20,10 @@ export type KaiCoreWebChatInput = {
   region?: KaiRegion;
   travellerAccountId?: string;
   referralAttribution?: ReferralAttribution;
+  /** See forceNewSessionRef in KaiPanel.tsx - forces createKaiCoreSession below to skip Kai Core's
+   * resume-or-create lookup even for a signed-in traveller. Only meaningful when sessionId is
+   * absent; a call that already has a sessionId never reaches createKaiCoreSession at all. */
+  forceNewSession?: boolean;
 };
 
 type KaiCoreSessionResponse = {
@@ -29,6 +33,20 @@ type KaiCoreSessionResponse = {
   };
   resumed?: boolean;
   messages?: Array<{ role: "traveller" | "assistant"; content: string }>;
+  unfinishedOrder?: KaiCoreUnfinishedOrder;
+};
+
+/** A real, still-unpaid checkout the traveller left behind by asking for a forced-fresh
+ * conversation - see forceNewSessionRef in KaiPanel.tsx and findAwaitingPaymentAttemptForTraveller
+ * (Kai) for the full chain. Only ever present on the one web-chat reply that just created that
+ * fresh conversation - a plain assistant reply to say so, not a separate widget concept. */
+export type KaiCoreUnfinishedOrder = {
+  conversationId: string;
+  productTitle: string;
+  dateText: string;
+  guests: number;
+  grossAmountCents: number;
+  currency: string;
 };
 
 export type KaiCoreResumedSession = {
@@ -236,6 +254,7 @@ export type KaiCoreWebChatResult = {
   timeOptions?: KaiCoreTimeOption[] | null;
   ticketOptions?: KaiCoreTicketOption[] | null;
   extraOptions?: KaiCoreExtraOption[] | null;
+  unfinishedOrder?: KaiCoreUnfinishedOrder;
 };
 
 export async function handleKaiCoreWebChat(
@@ -276,13 +295,19 @@ export async function handleKaiCoreWebChat(
   }
 
   const config = resolveKaiCoreConfig(env, region);
-  const conversationId =
-    effectiveSessionId ??
-    (await createKaiCoreSession({
+  let unfinishedOrder: KaiCoreUnfinishedOrder | undefined;
+  let conversationId = effectiveSessionId;
+
+  if (!conversationId) {
+    const created = await createKaiCoreSession({
       config,
       fetchImpl,
       travellerAccountId: input.travellerAccountId,
-    }));
+      forceNew: input.forceNewSession,
+    });
+    conversationId = created.conversationId;
+    unfinishedOrder = created.unfinishedOrder;
+  }
   const payload = {
     key: config.widgetKey,
     conversationId,
@@ -329,7 +354,8 @@ export async function handleKaiCoreWebChat(
     ...(data.dateOptions && data.dateOptions.length > 0 ? { dateOptions: data.dateOptions } : {}),
     ...(data.timeOptions && data.timeOptions.length > 0 ? { timeOptions: data.timeOptions } : {}),
     ...(data.ticketOptions && data.ticketOptions.length > 0 ? { ticketOptions: data.ticketOptions } : {}),
-    ...(data.extraOptions && data.extraOptions.length > 0 ? { extraOptions: data.extraOptions } : {})
+    ...(data.extraOptions && data.extraOptions.length > 0 ? { extraOptions: data.extraOptions } : {}),
+    ...(unfinishedOrder ? { unfinishedOrder } : {})
   };
 }
 
@@ -696,8 +722,8 @@ export async function listKaiCorePmsBookingLedger(
 }
 
 /**
- * The AU/Boattime side of a creator's earnings — scoped by referralPartnerId rather than tenantSlug,
- * since a creator's own dashboard has no tenant to ask about. See
+ * The AU/Boattime side of a partner's earnings — scoped by referralPartnerId rather than tenantSlug,
+ * since a partner's own dashboard has no tenant to ask about. See
  * listPmsBookingLedgerEntriesForReferralPartner (Kai) for why this needed its own endpoint instead
  * of a filter added to listKaiCorePmsBookingLedger above.
  */
@@ -1115,17 +1141,21 @@ async function createKaiCoreSession(input: {
   config: ReturnType<typeof resolveKaiCoreConfig>;
   fetchImpl: FetchLike;
   travellerAccountId?: string;
+  forceNew?: boolean;
 }) {
   // Passing travellerAccountId here (resume-or-create, not resume-only) means even a logged-in
   // traveller's very first-ever message - which is what decides their region - still gets tagged
   // to their account at creation time, so it's resumable later regardless of which tenant it
-  // landed in.
+  // landed in. `forceNew` opts back out of the "resume" half of that for one call - see
+  // KaiCoreWebChatInput.forceNewSession for why "just omit travellerAccountId" isn't the fix
+  // (that would also lose the tagging this comment is about).
   const response = await fetchKaiCoreWithRetry(input.fetchImpl, `${input.config.baseUrl}/api/widget/session`, {
     method: "POST",
     headers: buildKaiCoreHeaders(input.config),
     body: JSON.stringify({
       key: input.config.widgetKey,
       ...(input.travellerAccountId ? { travellerId: input.travellerAccountId } : {}),
+      ...(input.forceNew ? { forceNew: true } : {}),
     }),
   });
 
@@ -1140,7 +1170,7 @@ async function createKaiCoreSession(input: {
     throw new Error("Kai Core session response did not include a conversation id.");
   }
 
-  return conversationId;
+  return { conversationId, unfinishedOrder: data.unfinishedOrder };
 }
 
 // Lets a logged-in traveller's Kai memory follow their account rather than one browser's local

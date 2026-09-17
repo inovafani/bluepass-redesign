@@ -25,7 +25,7 @@ describe("foldMoneyByCurrency", () => {
     );
 
     expect(rows).toEqual([
-      { currency: "AUD", conservationCents: 800, operatorPayoutCents: 0, platformCommissionCents: 0, creatorCommissionCents: 0 },
+      { currency: "AUD", conservationCents: 800, operatorPayoutCents: 0, platformCommissionCents: 0, partnerCommissionCents: 0 },
     ]);
   });
 
@@ -72,7 +72,7 @@ describe("foldMoneyByCurrency", () => {
             { kind: "CONSERVATION_ALLOCATION", currency: "AUD", amountCents: 500 },
             { kind: "OPERATOR_PAYOUT_PLACEHOLDER", currency: "AUD", amountCents: 8_200 },
             { kind: "BLUEPASS_PLATFORM_COMMISSION", currency: "AUD", amountCents: 1_590 },
-            { kind: "CREATOR_COMMISSION_ESTIMATE", currency: "AUD", amountCents: 500 },
+            { kind: "PARTNER_COMMISSION_ESTIMATE", currency: "AUD", amountCents: 500 },
             { kind: "PAYMENT_PROCESSING_ALLOCATION", currency: "AUD", amountCents: 477 },
           ],
         },
@@ -85,7 +85,7 @@ describe("foldMoneyByCurrency", () => {
         conservationCents: 500,
         operatorPayoutCents: 8_200,
         platformCommissionCents: 1_590,
-        creatorCommissionCents: 500,
+        partnerCommissionCents: 500,
         // PAYMENT_PROCESSING_ALLOCATION has no field on this row and is silently dropped - the
         // overview page never claimed to show every ledger kind, only the four investor-facing ones.
       },

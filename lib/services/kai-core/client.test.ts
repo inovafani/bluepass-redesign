@@ -137,7 +137,7 @@ describe("listKaiCorePmsBookingLedger", () => {
 
 describe("listKaiCorePmsBookingLedgerForReferralPartner", () => {
   it("calls the referral-partner's pms-booking-ledger endpoint with the admin bearer and status filter", async () => {
-    const fetchImpl = vi.fn(async () => jsonResponse({ entries: [pmsEntry({ kind: "CREATOR_COMMISSION_ESTIMATE" })] }));
+    const fetchImpl = vi.fn(async () => jsonResponse({ entries: [pmsEntry({ kind: "PARTNER_COMMISSION_ESTIMATE" })] }));
 
     const entries = await listKaiCorePmsBookingLedgerForReferralPartner(
       { referralPartnerId: "partner_1", status: "FINALIZED" },
@@ -153,7 +153,7 @@ describe("listKaiCorePmsBookingLedgerForReferralPartner", () => {
     expect(init.method).toBe("GET");
 
     expect(entries).toHaveLength(1);
-    expect(entries[0].kind).toBe("CREATOR_COMMISSION_ESTIMATE");
+    expect(entries[0].kind).toBe("PARTNER_COMMISSION_ESTIMATE");
     expect(entries[0].attempt?.productTitle).toBe("Whitsundays Day Sail");
   });
 

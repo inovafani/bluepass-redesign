@@ -23,7 +23,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
     href: "/admin/approvals",
     label: "Approvals",
     blurb:
-      "Operator claims and creator/operator applications waiting on a human decision. Approving a claim also releases the operator's own profile.",
+      "Operator claims and partner/operator applications waiting on a human decision. Approving a claim also releases the operator's own profile.",
     counter: "pendingApprovals",
   },
   {
@@ -32,10 +32,15 @@ export const ADMIN_SECTIONS: AdminSection[] = [
     blurb: "Every operator profile — open one to correct its details after onboarding.",
   },
   {
-    href: "/admin/operators/new",
-    label: "New operator",
+    href: "/admin/partners",
+    label: "Partners",
+    blurb: "Every partner profile — approved, declined, and still-pending alike, not just the review queue.",
+  },
+  {
+    href: "/admin/blog",
+    label: "Blog",
     blurb:
-      "Onboard an operator you have already closed over phone or email — real payout details, live from the moment you save it.",
+      "The editorial CMS behind /blog — write, optimise and publish the articles that put Bluepass on page one for its own name.",
   },
   {
     href: "/admin/payouts",
@@ -46,9 +51,13 @@ export const ADMIN_SECTIONS: AdminSection[] = [
 ];
 
 /**
- * Longest-prefix match, so `/admin/operators/new` highlights the operators
- * section rather than every section whose href it happens to start with, and
- * `/admin` itself highlights nothing.
+ * Longest-prefix match, so `/admin/blog/categories` highlights Blog rather than
+ * every section whose href it happens to start with, and `/admin` itself
+ * highlights nothing.
+ *
+ * Sub-pages that are not sections of their own fall through to their parent by
+ * the same rule — `/admin/operators/new` keeps Operators lit while you are
+ * onboarding, which is where you came from and where saving returns you.
  */
 export function activeAdminSection(pathname: string) {
   return ADMIN_SECTIONS.filter((section) => pathname === section.href || pathname.startsWith(`${section.href}/`)).sort(

@@ -20,12 +20,15 @@ export const CONSOLE_PATHNAME_HEADER = "x-bluepass-pathname";
  * Each console owns its whole viewport: its own rail, its own brand mark, its own footer. The site
  * chrome has to stand aside for all of them, and there is now more than one — `/operator` shipped
  * after `/admin` and inherited none of its treatment, so the marketing nav painted over the
- * operator rail and the Kai launcher floated across an operator's own payout figures. `/creator`
- * repeated the same miss when it shipped after this comment was already written above it. `/crm`
- * has its own topbar for the same reason (app/crm/layout.tsx) even though it sits behind the same
- * admin login as `/admin` — it is still a console, not a marketing page.
+ * operator rail and the Kai launcher floated across an operator's own payout figures.
+ * `/partner-portal` repeated the same miss when it shipped after this comment was already written
+ * above it (renamed from `/creator`, then moved from `/partner` to `/partner-portal` so the dashboard
+ * route stopped colliding with the public `/partners` marketing page - both old paths are now just
+ * redirect stubs, no chrome to stand aside for). `/crm` has its own topbar for the same reason
+ * (app/crm/layout.tsx) even though it sits behind the same admin login as `/admin` — it is still a
+ * console, not a marketing page.
  */
-const CONSOLE_PATHNAME_PREFIXES = ["/admin", "/operator", "/creator", "/crm"];
+const CONSOLE_PATHNAME_PREFIXES = ["/admin", "/operator", "/partner-portal", "/crm"];
 
 /**
  * Whether `pathname` is inside a console area.

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { listSavedTripSlugs, toggleSavedTrip } from "./saved-trips";
 
 /**
- * Same convention as creator/guard.test.ts: real rows against the shared dev database, one
+ * Same convention as partner/guard.test.ts: real rows against the shared dev database, one
  * distinctive prefix per run, and an afterAll that cascades BluePassAccount -> SavedTrip.
  */
 const EMAIL_PREFIX = "saved-trips-test+";

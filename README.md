@@ -32,11 +32,42 @@ npm run build
 | `/discover` | Discover — search, regions, filterable trip grid, how-it-works, partners |
 | `/conservation` | Conservation — the 5% promise, named partners, report anatomy |
 | `/partners` | Partners — the booking path, four moves, partner toolkit, creators |
+| `/blog` | The Bluepass Journal — article index, category chips, featured lead |
+| `/blog/[slug]` | An article — contents rail, share row, related posts, JSON-LD |
+| `/blog/category/[slug]` | A category archive |
+| `/admin/blog` | The editorial CMS (admin only) |
 
 `Nav`, `SmoothScroll`, `Grain` and `KaiChat` live in [app/layout.tsx](app/layout.tsx) so they
 persist across routes; only the page body swaps. `SmoothScroll` resets Lenis and refreshes
 ScrollTrigger on every path change, since the new page's triggers must measure against the
 new layout rather than the old scroll position.
+
+## Blog & SEO
+
+The blog exists to win search results for Bluepass's own name and for the questions its customers
+ask before they book. Everything in it is arranged around that.
+
+- **Admin** — `/admin/blog` lists every article with a "Needs SEO" queue; `/admin/blog/new` and
+  `/admin/blog/[id]` are the editor; `/admin/blog/categories` manages the archives. Same
+  `requireCurrentAdmin()` gate as the rest of the console, re-checked inside every server action.
+- **Authoring** — bodies are Markdown, rendered by
+  [lib/services/blog/markdown.ts](lib/services/blog/markdown.ts). It escapes everything and emits
+  only its own tags, so no author-supplied HTML ever reaches a public page. The editor's preview
+  runs the same renderer the article page does.
+- **The checklist** — [lib/services/blog/seo.ts](lib/services/blog/seo.ts) is pure and isomorphic:
+  the browser recomputes it on every keystroke, the server recomputes it on save. Nothing it says
+  blocks publishing; it is advice, scored.
+- **What search engines get** — a self-referencing canonical, Open Graph and Twitter cards,
+  `BlogPosting` + `BreadcrumbList` + `Organization` JSON-LD (with `FAQPage`/`HowTo` when the
+  article is built that way), plus [app/sitemap.ts](app/sitemap.ts) and
+  [app/robots.ts](app/robots.ts). `noindex` posts are dropped from the sitemap rather than merely
+  marked.
+- **Entry point** — one link, in the footer's Journal column. The blog's audience arrives from
+  search, not from the nav.
+
+Images upload to the `blog-images` Supabase bucket via `/api/admin/blog/upload`. The bucket
+provisions itself on the first upload, so the only setup is `SUPABASE_SERVICE_ROLE_KEY` in the
+environment; without it the editor falls back to pasting image URLs, which is always available.
 
 ## Design-system fidelity
 

@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { splitBooking } from "@/lib/services/booking/unit-economics";
 
 const REFERRAL_LEDGER_KINDS = [
-  "CREATOR_COMMISSION_ESTIMATE",
+  "PARTNER_COMMISSION_ESTIMATE",
   "BLUEPASS_PLATFORM_COMMISSION",
   "CONSERVATION_ALLOCATION",
   "PAYMENT_PROCESSING_ALLOCATION",
@@ -30,7 +30,7 @@ export async function syncReferralCommissionLedger(
 ) {
   const budgetUsd = parseBudgetUsd(input.budget);
   const hasReferral = Boolean(input.referralPartnerId);
-  const split = splitBooking(budgetUsd, input.referralRole === "CREATOR");
+  const split = splitBooking(budgetUsd, input.referralRole === "PARTNER");
   const accountId = hasReferral
     ? await findReferralAccountId(input.referralPartnerId!, input.referralRole)
     : undefined;
@@ -75,15 +75,15 @@ export async function syncReferralCommissionLedger(
     }),
   ];
 
-  // Only the partner/creator line is conditional on a referral being attached - conservation,
+  // Only the partner line is conditional on a referral being attached - conservation,
   // payments, platform fee, and operator payout always post (see splitBooking).
   if (hasReferral) {
     entries.push(
       buildLedgerEntry(input, {
-        kind: "CREATOR_COMMISSION_ESTIMATE",
-        amountCents: usdToCents(split.creatorShare),
+        kind: "PARTNER_COMMISSION_ESTIMATE",
+        amountCents: usdToCents(split.partnerShare),
         accountId,
-        role: input.referralRole === "CREATOR" ? "CREATOR" : undefined,
+        role: input.referralRole === "PARTNER" ? "PARTNER" : undefined,
         metadata,
       }),
     );
@@ -120,8 +120,8 @@ export function parseBudgetUsd(value?: string | null) {
   return first;
 }
 
-export function creatorCommissionLedgerKind() {
-  return "CREATOR_COMMISSION_ESTIMATE" satisfies ReferralLedgerKind;
+export function partnerCommissionLedgerKind() {
+  return "PARTNER_COMMISSION_ESTIMATE" satisfies ReferralLedgerKind;
 }
 
 /**
@@ -158,8 +158,8 @@ async function findReferralAccountId(
   referralPartnerId: string,
   referralRole?: ReferralPartnerRole | null,
 ) {
-  if (referralRole === "CREATOR") {
-    const profile = await prisma.creatorProfile.findFirst({
+  if (referralRole === "PARTNER") {
+    const profile = await prisma.partnerProfile.findFirst({
       where: { referralPartnerId },
       select: { accountId: true },
     });

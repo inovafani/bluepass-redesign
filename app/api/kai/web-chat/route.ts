@@ -9,6 +9,11 @@ const webChatRequestSchema = z.object({
   sessionId: z.string().trim().min(1).optional(),
   message: z.string().trim().min(1),
   region: z.enum(["indonesia", "australia"]).optional(),
+  // Set once, right after the widget's "Start a new conversation" reset - see forceNewSessionRef
+  // in KaiPanel.tsx for why this can't just be "sessionId is absent": a signed-in traveller with no
+  // sessionId still gets Kai Core's own resume-or-create behaviour, which reattaches their last
+  // conversation. This says "no, really, a new one" even for that case.
+  forceNewSession: z.boolean().optional(),
   recentMessages: z
     .array(
       z.object({
@@ -50,6 +55,7 @@ export async function POST(request: NextRequest) {
         region: parsed.data.region,
         travellerAccountId: traveller?.accountId,
         referralAttribution,
+        forceNewSession: parsed.data.forceNewSession,
       });
 
       return NextResponse.json(result);

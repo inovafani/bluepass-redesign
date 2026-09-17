@@ -19,7 +19,7 @@ afterAll(async () => {
     where: { email: { startsWith: EMAIL_PREFIX } },
     select: { id: true },
   });
-  // Cascades to CreatorProfile / OperatorProfile / OperatorClaim.
+  // Cascades to PartnerProfile / OperatorProfile / OperatorClaim.
   await prisma.bluePassAccount.deleteMany({ where: { id: { in: accounts.map((a) => a.id) } } });
   // OperatorProfile.referralPartnerId is SetNull, so partners outlive the cascade above.
   await prisma.referralPartner.deleteMany({ where: { name: { startsWith: NAME_PREFIX } } });
@@ -33,7 +33,9 @@ async function seedAccount(displayName: string) {
       email: `${EMAIL_PREFIX}${randomUUID()}@ops.bluepass.co`,
       passwordHash: randomUUID(),
       displayName,
-      phone: "+61400999888",
+      // BluePassAccount.phone is unique now - every seeded account needs its own; the UUID suffix
+      // guarantees that regardless of how many accounts this file seeds.
+      phone: `+61${randomUUID()}`,
     },
   });
 }
@@ -69,9 +71,9 @@ async function seedClaim() {
   return { account, claim, slug, name };
 }
 
-async function seedCreatorApplication() {
-  const account = await seedAccount(`${NAME_PREFIX} Creator ${randomUUID()}`);
-  const profile = await prisma.creatorProfile.create({
+async function seedPartnerApplication() {
+  const account = await seedAccount(`${NAME_PREFIX} Partner ${randomUUID()}`);
+  const profile = await prisma.partnerProfile.create({
     data: {
       accountId: account.id,
       status: "PENDING_REVIEW",
@@ -110,18 +112,18 @@ describe("listPendingApprovals", () => {
     expect(row?.facts.find((f) => f.label === "Email")?.href).toBe(`mailto:${claim.claimantEmail}`);
   });
 
-  it("lists creator and operator applications together, oldest first", async () => {
-    const creator = await seedCreatorApplication();
+  it("lists partner and operator applications together, oldest first", async () => {
+    const partner = await seedPartnerApplication();
     const operator = await seedOperatorApplication();
 
     const { applications } = await listPendingApprovals();
     const ids = applications.map((item) => item.id);
 
-    expect(ids).toContain(creator.profile.id);
+    expect(ids).toContain(partner.profile.id);
     expect(ids).toContain(operator.profile.id);
-    expect(applications.find((i) => i.id === creator.profile.id)?.kind).toBe("creator-application");
+    expect(applications.find((i) => i.id === partner.profile.id)?.kind).toBe("partner-application");
     expect(applications.find((i) => i.id === operator.profile.id)?.kind).toBe("operator-application");
-    expect(ids.indexOf(creator.profile.id)).toBeLessThan(ids.indexOf(operator.profile.id));
+    expect(ids.indexOf(partner.profile.id)).toBeLessThan(ids.indexOf(operator.profile.id));
   });
 
   it("hides an operator profile that a pending claim already represents", async () => {
@@ -185,36 +187,36 @@ describe("resolveApproval", () => {
     expect(profile.status).toBe("PENDING_REVIEW");
   });
 
-  it("approves a creator application and gives them a referral partner", async () => {
-    const { profile } = await seedCreatorApplication();
+  it("approves a partner application and gives them a referral partner", async () => {
+    const { profile } = await seedPartnerApplication();
 
     await resolveApproval({
-      kind: "creator-application",
+      kind: "partner-application",
       id: profile.id,
       decision: "approve",
       reviewerEmail: REVIEWER,
     });
 
-    const reviewed = await prisma.creatorProfile.findUniqueOrThrow({
+    const reviewed = await prisma.partnerProfile.findUniqueOrThrow({
       where: { id: profile.id },
       include: { referralPartner: { include: { links: true } } },
     });
     expect(reviewed.status).toBe("APPROVED");
-    expect(reviewed.referralPartner?.role).toBe("CREATOR");
+    expect(reviewed.referralPartner?.role).toBe("PARTNER");
     expect(reviewed.referralPartner?.links.length).toBeGreaterThan(0);
   });
 
-  it("declines a creator application without provisioning a partner", async () => {
-    const { profile } = await seedCreatorApplication();
+  it("declines a partner application without provisioning a partner", async () => {
+    const { profile } = await seedPartnerApplication();
 
     await resolveApproval({
-      kind: "creator-application",
+      kind: "partner-application",
       id: profile.id,
       decision: "decline",
       reviewerEmail: REVIEWER,
     });
 
-    const reviewed = await prisma.creatorProfile.findUniqueOrThrow({ where: { id: profile.id } });
+    const reviewed = await prisma.partnerProfile.findUniqueOrThrow({ where: { id: profile.id } });
     expect(reviewed.status).toBe("DECLINED");
     expect(reviewed.referralPartnerId).toBeNull();
   });

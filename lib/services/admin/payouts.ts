@@ -76,7 +76,7 @@ export type CronHealthRow = {
 /* Jobs we expect to exist. Listing them explicitly is what lets a job that has never logged a single
    run be rendered as NEVER_RUN instead of simply being absent from the page. */
 const EXPECTED_KAI_JOBS = ["settle-pms-bookings"];
-const EXPECTED_LOCAL_JOBS = ["rezdy-agent-sync", "bokun-sync"];
+const EXPECTED_LOCAL_JOBS = ["rezdy-agent-sync"];
 
 type RawRun = {
   jobName: string;
@@ -218,7 +218,7 @@ export type LedgerFact = { label: string; value: string };
  *
  * `action` is resolved here rather than in the component so that "can an admin override this line?"
  * is a decision with a test around it. Only an unpaid operator-payout line qualifies: the other
- * kinds (platform commission, conservation, creator share) are internal splits with nothing to
+ * kinds (platform commission, conservation, partner share) are internal splits with nothing to
  * release, and releasing an already-FINALIZED line would double-pay a real operator.
  *
  * A zero amount is excluded too. Most PENDING lines in the Indonesia ledger currently carry

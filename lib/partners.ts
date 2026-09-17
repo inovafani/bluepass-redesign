@@ -93,6 +93,23 @@ export const audiences = [
   "Ocean partners",
 ];
 
+/**
+ * The applicant's own answer to "what best describes you?" on the apply form - the single source
+ * of truth for that select's options, so the six audiences pitched above (plus the actual first
+ * cohort, creators/influencers) map to the exact `PartnerCategory` values `/api/signup` accepts.
+ * Kept as string-literal `value`s (not an `import type { PartnerCategory }` union) so this file
+ * stays safe to import from a "use client" component without pulling in @prisma/client.
+ */
+export const partnerCategoryOptions: Array<{ value: string; label: string }> = [
+  { value: "CREATOR", label: "Creator / influencer" },
+  { value: "DIVE_SHOP", label: "Dive shop" },
+  { value: "TRAVEL_AGENCY", label: "Travel agency" },
+  { value: "TRIP_LEADER", label: "Trip leader" },
+  { value: "DIVE_INSTRUCTOR", label: "Dive instructor" },
+  { value: "ADVISOR", label: "Advisor" },
+  { value: "OCEAN_PARTNER", label: "Ocean partner" },
+];
+
 export const toolkit = [
   {
     title: "Operator catalogue",
