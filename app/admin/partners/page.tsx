@@ -31,7 +31,7 @@ export default async function PartnersPage() {
         </div>
       ) : (
         <div className="adm-table-wrap">
-          <table className="adm-table">
+          <table className="adm-table adm-table--cards">
             <thead>
               <tr>
                 <th className="ds-micro">Handle</th>
@@ -46,15 +46,15 @@ export default async function PartnersPage() {
             <tbody>
               {partners.map((partner) => (
                 <tr key={partner.id}>
-                  <td className="ds-body-sm">{partner.handle ?? "—"}</td>
-                  <td className="ds-body-sm">{partner.accountEmail}</td>
-                  <td>
+                  <td className="ds-body-sm adm-cell--title">{partner.handle ?? partner.accountEmail}</td>
+                  <td className="ds-body-sm" data-label="Account">{partner.accountEmail}</td>
+                  <td data-label="Status">
                     <StatusPill tone={STATUS_TONES[partner.status] ?? "muted"}>{partner.status}</StatusPill>
                   </td>
-                  <td className="ds-body-sm">{formatPartnerCategory(partner.partnerCategory)}</td>
-                  <td className="ds-body-sm">{partner.referralPartnerName ?? "—"}</td>
-                  <td className="ds-body-sm">{partner.hasPayoutDetails ? "On file" : "—"}</td>
-                  <td className="ds-body-sm">
+                  <td className="ds-body-sm" data-label="Category">{formatPartnerCategory(partner.partnerCategory)}</td>
+                  <td className="ds-body-sm" data-label="Referral name">{partner.referralPartnerName ?? "—"}</td>
+                  <td className="ds-body-sm" data-label="Payout details">{partner.hasPayoutDetails ? "On file" : "—"}</td>
+                  <td className="ds-body-sm adm-cell--go">
                     <Link href={`/admin/partners/${partner.id}`}>Edit →</Link>
                   </td>
                 </tr>

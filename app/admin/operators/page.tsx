@@ -39,7 +39,7 @@ export default async function OperatorsPage() {
         </div>
       ) : (
         <div className="adm-table-wrap">
-          <table className="adm-table">
+          <table className="adm-table adm-table--cards">
             <thead>
               <tr>
                 <th className="ds-micro">Company</th>
@@ -54,15 +54,15 @@ export default async function OperatorsPage() {
             <tbody>
               {operators.map((operator) => (
                 <tr key={operator.id}>
-                  <td className="ds-body-sm">{operator.companyName ?? operator.accountEmail}</td>
-                  <td>
+                  <td className="ds-body-sm adm-cell--title">{operator.companyName ?? operator.accountEmail}</td>
+                  <td data-label="Status">
                     <StatusPill tone={STATUS_TONES[operator.status] ?? "muted"}>{operator.status}</StatusPill>
                   </td>
-                  <td className="ds-body-sm">{formatPayoutMethod(operator.payoutMethod)}</td>
-                  <td className="ds-body-sm">{operator.country ?? "—"}</td>
-                  <td className="ds-body-sm">{operator.rezdySupplierId ? "Synced" : "—"}</td>
-                  <td className="ds-body-sm">{operator.hasPayoutDetails ? "Yes" : "No"}</td>
-                  <td className="ds-body-sm">
+                  <td className="ds-body-sm" data-label="Payout method">{formatPayoutMethod(operator.payoutMethod)}</td>
+                  <td className="ds-body-sm" data-label="Country">{operator.country ?? "—"}</td>
+                  <td className="ds-body-sm" data-label="Rezdy">{operator.rezdySupplierId ? "Synced" : "—"}</td>
+                  <td className="ds-body-sm" data-label="Payout on file">{operator.hasPayoutDetails ? "Yes" : "No"}</td>
+                  <td className="ds-body-sm adm-cell--go">
                     <Link href={`/admin/operators/${operator.id}`}>Edit →</Link>
                   </td>
                 </tr>

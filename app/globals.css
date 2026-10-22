@@ -6974,6 +6974,25 @@ html.is-scroll-locked body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+/* On a phone the numbers sit two to a row, so six figures read at a glance instead of a long scroll. */
+@media (max-width: 640px) {
+  .trc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-xs);
+  }
+  .cshell .trc-stat {
+    padding: var(--space-sm);
+    gap: 2px;
+  }
+  .trc-stat__value {
+    font-size: 28px;
+    line-height: 1.1;
+  }
+  .trc-stat__note {
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
 
 .ovr-counts {
   display: flex;
@@ -9541,7 +9560,8 @@ html.is-scroll-locked body {
     text-align: left;
   }
   /* The business name is the card's heading, not a labelled field. */
-  .adm-table--cards .crm-cell--name {
+  .adm-table--cards .crm-cell--name,
+  .adm-table--cards .adm-cell--title {
     display: block;
     padding: 0 0 var(--space-xs);
     margin-bottom: var(--space-xs);
@@ -9555,7 +9575,8 @@ html.is-scroll-locked body {
   .adm-table--cards td[data-label="Phone"] a {
     font-size: var(--type-body-lg-size);
   }
-  .adm-table--cards .crm-cell--go {
+  .adm-table--cards .crm-cell--go,
+  .adm-table--cards .adm-cell--go {
     display: block;
     padding: var(--space-sm) 0 0;
     margin-top: var(--space-xs);
@@ -9825,7 +9846,15 @@ html.is-scroll-locked body {
   letter-spacing: normal;
 }
 
-/* Small screens: the menu becomes a scrolling row under the top bar. */
+/* The menu button and the drawer's own chrome are for small screens only. */
+.cshell-burger,
+.cshell-scrim,
+.cshell-side__head,
+.cshell-top__here {
+  display: none;
+}
+
+/* Small screens: the menu is a drawer behind a button in the top bar, like the public site's menu. */
 @media (max-width: 900px) {
   .cshell {
     gap: 10px;
@@ -9835,34 +9864,445 @@ html.is-scroll-locked body {
   .cshell-brand__area {
     display: none;
   }
+  /* With the name hidden the chip is just the avatar, so its ring is even on every side. */
+  .cshell-user {
+    padding: 5px;
+    gap: 0;
+  }
+  .cshell-top {
+    padding: 8px 10px;
+    gap: 10px;
+  }
+  .cshell-burger {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-full);
+    background: var(--color-surface-2);
+    color: var(--color-ink);
+    cursor: pointer;
+    transition:
+      background 0.3s ease,
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cshell-burger:hover {
+    background: var(--color-canvas);
+  }
+  .cshell-burger:active {
+    transform: scale(0.94);
+  }
+  .cshell-burger__bars {
+    position: relative;
+    display: block;
+    width: 18px;
+    height: 12px;
+  }
+  .cshell-burger__bars i {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1.8px;
+    border-radius: 2px;
+    background: currentColor;
+    transition:
+      transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.25s ease,
+      top 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cshell-burger__bars i:nth-child(1) {
+    top: 0;
+  }
+  .cshell-burger__bars i:nth-child(2) {
+    top: 5px;
+  }
+  .cshell-burger__bars i:nth-child(3) {
+    top: 10px;
+  }
+  .cshell.is-open .cshell-burger__bars i:nth-child(1) {
+    top: 5px;
+    transform: rotate(45deg);
+  }
+  .cshell.is-open .cshell-burger__bars i:nth-child(2) {
+    opacity: 0;
+  }
+  .cshell.is-open .cshell-burger__bars i:nth-child(3) {
+    top: 5px;
+    transform: rotate(-45deg);
+  }
+  /* The page you are on, named in the bar, since the menu that shows it is now out of sight. */
+  .cshell-top__here {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--color-ink-muted);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cshell-brand {
+    padding-right: 5px;
+  }
+  .cshell-brand__name {
+    display: none;
+  }
+
+  .cshell-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 290;
+    display: block;
+    border: 0;
+    background: rgba(6, 6, 5, 0.55);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  .cshell.is-open .cshell-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .cshell-body {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;
   }
   .cshell-side {
-    position: static;
-    flex-direction: row;
-    gap: 4px;
+    position: fixed;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 300;
+    width: min(320px, calc(100vw - 20px));
     min-height: 0;
-    padding: 6px;
-    overflow-x: auto;
+    padding: 12px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+    transform: translateX(calc(-100% - 24px));
+    visibility: hidden;
+    transition:
+      transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0s linear 0.5s;
   }
-  .cshell-side__group {
-    flex-direction: row;
-    gap: 4px;
+  .cshell.is-open .cshell-side {
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
   }
-  .cshell-side__label,
-  .cshell-side__foot {
-    display: none;
+  .cshell-side__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 4px 2px 12px;
+  }
+  .cshell-side__title {
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .cshell-side__close {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-full);
+    background: none;
+    color: var(--color-ink-muted);
+    cursor: pointer;
+    transition:
+      color 0.3s ease,
+      background 0.3s ease;
+  }
+  .cshell-side__close:hover {
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+  }
+  .cshell-side__close svg {
+    width: 18px;
+    height: 18px;
   }
   .cshell-side__link {
-    white-space: nowrap;
+    min-height: 48px;
   }
   .cshell-main {
     padding: 0 2px 48px;
   }
   .cshell .adm-head__title {
     font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cshell-side,
+  .cshell-scrim,
+  .cshell-burger__bars i {
+    transition-duration: 0.01ms;
+    transition-delay: 0s;
+  }
+}
+
+/* Phones, designed as phones -------------------------------------------------
+   The console was drawn on a desktop and then squeezed. On a phone a field is a label, then what it
+   is for, then the box, each on its own line; a form is one column; a pair of buttons shares the
+   width; a header gives its actions a row of their own; and nothing needs a sideways swipe. Inputs are
+   16px so iOS does not zoom into them, and every tap target is at least 44px. */
+@media (max-width: 640px) {
+  .cshell .afield__top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .cshell .afield__hint {
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+  .cshell .afield__input,
+  .cshell .rl-input,
+  .cshell select,
+  .cshell textarea,
+  .cshell input:not([type="checkbox"]):not([type="radio"]) {
+    font-size: 16px;
+  }
+  .cshell .afield__input {
+    padding: 13px 14px;
+  }
+
+  .cshell .adm-form__section {
+    padding: 16px;
+    gap: 16px;
+  }
+  .cshell .adm-form__grid,
+  .cshell .rl-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cshell .adm-form__submit {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .cshell .adm-form__submit > * {
+    width: 100%;
+  }
+  .cshell .adm-form__submit .btn,
+  .cshell .adm-form__submit button {
+    justify-content: center;
+    min-height: 48px;
+  }
+  .cshell .adm-form__submit-note {
+    text-align: center;
+  }
+
+  /* The masthead: title and sentence, then the page's actions as a row of their own. */
+  .cshell .adm-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .cshell .adm-head__aside {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cshell .adm-head__aside > * {
+    flex: 1 1 auto;
+    justify-content: center;
+    text-align: center;
+  }
+  .cshell .adm-block {
+    margin-bottom: 36px;
+  }
+
+  /* Buttons are easy to hit. */
+  .cshell .rl-btn,
+  .cshell .btn,
+  .cshell button[type="submit"] {
+    min-height: 44px;
+  }
+
+  /* The editor's top bar is a card with two rows, not a pill squeezed into a line. */
+  .cshell .bpe__bar {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 20px;
+    padding: 12px;
+    gap: 10px;
+  }
+  .cshell .bpe__bar-left {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .cshell .bpe__bar-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .cshell .bpe__bar-right > * {
+    justify-content: center;
+    min-height: 44px;
+  }
+  .cshell .bpe-title {
+    font-size: 24px;
+  }
+
+  /* Wide tables scroll inside their own card rather than widening the page. */
+  .cshell .adm-card:has(> .adm-table),
+  .cshell .adm-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cshell .adm-table:not(.adm-table--cards) {
+    min-width: 560px;
+  }
+
+  /* Round +/- steppers and the small text links around them are thumb-sized. */
+  .cshell .rl-stepper__control button,
+  .cshell .bk-stepper__control button {
+    width: 44px;
+    height: 44px;
+  }
+  .cshell .rl-time__remove {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .cshell .rl-weeknav__step,
+  .cshell .rl-weeknav__today {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .cshell .alink-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* A trip row: picture on the left, the name and its meta given the full width beside it, and the
+     status pill under them rather than fighting them for the line. */
+  .cshell .rl-trip {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "thumb body go"
+      "thumb pill go";
+    align-items: center;
+    column-gap: var(--space-sm);
+    row-gap: 6px;
+    padding: var(--space-sm);
+  }
+  .cshell .rl-trip__thumb {
+    grid-area: thumb;
+    width: 56px;
+    height: 56px;
+    align-self: start;
+  }
+  .cshell .rl-trip__body {
+    grid-area: body;
+  }
+  .cshell .rl-trip > :nth-child(3) {
+    grid-area: pill;
+    justify-self: start;
+  }
+  .cshell .rl-trip__go {
+    grid-area: go;
+  }
+
+  /* A referral link: the address gets the whole width, and Copy sits under it as a full-width button. */
+  .cshell .ptr-links,
+  .cshell .ptr-links > ul {
+    padding-left: 0;
+    margin-left: 0;
+    list-style: none;
+  }
+  .cshell .ptr-link-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-xs);
+  }
+  .cshell .ptr-link-row__url {
+    overflow-wrap: anywhere;
+  }
+  .cshell .ptr-copy {
+    min-height: 44px;
+    width: 100%;
+  }
+
+  /* A form's lone action fills the width, and a secondary button on a card keeps its edge. */
+  .cshell form > .btn-magnet,
+  .cshell form > .btn-magnet > .btn {
+    width: 100%;
+  }
+  .cshell .adm-card .btn--secondary {
+    background: var(--color-surface-2);
+    box-shadow: inset 0 0 0 1px var(--color-hairline);
+  }
+
+  /* Cards: a thumb-width gutter, not a desktop one. */
+  .cshell .adm-card {
+    padding: var(--space-md);
+  }
+
+  /* The section index becomes a two-up grid of tiles: name, status pill, a short blurb, and the whole
+     tile is the tap target (the "Open →" line is redundant on a tile). */
+  .cshell .adm-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-xs);
+  }
+  .cshell .adm-card--link {
+    position: relative;
+    gap: 6px;
+    min-height: 76px;
+    justify-content: center;
+    padding-right: 36px;
+  }
+  .cshell .adm-card--link .adm-card__top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  /* The long explanation lives on the page the tile opens, so the tile stays a clean name and status
+     instead of a paragraph cut off mid-sentence. */
+  .cshell .adm-card--link .adm-card__blurb {
+    display: none;
+  }
+  .cshell .adm-card--link .adm-card__go {
+    position: absolute;
+    top: 50%;
+    right: var(--space-md);
+    transform: translateY(-50%);
+    font-size: 0;
+  }
+  .cshell .adm-card--link .adm-card__go::before {
+    content: "›";
+    font-size: 22px;
+    line-height: 1;
+  }
+  .cshell .adm-card--link:hover {
+    transform: none;
+  }
+
+  /* Labelled facts sit two across; each is a short label over a short value. */
+  .cshell .adm-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm) var(--space-md);
+  }
+
+  /* A review card keeps its date and status under the title, and its decisions share the width. */
+  .cshell .adm-review__when {
+    width: 100%;
+  }
+  .cshell .adm-decide__row > * {
+    flex: 1 1 140px;
+  }
+
+  /* An odd card out takes the full row instead of sitting half-width beside empty space. */
+  .cshell .rl-stats > .rl-stat:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }
 

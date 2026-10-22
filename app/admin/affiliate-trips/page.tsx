@@ -29,7 +29,7 @@ export default async function AffiliateTripsPage() {
           </div>
         ) : (
           <div className="adm-table-wrap">
-            <table className="adm-table">
+            <table className="adm-table adm-table--cards">
               <thead>
                 <tr>
                   <th className="ds-micro">Trip</th>
@@ -43,20 +43,20 @@ export default async function AffiliateTripsPage() {
               <tbody>
                 {trips.map((trip) => (
                   <tr key={trip.id}>
-                    <td className="ds-body-sm">
+                    <td className="ds-body-sm adm-cell--title">
                       {trip.title}
                       <br />
                       <a href={trip.bookingUrl} target="_blank" rel="noopener noreferrer" className="ds-micro">
                         Test booking link ↗
                       </a>
                     </td>
-                    <td className="ds-body-sm">{trip.operatorName}</td>
-                    <td className="ds-body-sm">{PLATFORM_LABELS[trip.bookingPlatform]}</td>
-                    <td className="ds-body-sm">{trip.priceSignal ?? "—"}</td>
-                    <td>
+                    <td className="ds-body-sm" data-label="Operator">{trip.operatorName}</td>
+                    <td className="ds-body-sm" data-label="Sold through">{PLATFORM_LABELS[trip.bookingPlatform]}</td>
+                    <td className="ds-body-sm" data-label="Price">{trip.priceSignal ?? "—"}</td>
+                    <td data-label="Status">
                       <StatusPill tone={trip.status === "LIVE" ? "good" : "muted"}>{trip.status}</StatusPill>
                     </td>
-                    <td className="ds-body-sm">
+                    <td className="ds-body-sm adm-cell--go">
                       <form action={setAffiliateTripLiveAction}>
                         <input type="hidden" name="listingId" value={trip.id} />
                         <input type="hidden" name="live" value={trip.status === "LIVE" ? "false" : "true"} />

@@ -34,7 +34,7 @@ export default function CommissionLedger({
         </div>
       ) : (
         <div className="adm-table-wrap">
-          <table className="adm-table">
+          <table className="adm-table adm-table--cards">
             <thead>
               <tr>
                 <th className="ds-micro">Kind</th>
@@ -48,18 +48,18 @@ export default function CommissionLedger({
             <tbody>
               {result.data.map((entry) => (
                 <tr key={entry.id}>
-                  <td className="ds-body-sm">{entry.kind.toLowerCase().replace(/_/g, " ")}</td>
-                  <td className="ds-body-sm adm-table__num">
+                  <td className="ds-body-sm adm-cell--title">{entry.kind.toLowerCase().replace(/_/g, " ")}</td>
+                  <td className="ds-body-sm adm-table__num" data-label="Amount">
                     {formatMoneyFromCents(entry.amountCents, entry.currency)}
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <StatusPill tone={ledgerTone(entry.status)}>{entry.status}</StatusPill>
                   </td>
-                  <td className="ds-body-sm">{entry.role ?? "—"}</td>
-                  <td className="ds-body-sm">
+                  <td className="ds-body-sm" data-label="Role">{entry.role ?? "—"}</td>
+                  <td className="ds-body-sm" data-label="Account">
                     {entry.account?.email ?? entry.account?.displayName ?? "—"}
                   </td>
-                  <td className="ds-body-sm">{formatDateTime(entry.createdAt)}</td>
+                  <td className="ds-body-sm" data-label="Created">{formatDateTime(entry.createdAt)}</td>
                 </tr>
               ))}
             </tbody>
