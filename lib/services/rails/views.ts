@@ -8,7 +8,7 @@ import {
   type DepartureState,
   type PricedLine,
 } from "@/lib/services/operators/listing-availability";
-import { expireLapsedBookings } from "@/lib/services/rails/bookings";
+import { expireLapsedBookingsForView } from "@/lib/services/rails/bookings";
 import { normaliseReference } from "@/lib/services/rails/reference";
 
 /**
@@ -81,23 +81,28 @@ export type CalendarView = {
 
 export async function operatorCalendar(input: { operatorProfileId: string; from: string; to: string; now?: Date }): Promise<CalendarView> {
   const now = input.now ?? new Date();
-  await expireLapsedBookings(now);
+  await expireLapsedBookingsForView(input.now);
 
-  const listings = await prisma.operatorListing.findMany({
-    // Live trips only: a draft cannot be sold, so its departures are not departures yet.
-    where: { operatorProfileId: input.operatorProfileId, status: "LIVE", schedules: { some: { active: true } } },
-    select: { id: true, title: true, status: true, schedules: { where: { active: true }, select: { timezone: true }, take: 1 } },
-    orderBy: { createdAt: "asc" },
-  });
-
-  const bookings = await prisma.listingBooking.findMany({
-    where: {
-      operatorProfileId: input.operatorProfileId,
-      status: { in: ACTIVE },
-      departsAt: { gte: new Date(Date.parse(`${input.from}T00:00:00Z`) - 86_400_000), lte: new Date(Date.parse(`${input.to}T23:59:59Z`) + 86_400_000) },
-    },
-    select: { listingId: true, departsAt: true, guests: true, status: true, checkedInAt: true, timezone: true, channel: true, listing: { select: { title: true, status: true } } },
-  });
+  // None of these depends on another, so they go together: one round trip instead of three.
+  const [listings, bookings, channelTrips] = await Promise.all([
+    prisma.operatorListing.findMany({
+      // Live trips only: a draft cannot be sold, so its departures are not departures yet.
+      where: { operatorProfileId: input.operatorProfileId, status: "LIVE", schedules: { some: { active: true } } },
+      select: { id: true, title: true, status: true, schedules: { where: { active: true }, select: { timezone: true }, take: 1 } },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.listingBooking.findMany({
+      where: {
+        operatorProfileId: input.operatorProfileId,
+        status: { in: ACTIVE },
+        departsAt: { gte: new Date(Date.parse(`${input.from}T00:00:00Z`) - 86_400_000), lte: new Date(Date.parse(`${input.to}T23:59:59Z`) + 86_400_000) },
+      },
+      select: { listingId: true, departsAt: true, guests: true, status: true, checkedInAt: true, timezone: true, channel: true, listing: { select: { title: true, status: true } } },
+    }),
+    prisma.operatorListing.count({
+      where: { operatorProfileId: input.operatorProfileId, status: "LIVE", channel: { not: "NATIVE" } },
+    }),
+  ]);
   const tally = new Map<string, { guests: number; checkedIn: number; bookings: number; pending: number }>();
   for (const b of bookings) {
     const key = `${b.listingId}|${b.departsAt.getTime()}`;
@@ -119,21 +124,21 @@ export async function operatorCalendar(input: { operatorProfileId: string; from:
     if (date < input.from || date > input.to) continue;
     channelDepartures.set(key, { listingId: b.listingId, title: b.listing.title, status: b.listing.status, channel: b.channel, timezone: b.timezone, departsAt: b.departsAt, date });
   }
-  const overrides = new Map(
+  const [overrideRows, perListing] = await Promise.all([
     channelDepartures.size
-      ? (await prisma.listingDepartureOverride.findMany({
+      ? prisma.listingDepartureOverride.findMany({
           where: { OR: [...channelDepartures.values()].map((d) => ({ listingId: d.listingId, departsAt: d.departsAt })) },
           select: { listingId: true, departsAt: true, closed: true, note: true },
-        })).map((o): [string, { closed: boolean; note: string | null }] => [`${o.listingId}|${o.departsAt.getTime()}`, o])
-      : [],
-  );
-
-  const perListing = await Promise.all(
-    listings.map(async (l) => ({
-      listing: l,
-      days: await listDepartures({ listingId: l.id, from: input.from, to: input.to, now }),
-    })),
-  );
+        })
+      : Promise.resolve([]),
+    Promise.all(
+      listings.map(async (l) => ({
+        listing: l,
+        days: await listDepartures({ listingId: l.id, from: input.from, to: input.to, now }),
+      })),
+    ),
+  ]);
+  const overrides = new Map(overrideRows.map((o): [string, { closed: boolean; note: string | null }] => [`${o.listingId}|${o.departsAt.getTime()}`, o]));
 
   const days: CalendarView["days"] = [];
   for (let date = input.from; date <= input.to; date = addDays(date, 1)) {
@@ -179,9 +184,6 @@ export async function operatorCalendar(input: { operatorProfileId: string; from:
     items.sort((a, b) => a.departure.departsAt.getTime() - b.departure.departsAt.getTime());
     days.push({ date, items, closed });
   }
-  const channelTrips = await prisma.operatorListing.count({
-    where: { operatorProfileId: input.operatorProfileId, status: "LIVE", channel: { not: "NATIVE" } },
-  });
   return { days, hasSchedules: listings.length > 0 || channelTrips > 0 || channelDepartures.size > 0 };
 }
 
@@ -216,7 +218,7 @@ export type ManifestBooking = Omit<Prisma.ListingBookingGetPayload<{ select: typ
 
 export async function departureManifest(input: { operatorProfileId: string; listingId: string; departsAt: Date; now?: Date }) {
   const now = input.now ?? new Date();
-  await expireLapsedBookings(now);
+  await expireLapsedBookingsForView(input.now);
 
   const listing = await prisma.operatorListing.findUnique({
     where: { id: input.listingId },
@@ -276,7 +278,7 @@ export type BookingsFilter = "upcoming" | "past" | "cancelled";
 
 export async function operatorBookings(input: { operatorProfileId: string; filter: BookingsFilter; q?: string; now?: Date; take?: number }) {
   const now = input.now ?? new Date();
-  await expireLapsedBookings(now);
+  await expireLapsedBookingsForView(input.now);
   const q = input.q?.trim();
 
   const where: Prisma.ListingBookingWhereInput = { operatorProfileId: input.operatorProfileId };

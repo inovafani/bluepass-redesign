@@ -1,6 +1,8 @@
 import Link from "next/link";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import OverviewStats from "@/components/admin/OverviewStats";
+import TractionPanel from "@/components/admin/TractionPanel";
+import { loadTraction } from "@/lib/services/admin/traction";
 import { ADMIN_SECTIONS } from "@/lib/services/admin/sections";
 import { loadAdminOverviewStats } from "@/lib/services/admin/overview";
 import { countPendingApprovals } from "@/lib/services/admin/review-queue";
@@ -10,10 +12,12 @@ import { countPendingApprovals } from "@/lib/services/admin/review-queue";
  * settled, in real money, across both regions. Still reports nothing it would have to invent — an
  * unreachable Kai shows as unreachable (OverviewStats), not as zero revenue.
  */
-export default async function AdminIndexPage() {
-  const [pendingApprovals, overviewStats] = await Promise.all([
+export default async function AdminIndexPage({ searchParams }: { searchParams: Promise<{ test?: string }> }) {
+  const { test } = await searchParams;
+  const [pendingApprovals, overviewStats, traction] = await Promise.all([
     countPendingApprovals(),
     loadAdminOverviewStats(),
+    loadTraction({ includeTest: test === "1" }),
   ]);
   const counters = { pendingApprovals };
 
@@ -23,6 +27,8 @@ export default async function AdminIndexPage() {
         title="Admin"
         support="The parts of Bluepass that need a person: who gets to take money as an operator, who earns commission as a partner, and what their payouts are attached to."
       />
+
+      <TractionPanel traction={traction} />
 
       <OverviewStats stats={overviewStats} />
 

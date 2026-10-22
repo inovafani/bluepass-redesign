@@ -518,6 +518,24 @@ export async function expireLapsedBookings(now = new Date()) {
   return result.count;
 }
 
+let lastViewSweep = 0;
+const VIEW_SWEEP_EVERY_MS = 30_000;
+
+/**
+ * The same sweep, for pages that only show bookings. It lets lapsed holds go, but at most once every
+ * half minute per server instance instead of on every page view: the sweep is a write across all
+ * operators, so doing it on each of an operator's page loads cost a database round trip every time
+ * for nothing the half-minute-old sweep had not already done. Anything that sells a seat, or that is
+ * handed a time on purpose, still calls `expireLapsedBookings` directly and always sweeps.
+ */
+export async function expireLapsedBookingsForView(now?: Date) {
+  if (now) return expireLapsedBookings(now);
+  const at = Date.now();
+  if (at - lastViewSweep < VIEW_SWEEP_EVERY_MS) return 0;
+  lastViewSweep = at;
+  return expireLapsedBookings(new Date(at));
+}
+
 // ---------------------------------------------------------------------------
 // Operator: phone and walk-up bookings
 // ---------------------------------------------------------------------------
