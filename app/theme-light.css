@@ -56,6 +56,11 @@ html:has(.theme-light),
 body:has(.theme-light) {
   background: #f7f7f5;
 }
+/* The operator and claim pages open on a dark title block and end on the dark site footer, so
+   pulling past either edge must show that dark rather than a cream strip under the footer. */
+html:has(main.opp) {
+  background: #0a0a09;
+}
 /* The site's film grain is tuned for a dark page and reads as dirt on a light one. */
 body:has(.theme-light) .grain {
   display: none;
