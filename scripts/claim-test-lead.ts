@@ -3,7 +3,7 @@
  *
  *   npx tsx --env-file=.env.local scripts/claim-test-lead.ts create <lead-inbox>
  *   npx tsx --env-file=.env.local scripts/claim-test-lead.ts report
- *   npx tsx --env-file=.env.local scripts/claim-test-lead.ts remove [--delete-account]
+ *   npx tsx --env-file=.env.local scripts/claim-test-lead.ts remove [--delete-account | --revoke-operator-role]
  *
  * There is no separate test database, so this lead lives in the same database as production and
  * its page is reachable at https://bluepass.co/operators/bluepass-claim-test. The claim email goes
@@ -20,6 +20,10 @@
  * ReferralPartner (with its links) that approving the claim created. The claimant's
  * BluePassAccount is kept unless `--delete-account` is given, and `remove` refuses outright if the
  * claimed profile has listings, or the claimant also holds a claim on any other operator.
+ *
+ * Signed in as an admin to test, the claim lands on the admin's own account and adds the OPERATOR
+ * role to it. `--delete-account` refuses an ADMIN account; use `--revoke-operator-role` instead,
+ * which takes the role back once the test profile is gone.
  */
 import { prisma } from "@/lib/db/prisma";
 
@@ -78,10 +82,16 @@ async function report() {
   console.log(`blockers:           ${s.listings} listings on the profile, ${s.otherClaims} claims on other operators`);
 }
 
-async function remove(deleteAccount: boolean) {
+async function remove(deleteAccount: boolean, revokeOperatorRole: boolean) {
   const s = await scope();
   if (s.listings) throw new Error(`Refusing: the claimed profile has ${s.listings} listing(s). Archive or remove them first.`);
   if (deleteAccount && s.otherClaims) throw new Error("Refusing --delete-account: the claimant also holds a claim on another operator.");
+  if (deleteAccount) {
+    /* The claim is filed by whoever is signed in, and an admin testing from their own browser is
+       signed in as the admin. Deleting that account would delete the admin console's login. */
+    const admins = await prisma.bluePassAccount.count({ where: { id: { in: s.accountIds }, roles: { has: "ADMIN" } } });
+    if (admins) throw new Error("Refusing --delete-account: the claimant account has the ADMIN role. Remove the test data without the flag.");
+  }
   if (s.ledger) throw new Error(`Refusing: the test partner has ${s.ledger} commission ledger entr(ies). That is not test data.`);
 
   await prisma.$transaction(async (tx) => {
@@ -91,6 +101,15 @@ async function remove(deleteAccount: boolean) {
     await tx.operatorProfile.deleteMany({ where: { id: { in: s.profileIds } } });
     await tx.referralPartner.deleteMany({ where: { id: { in: s.partnerIds } } }); // links cascade
     if (deleteAccount) await tx.bluePassAccount.deleteMany({ where: { id: { in: s.accountIds } } });
+    else if (revokeOperatorRole) {
+      /* Filing a claim does `roles: set(... + OPERATOR)` on the signed-in account. Take that role
+         back, but only where no operator profile remains once the test one is gone. */
+      for (const id of s.accountIds) {
+        const account = await tx.bluePassAccount.findUnique({ where: { id }, select: { roles: true, operatorProfile: { select: { id: true } } } });
+        if (!account || account.operatorProfile) continue;
+        await tx.bluePassAccount.update({ where: { id }, data: { roles: { set: account.roles.filter((r) => r !== "OPERATOR") } } });
+      }
+    }
     if (s.lead) await tx.operatorLead.delete({ where: { id: s.lead.id } }); // claim tokens cascade
   });
 
@@ -101,8 +120,8 @@ async function remove(deleteAccount: boolean) {
 async function main() {
   if (command === "create" && flags[0]) return create(flags[0]);
   if (command === "report") return report();
-  if (command === "remove") return remove(flags.includes("--delete-account"));
-  throw new Error("Usage: claim-test-lead.ts create <email> | report | remove [--delete-account]");
+  if (command === "remove") return remove(flags.includes("--delete-account"), flags.includes("--revoke-operator-role"));
+  throw new Error("Usage: claim-test-lead.ts create <email> | report | remove [--delete-account | --revoke-operator-role]");
 }
 
 main().finally(() => prisma.$disconnect());
