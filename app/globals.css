@@ -661,8 +661,9 @@ a.btn--translucent:hover {
 
 .footer__grid {
   display: grid;
-  /* One column per entry in `footerColumns`, plus the wider brand column that opens the row. */
-  grid-template-columns: 1.4fr repeat(5, 1fr);
+  /* One column per footer column that has a live link (set by SiteFooter), plus the wider brand
+     column that opens the row. */
+  grid-template-columns: 1.4fr repeat(var(--footer-cols, 5), 1fr);
   gap: 32px;
 }
 @media (max-width: 1200px) {
@@ -4253,6 +4254,10 @@ html.is-scroll-locked body {
 .aphone__preview {
   color: var(--color-ink-muted);
   opacity: 0.75;
+}
+.aphone__preview--error {
+  color: var(--color-gradient-coral);
+  opacity: 1;
 }
 
 .aphone__panel {

@@ -61,6 +61,7 @@ export default function PhoneField({
     return requested ?? findCountryByIso(DEFAULT_COUNTRY_ISO) ?? COUNTRIES[0];
   });
   const [national, setNational] = useState("");
+  const [touched, setTouched] = useState(false);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -141,6 +142,16 @@ export default function PhoneField({
     if (!value) setNational("");
   }, [value]);
 
+  /**
+   * A number that is started but too short is reported to the parent as "", so without this the
+   * digits typed would be dropped on submit with nothing said. Say so once the field is left, and
+   * keep the browser from submitting until the number is finished or cleared.
+   */
+  const tooShort = national.length > 0 && national.length < NATIONAL_MIN_DIGITS;
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(tooShort ? "Enter the full mobile number, or clear the field." : "");
+  }, [tooShort]);
+
   return (
     <div className={`afield aphone${open ? " is-open" : ""}`} ref={rootRef}>
       <span className="afield__top">
@@ -194,6 +205,8 @@ export default function PhoneField({
             className="afield__input aphone__input"
             value={national}
             onChange={(e) => handleInput(e.target.value)}
+            onBlur={() => setTouched(true)}
+            aria-invalid={touched && tooShort ? true : undefined}
             placeholder="400 000 000"
             autoComplete="tel-national"
             required={required}
@@ -242,10 +255,12 @@ export default function PhoneField({
         ) : null}
       </div>
 
-      <span id={`${id}-preview`} className="ds-micro aphone__preview">
+      <span id={`${id}-preview`} className={`ds-micro aphone__preview${touched && tooShort ? " aphone__preview--error" : ""}`} aria-live="polite">
         {national.length >= NATIONAL_MIN_DIGITS
           ? `${confirmLabel} +${country.dial}${national}`
-          : `${country.name}: enter your number without the leading 0`}
+          : touched && tooShort
+            ? "That number looks too short. Check it, or clear the field."
+            : `${country.name}: enter your number without the leading 0`}
       </span>
     </div>
   );

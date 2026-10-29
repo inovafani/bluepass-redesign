@@ -19,7 +19,9 @@ const bodySchema = z.object({
   guests: z.number().int().min(1).max(500).optional(),
   lead: z.object({
     name: z.string().max(120),
-    email: z.string().max(200),
+    /* Empty is still accepted (the service stores it as no email); anything typed must be an address,
+       so a form-less POST cannot open a booking and a payment for "abc". */
+    email: z.string().trim().max(200).refine((v) => v === "" || z.string().email().safeParse(v).success),
     phone: z.string().max(40).optional().nullable(),
   }),
   notes: z.string().max(1000).optional().nullable(),

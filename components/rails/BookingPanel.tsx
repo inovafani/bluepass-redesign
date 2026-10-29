@@ -124,6 +124,9 @@ export default function BookingPanel({
   const [dayLoading, setDayLoading] = useState(false);
   const [departsAt, setDepartsAt] = useState<string | null>(null);
   const [qty, setQty] = useState<Record<string, number>>({});
+  // Set when the email field is left with something that is not an address, so the page says so
+  // there rather than only when the form is submitted.
+  const [emailBad, setEmailBad] = useState(false);
   const [addOns, setAddOns] = useState<Record<string, number>>({});
   const [groupSize, setGroupSize] = useState(2);
   const [step, setStep] = useState<"choose" | "details">("choose");
@@ -224,6 +227,10 @@ export default function BookingPanel({
   const linesCents = ticketsCents + feeCents;
   const totalCents = quotedCents ?? linesCents;
   const reefCents = Math.round(totalCents * 0.05);
+
+  // The + buttons stop at the seats that are left, so the counter never offers more than the
+  // trip holds. `problem` below still catches a count that was already chosen for another time.
+  const roomFor = (nextSeats: number) => !departure || nextSeats <= departure.seatsLeft;
 
   const problem = useMemo(() => {
     if (!departure || seats === 0) return null;
@@ -446,7 +453,7 @@ export default function BookingPanel({
                       <span className="bk-stepper__control">
                         <button type="button" onClick={() => { setQuotedCents(null); setQty((c) => ({ ...c, [r.id]: Math.max(0, (c[r.id] ?? 0) - 1) })); }} disabled={(qty[r.id] ?? 0) === 0} aria-label={`Fewer ${r.label}`}>−</button>
                         <output className="ds-body" aria-live="polite">{qty[r.id] ?? 0}</output>
-                        <button type="button" onClick={() => { setQuotedCents(null); setQty((c) => ({ ...c, [r.id]: Math.min(50, (c[r.id] ?? 0) + 1) })); }} aria-label={`More ${r.label}`}>+</button>
+                        <button type="button" onClick={() => { setQuotedCents(null); setQty((c) => ({ ...c, [r.id]: Math.min(50, (c[r.id] ?? 0) + 1) })); }} disabled={!roomFor(flatChosen ? Math.max(groupSize, perGuestSeats + (r.seatsUsed ?? 1)) : perGuestSeats + (r.seatsUsed ?? 1))} aria-label={`More ${r.label}`}>+</button>
                       </span>
                     </div>
                   ) : (
@@ -465,12 +472,13 @@ export default function BookingPanel({
                     <span className="bk-stepper__control">
                       <button type="button" onClick={() => setGroupSize((g) => Math.max(1, g - 1))} disabled={groupSize <= 1} aria-label="Fewer people">−</button>
                       <output className="ds-body">{groupSize}</output>
-                      <button type="button" onClick={() => setGroupSize((g) => Math.min(500, g + 1))} aria-label="More people">+</button>
+                      <button type="button" onClick={() => setGroupSize((g) => Math.min(500, g + 1))} disabled={!roomFor(Math.max(groupSize + 1, perGuestSeats))} aria-label="More people">+</button>
                     </span>
                   </div>
                 ) : null}
               </div>
               {problem ? <p className="ds-caption bk-warn" role="status">{problem}</p> : null}
+              {!problem && departure && seats > 0 && !roomFor(seats + 1) ? <p className="ds-caption rl-muted">That&rsquo;s every seat left {departure.allDay ? "that day" : `at ${formatLocalTime(departure.localTime)}`}.</p> : null}
               {!problem && departure && departure.minGuests > 1 ? <p className="ds-caption rl-muted">This trip runs once {departure.minGuests} guests have booked in total.</p> : null}
             </section>
           ) : null}
@@ -554,7 +562,17 @@ export default function BookingPanel({
             </label>
             <label className="bk-field">
               <span className="ds-micro bk-label">Email</span>
-              <input type="email" autoComplete="email" required value={lead.email} onChange={(e) => setLead({ ...lead, email: e.target.value })} />
+              <input
+                type="email"
+                autoComplete="email"
+                required
+                value={lead.email}
+                aria-invalid={emailBad ? true : undefined}
+                aria-describedby={emailBad ? "bk-email-error" : undefined}
+                onChange={(e) => { setLead({ ...lead, email: e.target.value }); if (emailBad && e.currentTarget.validity.valid) setEmailBad(false); }}
+                onBlur={(e) => setEmailBad(Boolean(e.currentTarget.value) && !e.currentTarget.validity.valid)}
+              />
+              {emailBad ? <span id="bk-email-error" className="ds-micro bk-warn bk-field__hint" role="alert">That email doesn&rsquo;t look right. Check it has an @ and a domain, like name@example.com.</span> : null}
             </label>
             <PhoneField
               label="Mobile"

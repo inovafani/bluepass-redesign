@@ -7,6 +7,13 @@ import { footerColumns } from "@/lib/data";
 
 const WORDMARK = "Bluepass".split("");
 
+/* A link whose href is "#" goes nowhere, so it is left out until the page exists, and a column left
+   with no links goes with it. The entries stay in `footerColumns`: giving one a real href is all it
+   takes to bring it back. */
+const liveColumns = footerColumns
+  .map((col) => ({ ...col, links: col.links.filter((link) => link.href !== "#") }))
+  .filter((col) => col.links.length > 0);
+
 /** Shared across routes — the oversized wordmark is the site's sign-off. */
 export default function SiteFooter() {
   const ref = useRef<HTMLElement>(null);
@@ -54,7 +61,7 @@ export default function SiteFooter() {
   return (
     <footer ref={ref} style={{ borderTop: "1px solid var(--color-hairline-soft)", background: "var(--color-canvas)" }}>
       <div className="shell" style={{ maxWidth: 1360, margin: "0 auto", padding: "64px clamp(20px,4.4vw,64px) 40px" }}>
-        <div className="footer__grid">
+        <div className="footer__grid" style={{ "--footer-cols": liveColumns.length } as React.CSSProperties}>
           <div className="footer__col">
             <div className="ds-headline" style={{ color: "#ffffff" }}>
               Bluepass
@@ -67,7 +74,7 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          {footerColumns.map((col) => (
+          {liveColumns.map((col) => (
             <div key={col.title} className="footer__col" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div className="ds-caption" style={{ color: "#ffffff", textTransform: "uppercase", letterSpacing: 1 }}>
                 {col.title}
