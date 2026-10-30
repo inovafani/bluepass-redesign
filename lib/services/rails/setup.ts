@@ -9,6 +9,7 @@ import {
   type ScheduleRule,
 } from "@/lib/services/operators/listing-availability";
 import { formatDepartureShort, formatClock, OPERATOR_TIMEZONES } from "@/lib/services/rails/format";
+import { sameSchedule } from "@/lib/services/operator/same-schedule";
 
 /**
  * What an operator states once so their trip can be sold without them: when it
@@ -142,6 +143,10 @@ export async function saveSchedule(input: {
     await prisma.listingSchedule.update({ where: { id: existing.id }, data });
     return ok("Schedule saved. The calendar and booking page follow it from now on.");
   }
+
+  // A form sent twice would otherwise leave two identical rows selling the same departures.
+  const running = await prisma.listingSchedule.findMany({ where: { listingId: listing.id, active: true } });
+  if (running.some((existing) => sameSchedule(existing, data))) return no("That exact pattern is already on this trip.");
 
   await prisma.listingSchedule.create({ data: { ...data, listingId: listing.id } });
   return ok("Schedule added.");

@@ -558,6 +558,15 @@ export async function listKaiCoreBluePassLedger(
   );
 
   if (!response.ok) {
+    /* The message an operator reads stays generic, but the cause is in the function log: a 401 is a
+       wrong or placeholder KAI_CORE_ADMIN_TOKEN, a 404 a tenant Kai does not have. Without this the
+       two look identical from the dashboard. */
+    const body = (await response.json().catch(() => null)) as { error?: { code?: string } } | null;
+    console.error("kai-core.ledger_request_failed", {
+      status: response.status,
+      code: body?.error?.code ?? null,
+      tenantSlug: input.tenantSlug,
+    });
     throw new Error("Kai Core BluePass ledger request failed.");
   }
 

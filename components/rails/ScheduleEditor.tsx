@@ -77,7 +77,7 @@ export default function ScheduleEditor({
           {[...patterns, ...oneOffs].map((s) =>
             editing === s.id ? (
               <li key={s.id} className="rl-rows__item rl-rows__item--open">
-                <ScheduleForm listingId={listingId} schedule={s} onDone={() => setEditing(null)} defaultTimezone={defaultTimezone} defaultCapacity={defaultCapacity} />
+                <ScheduleForm listingId={listingId} schedule={s} others={patterns} onDone={() => setEditing(null)} defaultTimezone={defaultTimezone} defaultCapacity={defaultCapacity} />
               </li>
             ) : (
               <li key={s.id} className="rl-rows__item">
@@ -89,7 +89,7 @@ export default function ScheduleEditor({
                     {isOneOff(s) ? <span className="ds-micro rl-tag">One-off</span> : null}
                   </span>
                   <span className="ds-caption rl-rows__meta">
-                    {s.capacityPerDeparture} seats
+                    {s.capacityPerDeparture} {s.capacityPerDeparture === 1 ? "seat" : "seats"}
                     {s.minGuests > 1 ? ` · runs with ${s.minGuests} or more` : ""}
                     {" · "}
                     {cutoffText(s.cutoffHours)}
@@ -109,7 +109,7 @@ export default function ScheduleEditor({
       ) : null}
 
       {editing === "new" ? (
-        <ScheduleForm listingId={listingId} onDone={() => setEditing(null)} defaultTimezone={defaultTimezone} defaultCapacity={defaultCapacity} first={schedules.length === 0} />
+        <ScheduleForm listingId={listingId} others={patterns} onDone={() => setEditing(null)} defaultTimezone={defaultTimezone} defaultCapacity={defaultCapacity} first={schedules.length === 0} />
       ) : editing === "oneoff" ? (
         <OneOffForm listingId={listingId} onDone={() => setEditing(null)} defaultTimezone={schedules[0]?.timezone ?? defaultTimezone} defaultCapacity={schedules[0]?.capacityPerDeparture ?? defaultCapacity ?? 12} />
       ) : (
@@ -129,6 +129,7 @@ export default function ScheduleEditor({
 function ScheduleForm({
   listingId,
   schedule,
+  others,
   onDone,
   defaultTimezone,
   defaultCapacity,
@@ -136,16 +137,31 @@ function ScheduleForm({
 }: {
   listingId: string;
   schedule?: ScheduleRow;
+  /** The trip's other recurring patterns, so a pattern that repeats one of their days can say so. */
+  others: ScheduleRow[];
   onDone: () => void;
   defaultTimezone: string;
   defaultCapacity: number | null;
   first?: boolean;
 }) {
   const [state, formAction] = useActionState(saveScheduleAction.bind(null, listingId, schedule?.id ?? null), IDLE);
-  const [days, setDays] = useState<number[]>(schedule?.weekdays ?? [2, 4, 6]);
+  // The first pattern starts on the usual Tue/Thu/Sat. A pattern added beside others starts empty:
+  // pre-ticked days there just repeat the ones already running, and ticking one more looks like the
+  // new pattern was folded into the old.
+  const [days, setDays] = useState<number[]>(schedule?.weekdays ?? (first ? [2, 4, 6] : []));
   const [times, setTimes] = useState<string[]>(schedule?.departureTimes ?? ["08:00"]);
   const [seasonal, setSeasonal] = useState(Boolean(schedule?.seasonStart || schedule?.seasonEnd));
   const everyDay = days.length === 0 || days.length === 7;
+  // No days ticked means every day, which is right for a trip's first pattern and a trap for an
+  // extra one: forgetting to tick would quietly open the whole week.
+  const needsDay = !schedule && !first && days.length === 0;
+  const clashes = others
+    .filter((o) => o.id !== schedule?.id && o.departureTimes.some((t) => times.includes(t)))
+    .filter((o) => {
+      const theirs = o.weekdays.length === 0 ? [0, 1, 2, 3, 4, 5, 6] : o.weekdays;
+      const mine = days.length === 0 ? [0, 1, 2, 3, 4, 5, 6] : days;
+      return theirs.some((d) => mine.includes(d));
+    });
 
   if (state.status === "done") {
     return (
@@ -157,7 +173,7 @@ function ScheduleForm({
   }
 
   return (
-    <form action={formAction} className="rl-form">
+    <form action={formAction} className="rl-form" onSubmit={(e) => { if (needsDay) e.preventDefault(); }}>
       {first ? (
         <p className="ds-body-sm rl-form__lede">
           Say how the trip runs and the calendar fills itself in. You will not need to touch it again unless your pattern changes.
@@ -185,7 +201,12 @@ function ScheduleForm({
             );
           })}
         </div>
-        <span className="ds-micro rl-field__hint">{everyDay ? "Every day" : describeWeekdays(days)}</span>
+        <span className="ds-micro rl-field__hint">{needsDay ? "Pick at least one day." : everyDay ? "Every day" : describeWeekdays(days)}</span>
+        {clashes.length > 0 ? (
+          <span className="ds-micro rl-field__hint" role="status">
+            Already running at that time: {clashes.map((o) => `${describeWeekdays(o.weekdays)} · ${o.departureTimes.map(formatLocalTime).join(", ")}`).join("; ")}. Days that overlap are not a second boat; change the existing pattern instead.
+          </span>
+        ) : null}
       </fieldset>
 
       <fieldset className="rl-field">
@@ -243,7 +264,7 @@ function ScheduleForm({
 
       <ActionNotice state={state} />
       <div className="rl-actions">
-        <PendingButton>{schedule ? "Save schedule" : "Add schedule"}</PendingButton>
+        <PendingButton disabled={needsDay}>{schedule ? "Save schedule" : "Add schedule"}</PendingButton>
         {!first ? <button type="button" className="rl-btn rl-btn--quiet" onClick={onDone}>Cancel</button> : null}
       </div>
     </form>
