@@ -91,10 +91,31 @@
 .vi-email__row { display: flex; gap: 8px; flex-wrap: wrap; }
 .vi-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.ca-add { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 20px; }
-.ca-add__wide { grid-column: 1 / -1; }
-.ca-add__tags { display: flex; flex-wrap: wrap; gap: 6px 14px; border: 0; padding: 0; margin: 0; }
-.ca-add__tags legend { margin-bottom: 6px; padding: 0; }
-.ca-add__tag { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
-.ca-add__submit { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-@media (max-width: 640px) { .ca-add { grid-template-columns: 1fr; } }
+/* Add-creator form. Four columns on a wide admin, two on a laptop, one on a phone; every option in a
+   topic group shares one column width so the rows read as a grid, not a ragged wrap. */
+.ca-grid.adm-form__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ca-grid > .ca-span-2 { grid-column: span 2; }
+.adm-form__rule { border: 0; border-top: 1px solid var(--color-hairline); margin: 0; }
+.adm-form__check { display: flex; align-items: flex-start; gap: var(--space-xs); max-width: 60ch; color: var(--color-ink); cursor: pointer; }
+.adm-form__check input { margin-top: 3px; accent-color: var(--color-accent-blue); }
+.adm-topics { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.adm-topics legend { padding: 0; margin-bottom: var(--space-xs); }
+.adm-topics__group { display: flex; flex-direction: column; gap: var(--space-xs); }
+.adm-topics__label { color: var(--color-ink-muted); }
+.adm-topics__grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-xs); }
+.adm-topic { position: relative; display: flex; align-items: center; min-height: 40px; padding: 0 var(--space-sm); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-surface-1); color: var(--color-ink-muted); cursor: pointer; text-transform: capitalize; transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease; }
+.adm-topic:hover { background: var(--color-surface-2); color: var(--color-ink); }
+.adm-topic.is-active { background: color-mix(in srgb, var(--color-accent-blue) 18%, var(--color-surface-1)); border-color: var(--color-accent-blue); color: var(--color-ink); }
+.adm-topic__check { margin-left: auto; opacity: 0; color: var(--color-accent-blue); transition: opacity 0.15s ease; }
+.adm-topic.is-active .adm-topic__check { opacity: 1; }
+.adm-topic input { position: absolute; opacity: 0; pointer-events: none; }
+.adm-topic:has(input:focus-visible) { outline: 2px solid var(--color-ink); outline-offset: 2px; }
+@media (max-width: 1100px) {
+  .ca-grid.adm-form__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adm-topics__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .ca-grid.adm-form__grid { grid-template-columns: 1fr; }
+  .ca-grid > .ca-span-2 { grid-column: auto; }
+  .adm-topics__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

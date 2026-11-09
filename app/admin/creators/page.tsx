@@ -58,9 +58,7 @@ export default async function CreatorsAdmin() {
 
       <section className="adm-block">
         <header className="adm-block__head"><h2 className="ds-headline adm-block__title">Add a creator</h2></header>
-        <div className="adm-card">
-          <AddCreatorForm add={addCreatorAction} specialties={SPECIALTIES} />
-        </div>
+        <AddCreatorForm add={addCreatorAction} specialties={SPECIALTIES} />
         <p className="ds-caption" style={{ color: "var(--color-ink-muted)", marginTop: 10 }}>
           For someone who is not on the research list. They show up for operators to pick straight away, and are invited here once an operator picks them.
         </p>

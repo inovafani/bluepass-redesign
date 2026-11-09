@@ -1,6 +1,8 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
+import Field from "@/components/auth/Field";
+import Button from "@/components/ui/Button";
 import Notice from "@/components/auth/Notice";
 import "@/app/creators.css";
 import type { CreatorAdminState } from "@/app/admin/creators/actions";
@@ -51,36 +53,118 @@ export function DisputeActions({ campaignId, resolve }: { campaignId: string; re
 }
 
 const STATES = ["NSW", "VIC", "QLD", "SA", "WA", "TAS", "NT", "ACT"];
+const EMPTY = { name: "", brand: "", instagram: "", website: "", contactEmail: "", baseState: "", baseTown: "", summary: "" };
 
-/** Adds a creator who is not on the research list, so operators can pick them. */
+/** The topic list is long, so it is read in four short groups of equal-width options rather than one wrapping row. */
+const TOPIC_GROUPS: { label: string; topics: string[] }[] = [
+  { label: "Marine life and places", topics: ["whales", "sharks", "manta", "whale-shark", "dolphins", "seals-sea-lions", "turtles", "reef", "wrecks", "macro"] },
+  { label: "Activities", topics: ["dive", "freedive", "snorkel", "swim-with-wildlife", "kayak", "sail", "surf", "boating", "fishing"] },
+  { label: "Angles", topics: ["marine-science", "conservation", "family", "adventure", "travel"] },
+  { label: "What they make", topics: ["photo", "video", "writing", "workshops", "hosted-trips"] },
+];
+
+/**
+ * Adds a creator who is not on the research list, so operators can pick them. Controlled like the
+ * operator onboarding form: React resets a form once its action resolves, so a rejected submission
+ * would otherwise empty everything the admin just typed.
+ */
 export function AddCreatorForm({ add, specialties }: { add: (prev: CreatorAdminState, form: FormData) => Promise<CreatorAdminState>; specialties: readonly string[] }) {
   const [state, action, pending] = useActionState(add, IDLE);
+  const [values, setValues] = useState(EMPTY);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [createLogin, setCreateLogin] = useState(false);
+  const set = (field: keyof typeof EMPTY) => (value: string) => setValues((v) => ({ ...v, [field]: value }));
+  const toggle = (topic: string) => setTopics((t) => (t.includes(topic) ? t.filter((x) => x !== topic) : [...t, topic]));
+
+  useEffect(() => {
+    if (state.status !== "done") return;
+    setValues(EMPTY);
+    setTopics([]);
+    setCreateLogin(false);
+  }, [state]);
+
+  // A topic added to SPECIALTIES later still shows up, in a last group, instead of silently vanishing.
+  const grouped = new Set(TOPIC_GROUPS.flatMap((g) => g.topics));
+  const groups = [...TOPIC_GROUPS, { label: "Other", topics: specialties.filter((t) => !grouped.has(t)) }]
+    .map((g) => ({ ...g, topics: g.topics.filter((t) => specialties.includes(t)) }))
+    .filter((g) => g.topics.length);
+
   return (
-    <form action={action} className="ca-add" key={state.status === "done" ? state.message : "form"}>
-      <input name="name" className="cr-input" placeholder="Name" aria-label="Name" required />
-      <input name="brand" className="cr-input" placeholder="Brand (optional)" aria-label="Brand" />
-      <input name="website" className="cr-input" placeholder="Website" aria-label="Website" />
-      <input name="instagram" className="cr-input" placeholder="Instagram handle" aria-label="Instagram handle" />
-      <input name="contactEmail" type="email" className="cr-input" placeholder="Email (only used for their invite)" aria-label="Email" />
-      <select name="baseState" className="cr-input" defaultValue="" aria-label="State">
-        <option value="">State (optional)</option>
-        {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-      </select>
-      <input name="baseTown" className="cr-input" placeholder="Town (optional)" aria-label="Town" />
-      <input name="summary" className="cr-input ca-add__wide" placeholder="One line on what they make (optional)" aria-label="Summary" />
-      <fieldset className="ca-add__wide ca-add__tags">
-        <legend className="ds-caption">What they make content about</legend>
-        {specialties.map((s) => (
-          <label key={s} className="ca-add__tag"><input type="checkbox" name="specialties" value={s} /> {s.replace(/-/g, " ")}</label>
-        ))}
-      </fieldset>
-      <label className="ca-add__wide ca-add__tag">
-        <input type="checkbox" name="createLogin" /> Also create their login and email them a link to set a password (needs their email)
-      </label>
-      <div className="ca-add__wide ca-add__submit">
-        <button type="submit" className="bpe__btn bpe__btn--primary ca-btn" disabled={pending}>Add creator</button>
-        {state.status !== "idle" ? <Notice tone={state.status === "done" ? "success" : "error"}>{state.message}</Notice> : null}
-      </div>
+    <form action={action} className="adm-form">
+      {state.status !== "idle" ? <Notice tone={state.status === "done" ? "success" : "error"}>{state.message}</Notice> : null}
+
+      <section className="adm-form__section">
+        <div className="adm-form__grid ca-grid">
+          <div className="adm-form__row ca-span-2">
+            <Field label="Name" name="name" value={values.name} onChange={set("name")} placeholder="Rae Shooter" autoComplete="off" required disabled={pending} />
+          </div>
+          <div className="adm-form__row ca-span-2">
+            <Field label="Brand" name="brand" value={values.brand} onChange={set("brand")} hint="Optional" autoComplete="off" disabled={pending} />
+          </div>
+          <div className="adm-form__row">
+            <Field label="Instagram" name="instagram" value={values.instagram} onChange={set("instagram")} placeholder="reefshooter" hint="Handle or link" autoComplete="off" disabled={pending} />
+          </div>
+          <div className="adm-form__row">
+            <Field label="Website" name="website" value={values.website} onChange={set("website")} inputMode="url" placeholder="reefshooter.com" autoComplete="off" disabled={pending} />
+          </div>
+          <div className="adm-form__row ca-span-2">
+            <Field label="Email" name="contactEmail" value={values.contactEmail} onChange={set("contactEmail")} type="email" inputMode="email" placeholder="rae@reefshooter.com" hint="Their invite and login go here" autoComplete="off" disabled={pending} />
+          </div>
+        </div>
+        <p className="ds-body-sm adm-form__help">Add at least one of Instagram, website or email, so we can reach them.</p>
+
+        <hr className="adm-form__rule" />
+
+        <div className="adm-form__grid ca-grid">
+          <label className="afield adm-form__row" htmlFor="ca-state">
+            <span className="afield__top"><span className="ds-micro afield__label">State</span><span className="ds-micro afield__hint">Optional</span></span>
+            <span className="afield__well">
+              <select id="ca-state" name="baseState" className="afield__input" value={values.baseState} onChange={(e) => set("baseState")(e.target.value)} disabled={pending}>
+                <option value="">Not set</option>
+                {STATES.map((st) => <option key={st} value={st}>{st}</option>)}
+              </select>
+            </span>
+          </label>
+          <div className="adm-form__row">
+            <Field label="Town" name="baseTown" value={values.baseTown} onChange={set("baseTown")} hint="Optional" autoComplete="off" disabled={pending} />
+          </div>
+          <div className="adm-form__row ca-span-2">
+            <Field label="One line about their work" name="summary" value={values.summary} onChange={set("summary")} hint="Optional" autoComplete="off" disabled={pending} />
+          </div>
+        </div>
+
+        <hr className="adm-form__rule" />
+
+        <fieldset className="adm-topics" disabled={pending}>
+          <legend className="ds-micro afield__label">They make content about</legend>
+          <p className="ds-body-sm adm-form__help">Optional. When an operator joins, we suggest creators who cover what their trips are about, so these decide who gets suggested. Photo, video, writing and the other formats never match on their own.</p>
+          {groups.map((g) => (
+            <div key={g.label} className="adm-topics__group">
+              <span className="ds-micro adm-topics__label">{g.label}</span>
+              <div className="adm-topics__grid">
+                {g.topics.map((topic) => (
+                  <label key={topic} className={`ds-body-sm adm-topic ${topics.includes(topic) ? "is-active" : ""}`}>
+                    <input type="checkbox" name="specialties" value={topic} checked={topics.includes(topic)} onChange={() => toggle(topic)} />
+                    {topic.replace(/-/g, " ")}
+                    <svg className="adm-topic__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </fieldset>
+
+        <hr className="adm-form__rule" />
+
+        <label className="ds-body-sm adm-form__check">
+          <input type="checkbox" name="createLogin" checked={createLogin} onChange={(e) => setCreateLogin(e.target.checked)} disabled={pending} />
+          <span>Also create their login and email them a link to set a password. Needs their email.</span>
+        </label>
+
+        <div className="adm-form__submit">
+          <Button type="submit" disabled={pending}>{pending ? "Adding…" : "Add creator"}</Button>
+        </div>
+      </section>
     </form>
   );
 }
