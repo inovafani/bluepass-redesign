@@ -1,6 +1,10 @@
+import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { createAndSendPasswordReset } from "@/lib/services/auth/password-reset";
+import { approveReferralApplication } from "@/lib/services/referrals/application-approval";
 import { CREDIT_CURRENCY } from "@/lib/services/onboarding/credits";
 import { stopOutreachQuietly } from "@/lib/services/outreach/stop";
+import { hostOf, slugify, type NewCreator } from "@/lib/services/admin/creator-input";
 
 /**
  * What the Bluepass team does in creator onboarding: see which picked creators still have no
@@ -25,6 +29,79 @@ export async function invitesToSend() {
       emailed: c.enrolments[0] ? { at: c.enrolments[0].createdAt, status: c.enrolments[0].status } : null,
     }))
     .sort((a, b) => Number(Boolean(a.invitedAt)) - Number(Boolean(b.invitedAt)) || b.pickedBy.length - a.pickedBy.length);
+}
+
+/**
+ * Adds a creator by hand to the directory operators pick from, for someone not on the research
+ * list. Stored like a researched creator (source "research"), so one who later signs up with the
+ * same email or Instagram is linked on approval. Refuses a repeat of a website, Instagram or name.
+ */
+export async function addCreator(input: NewCreator) {
+  const host = hostOf(input.website);
+  const slug = slugify(input.name);
+  const same = await prisma.creator.findFirst({
+    where: {
+      OR: [
+        { slug },
+        ...(host ? [{ website: { contains: host, mode: "insensitive" as const } }] : []),
+        ...(input.instagram ? [{ instagram: { equals: input.instagram, mode: "insensitive" as const } }] : []),
+      ],
+    },
+    select: { name: true },
+  });
+  if (same) return { ok: false as const, message: `${same.name} is already in the directory.` };
+  const created = await prisma.creator.create({ data: { ...input, slug, source: "research", sourceUrl: input.website }, select: { id: true } });
+  return { ok: true as const, creatorId: created.id };
+}
+
+/**
+ * Gives a creator Bluepass added by hand their own login, the way createManualOperator does for
+ * operators: an approved creator account with an unusable password, tied to their directory entry,
+ * and the same single-use "set your password" link a forgotten password uses. Whoever adds them is
+ * the vetting step, so there is no application to approve. The address comes from the creator's row,
+ * never from the caller, and an email that already has an account is refused rather than taken over.
+ */
+export async function createCreatorLogin(
+  input: { creatorId: string; baseUrl?: string },
+  createReset: typeof createAndSendPasswordReset = createAndSendPasswordReset,
+) {
+  const creator = await prisma.creator.findUnique({ where: { id: input.creatorId } });
+  if (!creator) return { ok: false as const, message: "That creator is no longer in the directory." };
+  if (creator.partnerProfileId) return { ok: false as const, message: `${creator.name} already has a login.` };
+  const email = creator.contactEmail?.trim().toLowerCase();
+  if (!email) return { ok: false as const, message: `${creator.name} has no email, so there is nowhere to send a login. Add one first.` };
+  if (await prisma.bluePassAccount.findUnique({ where: { email }, select: { id: true } })) {
+    return { ok: false as const, message: `${email} already has a Bluepass account. If it is theirs, link it with "They joined as…" on this page.` };
+  }
+
+  const profile = await prisma.$transaction(async (tx) => {
+    const account = await tx.bluePassAccount.create({
+      // Unusable by design; they choose their own through the link below.
+      data: { email, passwordHash: randomBytes(32).toString("hex"), displayName: creator.name, roles: ["PARTNER"] },
+      select: { id: true },
+    });
+    const created = await tx.partnerProfile.create({
+      data: {
+        accountId: account.id, status: "PENDING_REVIEW", partnerCategory: "CREATOR", handle: creator.instagram,
+        audienceUrl: creator.website, instagramUrl: creator.instagram ? `https://www.instagram.com/${creator.instagram}/` : null,
+        youtubeUrl: creator.youtube, tiktokUrl: creator.tiktok,
+      },
+      select: { id: true },
+    });
+    // Linked before approval so the directory sync never mints a second entry for this account.
+    await tx.creator.update({ where: { id: creator.id }, data: { partnerProfileId: created.id } });
+    return created;
+  });
+  await approveReferralApplication({ kind: "partner", id: profile.id });
+  await stopOutreachQuietly({ creatorId: creator.id }, "was given a Bluepass login");
+
+  try {
+    const sent = await createReset({ email, baseUrl: input.baseUrl });
+    return { ok: true as const, email, emailed: !sent.developmentResetUrl, developmentResetUrl: sent.developmentResetUrl };
+  } catch (error) {
+    // The account exists; only the email failed. Say so, so nobody adds them a second time.
+    return { ok: true as const, email, emailed: false, emailError: error instanceof Error ? error.message : "The email could not be sent." };
+  }
 }
 
 export async function markInvited(input: { creatorId: string; by: string; now?: Date }) {

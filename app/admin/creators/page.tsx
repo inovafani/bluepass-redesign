@@ -1,6 +1,7 @@
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import { DisputeActions, InviteActions } from "@/components/admin/CreatorAdminRows";
-import { linkAccountAction, markInvitedAction, resolveDisputeAction } from "@/app/admin/creators/actions";
+import { AddCreatorForm, DisputeActions, InviteActions } from "@/components/admin/CreatorAdminRows";
+import { addCreatorAction, linkAccountAction, markInvitedAction, resolveDisputeAction } from "@/app/admin/creators/actions";
+import { SPECIALTIES } from "@/lib/services/onboarding/creator-match";
 import { requireAdminOrRedirect } from "@/lib/services/admin/guard";
 import { creatorDirectoryCounts, disputedPosts, invitesToSend, linkableCreatorAccounts } from "@/lib/services/onboarding/creator-admin";
 import { formatCredit } from "@/lib/services/onboarding/credits";
@@ -52,6 +53,16 @@ export default async function CreatorsAdmin() {
         )}
         <p className="ds-caption" style={{ color: "var(--color-ink-muted)", marginTop: 10 }}>
           Creators with a published email get one invite from Tony through Instantly. For the rest, send an Instagram message yourself and mark it here.
+        </p>
+      </section>
+
+      <section className="adm-block">
+        <header className="adm-block__head"><h2 className="ds-headline adm-block__title">Add a creator</h2></header>
+        <div className="adm-card">
+          <AddCreatorForm add={addCreatorAction} specialties={SPECIALTIES} />
+        </div>
+        <p className="ds-caption" style={{ color: "var(--color-ink-muted)", marginTop: 10 }}>
+          For someone who is not on the research list. They show up for operators to pick straight away, and are invited here once an operator picks them.
         </p>
       </section>
 
