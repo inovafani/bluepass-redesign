@@ -21,6 +21,8 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: { absolute: TITLE },
   description: DESCRIPTION,
+  // Explicit: the root is prerendered at the internal path "/index", so the layout's relative "./" resolves to /index here.
+  alternates: { canonical: "/" },
   openGraph: { title: TITLE, description: DESCRIPTION, type: "website" },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
