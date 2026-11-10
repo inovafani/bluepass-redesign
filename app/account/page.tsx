@@ -6,6 +6,7 @@ import TripList from "@/components/account/TripList";
 import SavedTripList from "@/components/account/SavedTripList";
 import AccountTabs from "@/components/account/AccountTabs";
 import { requireSignedInOrRedirect } from "@/lib/services/account/guard";
+import { loadNativeTrips, NO_NATIVE_TRIPS } from "@/lib/services/account/native-trips";
 import { loadTravellerTrips } from "@/lib/services/account/traveller-bookings";
 import { loadSavedTripSummaries } from "@/lib/services/account/saved-trips";
 
@@ -35,8 +36,13 @@ export default async function AccountPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const traveller = await requireSignedInOrRedirect("/account");
+  /* Own database, so a failure here must not take the Kai trips down with it, or the reverse. */
+  const native = await loadNativeTrips(traveller.accountId).catch((error) => {
+    console.error("account.native_trips_failed", { message: error instanceof Error ? error.message : String(error) });
+    return NO_NATIVE_TRIPS;
+  });
   const [trips, savedTrips, params] = await Promise.all([
-    loadTravellerTrips(traveller.accountId),
+    loadTravellerTrips(traveller.accountId, native),
     loadSavedTripSummaries(traveller.accountId).catch(() => []),
     searchParams,
   ]);
@@ -68,7 +74,9 @@ export default async function AccountPage({
 
       {!trips.ok ? (
         /* Distinct from "you have no trips", and deliberately so: an unreachable Kai must never
-           be rendered as an empty history to someone who has really booked. */
+           be rendered as an empty history to someone who has really booked. Bookings from our own
+           database are still shown beneath it, since they did not depend on Kai. */
+        <>
         <div className="acctpage__panel acctpage__panel--fault" role="alert">
           <p className="ds-body-sm acctpage__fault-title">
             We couldn&rsquo;t load your trips just now.
@@ -79,6 +87,8 @@ export default async function AccountPage({
             up for you.
           </p>
         </div>
+        {native.trips.length ? <TripList trips={native.trips} /> : null}
+        </>
       ) : trips.data.trips.length === 0 ? (
         <div className="acctpage__panel">
           <p className="ds-body-lg acctpage__empty-title">No trips yet.</p>

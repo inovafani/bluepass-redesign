@@ -3,6 +3,7 @@ import {
   section,
   type SectionResult,
 } from "@/lib/services/admin/payouts";
+import { NO_NATIVE_TRIPS, type NativeTrips } from "@/lib/services/account/native-trips";
 import {
   listKaiCoreTravellerBookings,
   type KaiCoreTravellerBookings,
@@ -20,7 +21,7 @@ import {
  */
 export type TravellerTrip = {
   id: string;
-  kind: "au-booking" | "indonesia-inquiry";
+  kind: "au-booking" | "indonesia-inquiry" | "native-booking";
   /** What the traveller would call it: the product they picked, or the yacht, or the destination. */
   title: string;
   status: string;
@@ -36,6 +37,8 @@ export type TravellerTrip = {
   reference: string | null;
   settledAt: string | null;
   cancelledAt: string | null;
+  /** Where the traveller can open this booking, when it has a page of its own. */
+  href?: string;
 };
 
 export type TravellerConservationSummary = { currency: string; amount: string }[];
@@ -115,9 +118,27 @@ export type TravellerTripsAndImpact = {
  */
 export async function loadTravellerTrips(
   travellerAccountId: string,
+  native: NativeTrips = NO_NATIVE_TRIPS,
 ): Promise<SectionResult<TravellerTripsAndImpact>> {
-  return section(async () => {
+  const result = await section(async () => {
     const data = await listKaiCoreTravellerBookings({ travellerAccountId });
-    return { trips: mergeTravellerTrips(data), conservation: formatTravellerConservation(data) };
+    const sum = new Map<string, number>();
+    for (const row of [...data.conservationByCurrency, ...native.conservation]) {
+      sum.set(row.currency, (sum.get(row.currency) ?? 0) + row.amountCents);
+    }
+    return {
+      trips: [...mergeTravellerTrips(data), ...native.trips].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+      conservation: formatTravellerConservation({
+        conservationByCurrency: [...sum].map(([currency, amountCents]) => ({ currency, amountCents })),
+      }),
+    };
   });
+
+  /* `section` swallows the error so the page can show a fault, which also means nothing was ever
+     written down. Without this a failed Kai call (wrong token, Kai down) leaves no trace to debug
+     from. No account id, no email: the message alone says what broke. */
+  if (!result.ok) console.error("account.trips_load_failed", { message: result.message });
+  return result;
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatDateTime } from "@/lib/services/admin/payouts";
 import type { TravellerTrip } from "@/lib/services/account/traveller-bookings";
 
@@ -13,6 +14,7 @@ const STATUS_COPY: Record<string, { label: string; tone: string }> = {
   AWAITING_PAYMENT: { label: "Awaiting payment", tone: "wait" },
   PAYMENT_PENDING: { label: "Payment processing", tone: "wait" },
   CONFIRMED: { label: "Confirmed", tone: "good" },
+  REQUESTED: { label: "Awaiting operator", tone: "wait" },
   SETTLED: { label: "Confirmed", tone: "good" },
   CANCELLED: { label: "Cancelled", tone: "off" },
   FAILED: { label: "Payment failed", tone: "bad" },
@@ -42,7 +44,9 @@ export default function TripList({ trips }: { trips: TravellerTrip[] }) {
             <article className="acct-trip">
               <header className="acct-trip__head">
                 <div className="acct-trip__ident">
-                  <h2 className="ds-body-lg acct-trip__title">{trip.title}</h2>
+                  <h2 className="ds-body-lg acct-trip__title">
+                    {trip.href ? <Link href={trip.href}>{trip.title}</Link> : trip.title}
+                  </h2>
                   {trip.operator ? (
                     <p className="ds-caption acct-trip__operator">with {trip.operator}</p>
                   ) : null}
