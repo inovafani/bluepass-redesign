@@ -229,11 +229,11 @@ function soldLines(lines: { rateId: string; label: string; amountCents: number; 
     : lines;
 }
 
-function money(totalCents: number, commissionCents: number | null) {
+function money(totalCents: number, commissionCents: number | null, currency?: string | null) {
   // The operator's share is what Rezdy says it is: the fare less the commission they set
   // for Bluepass. Without a figure from Rezdy it falls back to Bluepass's standard split.
   const conservationCents = Math.round(totalCents * CONSERVATION_PCT);
-  const operatorNetCents = commissionCents !== null ? Math.max(0, totalCents - commissionCents) : splitOnlineBooking(totalCents).operatorNetCents;
+  const operatorNetCents = commissionCents !== null ? Math.max(0, totalCents - commissionCents) : splitOnlineBooking(totalCents, currency).operatorNetCents;
   return { conservationCents, operatorNetCents };
 }
 
@@ -445,7 +445,7 @@ async function recordOrder(booking: ListingBooking, order: RezdyBooking, opts: {
   const settled = status === "CONFIRMED" || status === "REQUESTED" ? status : "CONFIRMED";
   const totalCents = toCents(order.totalAmount) ?? booking.totalCents;
   const commissionCents = toCents(order.commission) ?? booking.commissionCents;
-  const split = money(totalCents, commissionCents);
+  const split = money(totalCents, commissionCents, booking.currency);
   const updated = await prisma.listingBooking.update({
     where: { id: booking.id },
     data: {

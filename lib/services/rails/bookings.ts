@@ -419,7 +419,7 @@ export async function confirmPayment(input: PaymentConfirmation, payments: Rails
       await tx.listingSeatHold.update({ where: { id: hold.id }, data: { confirmed: true, expiresAt: null } });
     }
 
-    const split = splitOnlineBooking(booking.totalCents);
+    const split = splitOnlineBooking(booking.totalCents, booking.currency);
     await tx.listingBooking.update({
       where: { id: booking.id },
       data: {

@@ -1,17 +1,15 @@
 import {
-  AU_PLATFORM_FEE_PCT_REFERRED,
-  AU_PLATFORM_FEE_PCT_UNREFERRED,
   CONSERVATION_PCT,
   PARTNER_COMMISSION_PCT,
   PAYMENT_PROCESSING_PCT,
-  PLATFORM_FEE_PCT_REFERRED,
-  PLATFORM_FEE_PCT_UNREFERRED,
+  PLATFORM_FEE_PCT,
   STRIPE_FIXED_FEE_USD,
   STRIPE_PERCENT_FEE,
+  type BookingMarket,
 } from "@/lib/constants/economics";
 
 /** Mirrors kai's BluePassLedgerMarket (src/core/bluepass/ledger.ts). */
-export type BookingSplitMarket = "AUSTRALIA" | "INDONESIA";
+export type BookingSplitMarket = BookingMarket;
 
 export type BookingSplit = {
   total: number;
@@ -28,26 +26,20 @@ export type BookingSplit = {
 const roundCurrency = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 /**
- * `market` is opt-in only, same convention as kai's ledger.ts. As of 2026-08-24 every market
- * (AU, Indonesia, and no market at all) is on the same 20%/80% split - see economics.ts's comment
- * for the full history, including why an earlier "Boattime stays frozen on the old rate" carve-out
- * turned out to have no real source and was removed. `market` no longer changes the numbers this
- * function returns; it's kept as a parameter only so kai's mirrored ledger.ts and this file stay
- * structurally comparable, in case a real future region-specific split needs it again.
+ * `market` picks the rate: AUSTRALIA, or none given, is 20%/80%; INDONESIA and BARBADOS are 18%/82%
+ * (a lower platform fee only), per Tony on 2026-11-10. See economics.ts for the history.
  */
 export function splitBooking(totalUsd: number, partnerAttributed = false, market?: BookingSplitMarket): BookingSplit {
   if (!Number.isFinite(totalUsd) || totalUsd < 0) {
     throw new Error("Booking total must be a non-negative finite number.");
   }
 
-  const platformFeePctReferred = market === "AUSTRALIA" ? AU_PLATFORM_FEE_PCT_REFERRED : PLATFORM_FEE_PCT_REFERRED;
-  const platformFeePctUnreferred =
-    market === "AUSTRALIA" ? AU_PLATFORM_FEE_PCT_UNREFERRED : PLATFORM_FEE_PCT_UNREFERRED;
+  const fees = PLATFORM_FEE_PCT[market ?? "AUSTRALIA"];
 
   const conservation = totalUsd * CONSERVATION_PCT;
   const partnerShare = partnerAttributed ? totalUsd * PARTNER_COMMISSION_PCT : 0;
   const paymentProcessing = totalUsd * PAYMENT_PROCESSING_PCT;
-  const commission = totalUsd * (partnerAttributed ? platformFeePctReferred : platformFeePctUnreferred);
+  const commission = totalUsd * (partnerAttributed ? fees.referred : fees.unreferred);
   // Derived as the remainder (not a separate totalUsd * 0.82) so the four buckets always sum to
   // exactly totalUsd, with no rounding leakage between them.
   const operatorNet = totalUsd - conservation - partnerShare - paymentProcessing - commission;

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { marketForCurrency } from "@/lib/constants/economics";
+import { splitOnlineBooking } from "@/lib/services/rails/money";
 import { splitBooking } from "./unit-economics";
 
 describe("splitBooking", () => {
-  // Indonesia was corrected from 18%/82% to 20%/80% on 2026-08-24 (Tony: "Indonesia ternyata 20%
-  // juga, bukan 18%"), matching AU's earlier 2026-08-05 move - so the no-market default below is now
-  // the same 20%/80% split as an explicit "AUSTRALIA"/"INDONESIA" market.
+  // Australia, and any booking with no market, is 20%/80%. Per Tony (2026-11-10) Indonesia and
+  // Barbados are 18%/82%: only the platform fee drops (5% referred / 10% unreferred).
   it("splits an unreferred $1000 booking into the real 20% (5/0/3/12) breakdown, operator keeps 80%", () => {
     const split = splitBooking(1000);
 
@@ -42,15 +43,32 @@ describe("splitBooking", () => {
     expect(split.operatorNet).toBe(800);
   });
 
-  it("gives the same split with no market, an explicit INDONESIA, or an explicit AUSTRALIA - all 20%/80% now", () => {
-    const withoutMarket = splitBooking(1000, true);
-    const explicitIndonesia = splitBooking(1000, true, "INDONESIA");
-    const explicitAustralia = splitBooking(1000, true, "AUSTRALIA");
-
-    for (const split of [withoutMarket, explicitIndonesia, explicitAustralia]) {
-      expect(split.commission).toBe(70);
-      expect(split.operatorNet).toBe(800);
+  it("is 20%/80% with no market or AUSTRALIA, and 18%/82% for INDONESIA and BARBADOS", () => {
+    for (const market of [undefined, "AUSTRALIA"] as const) {
+      expect(splitBooking(1000, true, market)).toMatchObject({ commission: 70, operatorNet: 800 });
+      expect(splitBooking(1000, false, market)).toMatchObject({ commission: 120, operatorNet: 800 });
     }
+    for (const market of ["INDONESIA", "BARBADOS"] as const) {
+      expect(splitBooking(1000, true, market)).toMatchObject({ conservation: 50, partnerShare: 50, paymentProcessing: 30, commission: 50, operatorNet: 820 });
+      expect(splitBooking(1000, false, market)).toMatchObject({ conservation: 50, partnerShare: 0, paymentProcessing: 30, commission: 100, operatorNet: 820 });
+    }
+  });
+
+  it("reads the market from an unambiguous currency only; USD keeps the 20% default", () => {
+    expect(marketForCurrency("aud")).toBe("AUSTRALIA");
+    expect(marketForCurrency("IDR")).toBe("INDONESIA");
+    expect(marketForCurrency("BBD")).toBe("BARBADOS");
+    expect(marketForCurrency("USD")).toBeUndefined();
+    expect(marketForCurrency(undefined)).toBeUndefined();
+  });
+
+  it("splits a native booking by its currency: A$ keeps 80%, BBD and IDR keep 82%, USD keeps 80%", () => {
+    expect(splitOnlineBooking(100000, "AUD").operatorNetCents).toBe(80000);
+    expect(splitOnlineBooking(100000, "BBD").operatorNetCents).toBe(82000);
+    expect(splitOnlineBooking(100000, "IDR").operatorNetCents).toBe(82000);
+    expect(splitOnlineBooking(100000, "USD").operatorNetCents).toBe(80000);
+    expect(splitOnlineBooking(100000).operatorNetCents).toBe(80000);
+    expect(splitOnlineBooking(100000, "BBD").conservationCents).toBe(5000);
   });
 
   it("keeps a real, separate Stripe fee estimate distinct from the internal payment-processing line", () => {

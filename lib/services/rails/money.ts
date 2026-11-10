@@ -1,7 +1,8 @@
 import {
   CONSERVATION_PCT,
   PAYMENT_PROCESSING_PCT,
-  PLATFORM_FEE_PCT_UNREFERRED,
+  PLATFORM_FEE_PCT,
+  marketForCurrency,
 } from "@/lib/constants/economics";
 
 /**
@@ -17,10 +18,11 @@ import {
  * and no 5% either: promising the reef money we never held would be a promise we
  * could only keep out of our own pocket.
  */
-export function splitOnlineBooking(totalCents: number) {
+export function splitOnlineBooking(totalCents: number, currency?: string | null) {
+  const platformFeePct = PLATFORM_FEE_PCT[marketForCurrency(currency) ?? "AUSTRALIA"].unreferred;
   const conservationCents = Math.round(totalCents * CONSERVATION_PCT);
   const bluepassShareCents = Math.round(
-    totalCents * (CONSERVATION_PCT + PAYMENT_PROCESSING_PCT + PLATFORM_FEE_PCT_UNREFERRED),
+    totalCents * (CONSERVATION_PCT + PAYMENT_PROCESSING_PCT + platformFeePct),
   );
   return {
     conservationCents,
