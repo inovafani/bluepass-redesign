@@ -78,7 +78,13 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Session cookie:</strong> one functional, HTTP-only cookie that keeps you
-                signed in. No advertising or tracking cookies are set by Bluepass itself.
+                signed in.
+              </li>
+              <li>
+                <strong>Site analytics:</strong> on our public pages we use Google Analytics to
+                count visits and see which pages are used. It sets cookies in your browser and
+                receives the pages you view and your approximate location. It is not used on
+                signed-in areas, and we do not use it for advertising.
               </li>
             </ul>
           </section>
@@ -112,6 +118,10 @@ export default function PrivacyPage() {
               <li>
                 <strong>Supabase</strong> — our database host, where account and booking records are
                 stored.
+              </li>
+              <li>
+                <strong>Google Analytics</strong> — site usage statistics for our public pages, as
+                described in §2.
               </li>
               <li>
                 <strong>WhatsApp Business (Meta)</strong> — only if you choose to message Kai over

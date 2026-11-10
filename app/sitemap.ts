@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { listPublicCategories, listSitemapPosts } from "@/lib/services/blog/posts";
 import { absoluteUrl } from "@/lib/services/blog/site";
+import { prisma } from "@/lib/db/prisma";
 
 /**
  * The sitemap.
@@ -17,7 +18,14 @@ import { absoluteUrl } from "@/lib/services/blog/site";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, categories] = await Promise.all([listSitemapPosts(), listPublicCategories()]);
+  const [posts, categories, operators] = await Promise.all([
+    listSitemapPosts(),
+    listPublicCategories(),
+    /* Only operators whose claim Bluepass has approved. A prepared page nobody has claimed is
+       `noindex` on purpose (see app/operators/[slug]/page.tsx), and listing a noindex URL in a
+       sitemap sends a crawler contradictory instructions. */
+    prisma.operatorLead.findMany({ where: { status: { in: ["APPROVED", "LIVE"] } }, select: { slug: true, updatedAt: true } }),
+  ]);
 
   const now = new Date();
 
@@ -33,6 +41,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
+    ...operators.map((operator) => ({
+      url: absoluteUrl(`/operators/${operator.slug}`),
+      lastModified: operator.updatedAt,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
     ...categories.map((category) => ({
       url: absoluteUrl(`/blog/category/${category.slug}`),
       lastModified: now,

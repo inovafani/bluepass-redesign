@@ -10,6 +10,9 @@ import RouteProgress from "@/components/RouteProgress";
 import SessionProvider from "@/components/auth/SessionProvider";
 import FlashNotice from "@/components/auth/FlashNotice";
 import FormKeeper from "@/components/FormKeeper";
+import Analytics from "@/components/Analytics";
+import { buildSiteJsonLd } from "@/lib/services/seo/site-jsonld";
+import { siteUrl } from "@/lib/services/blog/site";
 
 /* The design system specifies GT Walsheim for display type and substitutes
  * Geist (see the DS readme's font caveat); Inter carries all body copy. */
@@ -28,6 +31,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  /* Resolves every relative URL below, and makes `canonical: "./"` mean "this page's own path" on every
+     route. Pages that set their own canonical (the blog) override it. */
+  metadataBase: new URL(siteUrl()),
+  alternates: { canonical: "./" },
   title: "Bluepass: Book the ocean. Leave it better.",
   description:
     "Vetted operators for surf, sail and dive, at the same price as booking direct. A fixed 5% of every fare protects reefs, funds ocean clean-ups and lifts coastal communities.",
@@ -56,6 +63,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${geist.variable} ${inter.variable}`}>
       <body>
+        <script
+          type="application/ld+json"
+          // JSON.stringify of our own object; `<` is the only character that could break out of the tag.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildSiteJsonLd()).replace(/</g, "\\u003c") }}
+        />
         {/* Chrome that persists across routes — only the page body swaps.
             The session wraps all of it: the nav and the Kai panel both need to
             know who is signed in, and one `/api/auth/me` serves both. */}
@@ -64,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ReferralTracker />
         <RouteProgress />
         <FormKeeper />
+        <Analytics />
         <SessionProvider>
           <Nav />
           <FlashNotice />

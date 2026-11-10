@@ -12,13 +12,17 @@ const waitlistGateEnabled = process.env.WAITLIST_POPUP_ENABLED === "true";
 
 export const revalidate = 300;
 
+/* Copy supplied by Tony, 2026-11-10 (with his January 2027 launch target). It promises no listing,
+   price or availability, because none is live yet. Reused for OpenGraph and Twitter. */
+const TITLE = "Bluepass | Surf, sail and dive trips, booked direct";
+const DESCRIPTION =
+  "Bluepass is a marine booking marketplace for surf, sail and dive trips in Australia and Indonesia. Launching January 2027. Join the early list.";
+
 export const metadata: Metadata = {
-  /* Just the brand: this is the front door, so the tab shouldn't read like a
-     sub-page. "Trips" is the nav label for it, not its title. The other
-     routes keep their "<Page> — Bluepass" form. */
-  title: "Bluepass",
-  description:
-    "Whale watching, yacht charters, dive boats and expeditions across the Australian coast, at the operator's own rate, never a markup.",
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
+  openGraph: { title: TITLE, description: DESCRIPTION, type: "website" },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 /**
