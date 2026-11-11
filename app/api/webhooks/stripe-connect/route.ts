@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { handlePaymentProblem } from "@/lib/services/stripe/payment-problems";
 import { handleStripeAccountUpdated, verifyStripeConnectWebhookEvent } from "@/lib/services/stripe/stripe-connect-webhook";
 
 export async function POST(request: NextRequest) {
@@ -27,6 +28,9 @@ export async function POST(request: NextRequest) {
   try {
     if (event.type === "account.updated") {
       await handleStripeAccountUpdated(event.data.object as Stripe.Account);
+    } else if (event.type === "payout.failed") {
+      // An operator's own bank payout failing arrives here, as an event on their connected account.
+      await handlePaymentProblem(event);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

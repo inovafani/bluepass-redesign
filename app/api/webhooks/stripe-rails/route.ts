@@ -4,11 +4,13 @@ import { prisma } from "@/lib/db/prisma";
 import { syncCalendarSoon } from "@/lib/services/rails/background";
 import { confirmPayment, expireCheckout } from "@/lib/services/rails/bookings";
 import { RAILS_CHECKOUT_KIND, railsPayments, verifyRailsWebhook } from "@/lib/services/rails/payments";
+import { handlePaymentProblem, PROBLEM_EVENTS } from "@/lib/services/stripe/payment-problems";
 
 /**
  * Stripe events for native bookings. Registered as its own endpoint on the Bluepass
  * Stripe account, subscribed to checkout.session.completed,
- * checkout.session.async_payment_succeeded and checkout.session.expired.
+ * checkout.session.async_payment_succeeded and checkout.session.expired, plus the money
+ * problems in PROBLEM_EVENTS (disputes, reversed transfers, failed payouts).
  *
  * Kai's checkouts are on the same account and arrive here too; anything without our
  * metadata marker is acknowledged and ignored.
@@ -25,6 +27,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Signature check failed." }, { status: 400 });
   }
 
+  if ((PROBLEM_EVENTS as readonly string[]).includes(event.type)) {
+    try {
+      await handlePaymentProblem(event);
+    } catch (error) {
+      // Recording is idempotent per Stripe event id, so a retry cannot double-record or double-alert.
+      console.error("rails.problem_webhook_failed", { type: event.type, error: error instanceof Error ? error.message : String(error) });
+      return NextResponse.json({ error: "Handler failed; Stripe will retry." }, { status: 500 });
+    }
+    return NextResponse.json({ received: true });
+  }
   if (!event.type.startsWith("checkout.session.")) return NextResponse.json({ received: true });
   const session = event.data.object as Stripe.Checkout.Session;
   const bookingId = session.metadata?.kind === RAILS_CHECKOUT_KIND ? session.metadata.bookingId : undefined;

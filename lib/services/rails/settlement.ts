@@ -35,6 +35,9 @@ export async function settleNativeBookings(input: { payments: RailsPayments; now
       settledAt: null,
       operatorNetCents: { gt: 0 },
       departsAt: { lt: new Date(now.getTime() - SETTLE_AFTER_HOURS * 3_600_000) },
+      // A booking with a dispute (recorded by the Stripe webhook) is not paid out unless the dispute was won:
+      // Stripe can take the money back, and an operator already paid cannot be un-paid.
+      NOT: { AND: [{ events: { some: { type: "dispute_opened" } } }, { events: { none: { type: "dispute_won" } } }] },
     },
     include: {
       operatorProfile: { select: { payoutMethod: true, stripeConnectAccountId: true, stripePayoutsEnabled: true } },

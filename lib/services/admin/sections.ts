@@ -98,6 +98,13 @@ export const ADMIN_SECTIONS: AdminSection[] = [
     blurb: "Operators selling from their own booking system: Rezdy connection health, and FareHarbor's affiliate report, imported.",
   },
   {
+    href: "/admin/bookings",
+    group: "Money",
+    icon: "payouts",
+    label: "Bookings",
+    blurb: "Bookings made on bluepass.co with what was paid and refunded, where each operator's payout stands, and a safe way to cancel and refund.",
+  },
+  {
     href: "/admin/payouts",
     group: "Money",
     icon: "payouts",
