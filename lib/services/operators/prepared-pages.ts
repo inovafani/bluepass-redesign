@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { holdOutreach } from "@/lib/services/operators/outreach-hold";
 import { uniqueListingSlug } from "@/lib/services/channels/listings";
 import { mainPrice } from "@/lib/services/operators/main-price";
 import {
@@ -206,6 +207,7 @@ export async function importPreparedOperator(op: PreparedOperator, now = new Dat
     },
     update: { name: op.name, category: op.category ?? null, region, websiteUrl: op.website },
   });
+  await holdOutreach(op.contact?.email, "hold-import");
 
   // The trips need an owner. Until the operator claims the page it is a placeholder
   // account nobody can sign in to, the same arrangement the Rezdy Discover sync uses.

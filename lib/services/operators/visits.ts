@@ -9,6 +9,7 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { outreachHoldQuery } from "@/lib/services/operators/outreach-hold";
 import { lowestPrice } from "@/lib/services/operators/page-price";
 import { emailSiteUrl } from "@/lib/services/partner/approval-email";
 import { loadPreparedPage } from "@/lib/services/operators/prepared-pages";
@@ -98,6 +99,7 @@ export async function confirmEmailInPerson(input: { slug: string; email: string;
   const email = parsed.data.email;
   await prisma.$transaction([
     prisma.operatorLead.update({ where: { id: lead.id }, data: { email } }),
+    outreachHoldQuery(email, "hold-email-confirmed"),
     prisma.operatorOutreachEvent.create({
       data: {
         operatorLeadId: lead.id,

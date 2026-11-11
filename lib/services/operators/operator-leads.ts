@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { holdOutreach } from "@/lib/services/operators/outreach-hold";
 
 export type OperatorLeadImportRow = {
   slug: string;
@@ -91,6 +92,7 @@ export async function upsertOperatorLeads(
         source,
       },
     });
+    await holdOutreach(lead.email, "hold-import");
   }
 
   return { imported: rows.length };
