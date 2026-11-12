@@ -14,7 +14,8 @@ export default function PhotoGallery({ photos: linked, name, heading, min = 1 }:
   const fail = useCallback((url: string) => setFailed((prev) => (prev.has(url) ? prev : new Set(prev).add(url))), []);
   const photos = linked.filter((url) => !failed.has(url));
   const [open, setOpen] = useState<number | null>(null);
-  const shown = photos.slice(0, 9);
+  // Only a count that fills its grid is shown (a half-empty grid reads as broken); the viewer still opens every photo.
+  const shown = photos.slice(0, photos.length >= 9 ? 9 : photos.length >= 5 ? 5 : photos.length);
   const more = photos.length - shown.length;
   const step = useCallback((by: number) => setOpen((i) => (i === null ? i : (i + by + photos.length) % photos.length)), [photos.length]);
   // A photo dropping out while the viewer is open must not leave it pointing past the end.

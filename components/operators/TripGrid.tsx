@@ -48,7 +48,7 @@ export default function TripGrid({ items, filterable = true }: { items: TripCard
           ))}
         </div>
       ) : null}
-      <ul className="opp-cards">
+      <ul className="opp-cards" data-count={shown.length}>
         {shown.map((t) => {
           const image = t.image && !failed.has(t.image) ? t.image : null;
           return (
@@ -75,7 +75,7 @@ export default function TripGrid({ items, filterable = true }: { items: TripCard
                 {image ? null : <span className="opp-card__kind opp-card__kind--text">{t.kindLabel}</span>}
                 <span className="opp-card__title">{t.title}</span>
                 {t.meta ? <span className="opp-card__meta">{t.meta}</span> : null}
-                {!image && t.excerpt ? <span className="opp-card__excerpt">{t.excerpt}</span> : null}
+                {(!image || items.length === 1) && t.excerpt ? <span className="opp-card__excerpt">{t.excerpt}</span> : null}
                 <span className="opp-card__foot">
                   {t.price ? (
                     <span className="opp-card__price">

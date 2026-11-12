@@ -3400,3 +3400,37 @@ fieldset[aria-invalid="true"] {
   .ob-bar__send { min-height: 44px; padding: 0 16px; }
 }
 
+
+/* Operator page: blocks fill the container ---------------------------------------------------------------
+ * The page runs on one width. A block that leaves a stretch of it empty reads as unfinished, so each one
+ * fills its row: the summary shares its width between its facts, a lone trip is a wide card, and a photo
+ * grid is always a whole grid (PhotoGallery only shows a count that fills it). */
+.opp-summary__facts { flex: 1; gap: 0; }
+.opp-summary__facts > div { flex: 1; max-width: none; padding: 0 32px; }
+.opp-summary__facts > div:first-child { padding-left: 0; }
+.opp-summary__facts > div + div { border-left: 1px solid var(--color-hairline); }
+
+.opp-cards[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
+.opp-cards[data-count="2"], .opp-cards[data-count="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.opp-cards[data-count="1"] .opp-card { flex-direction: row; }
+.opp-cards[data-count="1"] .opp-card__media { flex: 0 0 46%; aspect-ratio: auto; min-height: 300px; }
+.opp-cards[data-count="1"] .opp-card__body { justify-content: center; gap: 8px; padding: 28px 32px; }
+.opp-cards[data-count="1"] .opp-card__title { font-size: 22px; }
+@media (min-width: 1000px) {
+  .opp-cards[data-count="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.opp-photogrid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 280px; }
+.opp-photogrid--2 li:first-child { grid-column: auto; }
+.opp-photogrid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.opp-photogrid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 240px; }
+.opp-photogrid--4 li:first-child { grid-column: auto; grid-row: auto; }
+
+@media (max-width: 720px) {
+  .opp-summary__facts > div { padding: 0 16px; }
+  .opp-cards[data-count] { grid-template-columns: minmax(0, 1fr); }
+  .opp-cards[data-count="1"] .opp-card { flex-direction: column; }
+  .opp-cards[data-count="1"] .opp-card__media { flex: none; aspect-ratio: 4 / 3; min-height: 0; }
+  .opp-cards[data-count="1"] .opp-card__body { padding: 16px 18px 18px; }
+  .opp-photogrid--2, .opp-photogrid--3, .opp-photogrid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 130px; }
+}
