@@ -218,6 +218,25 @@ export function cancellationEmail(b: EmailBooking, listing: EmailListing, detail
   );
 }
 
+/** Told to the operator when Bluepass, not the operator, cancels one of their bookings. */
+export function operatorCancellationEmail(b: EmailBooking, listing: EmailListing, detail: { reason: string; refundedCents: number }, manifestUrl: string): EmailContent {
+  const rows: [string, string][] = [
+    ["Booking", b.reference],
+    ["Departure", when(b)],
+    ["Guests", guestsLine(b)],
+    ["Lead guest", b.leadName],
+    ["Reason given to the guest", detail.reason],
+  ];
+  if (detail.refundedCents > 0) rows.push(["Refunded to the guest", formatMoney(detail.refundedCents, b.currency)]);
+  return content(
+    `Cancelled by Bluepass: ${listing.title}, ${formatDepartureDay(b.departsAt, b.timezone)}`,
+    `Bluepass cancelled ${b.reference}`,
+    rows,
+    ["The seats are back on sale. The guest has been told. Reply to this email if you have questions."],
+    [{ label: "Open the manifest", href: manifestUrl }],
+  );
+}
+
 export function departureUpdateEmail(b: EmailBooking, listing: EmailListing, message: string): EmailContent {
   return content(
     `Update about ${listing.title}, ${formatDepartureDay(b.departsAt, b.timezone)}`,

@@ -9,6 +9,7 @@ import {
   confirmationEmail,
   departureUpdateEmail,
   operatorAlertEmail,
+  operatorCancellationEmail,
   reminderEmail,
   requestedEmail,
   type EmailBooking,
@@ -372,13 +373,20 @@ export async function resendTravellerConfirmation(bookingId: string, deps: Notif
 
 export async function notifyBookingCancelled(
   bookingId: string,
-  detail: { reason: string; refundedCents: number },
+  detail: { reason: string; refundedCents: number; /** Bluepass cancelled it, so the operator is told too. */ tellOperator?: boolean },
   deps: NotifyDeps = liveNotifyDeps(),
 ) {
   const m = await loadBooking(bookingId);
   if (!m) return [];
   const envelope = { operatorProfileId: m.row.operatorProfileId, bookingId: m.row.id, audience: "TRAVELLER" as const, kind: "booking_cancelled" };
   const tasks: Promise<DeliveryOutcome>[] = [];
+  if (detail.tellOperator && m.operator.email && (await notificationSettings(m.row.operatorProfileId)).emailNewBooking) {
+    const manifestUrl = `${siteUrl()}${manifestPath(m.row.listingId, m.row.departsAt)}`;
+    tasks.push(deliverEmail(
+      { ...envelope, audience: "OPERATOR", kind: "operator_booking_cancelled", dedupeKey: `operator_booking_cancelled:email:${m.row.id}` },
+      m.operator.email, operatorCancellationEmail(m.booking, m.listing, detail, manifestUrl), deps,
+    ));
+  }
   if (m.booking.leadEmail) {
     tasks.push(deliverEmail({ ...envelope, dedupeKey: `booking_cancelled:email:${m.row.id}` }, m.booking.leadEmail, cancellationEmail(m.booking, m.listing, detail), deps));
   }

@@ -746,7 +746,7 @@ export async function cancelBooking(
 
   await markDepartureChanged(booking.operatorProfileId, booking.listingId, booking.departsAt);
   if (booking.status === "CONFIRMED" || booking.status === "REQUESTED") {
-    await notifyBookingCancelled(booking.id, { reason, refundedCents: refundable + refundedByChannel });
+    await notifyBookingCancelled(booking.id, { reason, refundedCents: refundable + refundedByChannel, tellOperator: input.actor.startsWith("admin:") });
   }
   return { ok: true, refundedCents: refundable + refundedByChannel };
 }

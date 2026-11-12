@@ -4,6 +4,7 @@ import { reserveSeats } from "@/lib/services/rails/bookings";
 import {
   applyWhatsAppStatuses,
   liveNotifyDeps,
+  notifyBookingCancelled,
   notifyBookingConfirmed,
   notifyDepartureUpdate,
   sendDailyDigests,
@@ -121,6 +122,21 @@ describe("booking confirmations", () => {
     const { deps, sent } = fakeNotify();
     await notifyBookingConfirmed(booking.id, { deps });
     expect(sent.map((m) => m.to)).toEqual(["mia@example.test"]);
+  });
+});
+
+describe("cancellations", () => {
+  it("tells the operator only when Bluepass cancelled, and only once", async () => {
+    const seeded = await seedOperator();
+    const booking = await paidBooking(seeded, { name: "Mia Torres" }, false);
+    const { deps, sent } = fakeNotify();
+
+    await notifyBookingCancelled(booking.id, { reason: "Weather", refundedCents: 1000 }, deps);
+    expect(sent.map((m) => m.to)).toEqual(["mia@example.test"]);
+
+    await notifyBookingCancelled(booking.id, { reason: "Weather", refundedCents: 1000, tellOperator: true }, deps);
+    await notifyBookingCancelled(booking.id, { reason: "Weather", refundedCents: 1000, tellOperator: true }, deps);
+    expect(sent.map((m) => m.to).sort()).toEqual([seeded.account.email, "mia@example.test"].sort());
   });
 });
 

@@ -23,10 +23,10 @@ export default function AdminCancelBooking({ bookingId, reference, refundText }:
   }
   return (
     <form action={action} className="rl-form">
-      <p className="ds-body-sm">{refundText} The guest and the operator are emailed and the seats go back on sale.</p>
+      <p className="ds-body-sm">{refundText} The guest is emailed and the seats go back on sale.</p>
       <label className="rl-field">
         <span className="ds-micro rl-field__label">Reason the guest will see</span>
-        <input name="reason" placeholder="The operator cannot run this trip" maxLength={300} className="rl-input" />
+        <input name="reason" placeholder="The operator cannot run this trip" maxLength={300} required className="rl-input" />
       </label>
       <label className="rl-switch">
         <input type="checkbox" name="confirm" />

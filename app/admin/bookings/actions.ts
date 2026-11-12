@@ -37,7 +37,8 @@ export async function adminCancelBookingAction(bookingId: string, _prev: RailsAc
     return { status: "error", message: "This booking has a dispute. Refunding as well would pay the guest twice; answer the dispute in Stripe instead." };
   }
 
-  const reason = String(form.get("reason") ?? "").trim().slice(0, 300) || "Cancelled by Bluepass";
+  const reason = String(form.get("reason") ?? "").trim().slice(0, 300);
+  if (!reason) return { status: "error", message: "Write the reason the guest will see." };
   const result = await cancelBooking(
     { bookingId, operatorProfileId: booking.operatorProfileId, actor: `admin:${admin.email}`, reason },
     railsPayments(),
@@ -48,6 +49,6 @@ export async function adminCancelBookingAction(bookingId: string, _prev: RailsAc
   syncCalendarSoon(booking.operatorProfileId);
   return {
     status: "done",
-    message: result.refundedCents > 0 ? "Cancelled and refunded in full. The guest and the operator have been emailed." : "Cancelled. The seats are back on sale.",
+    message: result.refundedCents > 0 ? "Cancelled and refunded in full. The guest has been emailed." : "Cancelled. The seats are back on sale.",
   };
 }
