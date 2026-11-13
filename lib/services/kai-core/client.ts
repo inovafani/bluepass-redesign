@@ -1,5 +1,6 @@
 import type { ReferralAttribution } from "@/lib/services/referrals/attribution";
 import { prisma } from "@/lib/db/prisma";
+import { boats } from "@/lib/data";
 import { yachts } from "@/lib/data/yachts";
 import { detectKaiRegion, KAI_REGION_CLARIFYING_QUESTION, type KaiRegion } from "./region-router";
 
@@ -1319,7 +1320,7 @@ function toBluePassChatMatch(match: KaiCoreBluePassMatch) {
     matchingReasons: match.reasons ?? [],
     departuresPreview: [],
     score: match.score ?? 0,
-    productUrl: match.productUrl ?? `/yachts/${match.slug}`,
+    productUrl: match.productUrl ?? null,
     heroImageUrl: match.imageUrl ?? undefined,
   };
 }
@@ -1368,13 +1369,48 @@ export async function buildBluePassCatalogSnapshot() {
     operatorName: yacht.name,
     cabinBookable: yacht.cabinBookable,
     about: yacht.about,
-    productUrl: buildBluePassProductUrl(yacht.slug),
+    // No /yachts/[slug] page exists (404 for every one), so no link until it does.
+    productUrl: null,
     imageUrl: yacht.images.card,
     departuresPreview: yacht.departures.slice(0, 3).map((departure) => departure.dates),
     interests: buildCatalogInterests(yacht),
   }));
 
-  return [...staticSnapshot, ...(await buildOperatorListingCatalogSnapshot())];
+  return [...staticSnapshot, ...buildExploreCharterSnapshot(), ...(await buildOperatorListingCatalogSnapshot())];
+}
+
+// The Australian charters on the public /explore grid (lib/data.ts), so Kai knows what the site shows.
+// Yot Club stays out: a 400-guest venue, not a trip to match. No price is passed on: those are
+// third-party rates last checked 6 Aug, and Kai's budget scoring assumes USD.
+const EXPLORE_REGION: Record<string, string> = { "HAMILTON ISLAND": "Hamilton Island, Whitsundays", "GOLD COAST": "Gold Coast" };
+
+function buildExploreCharterSnapshot() {
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://bluepass.co").replace(/\/$/, "");
+
+  return boats
+    .filter((boat) => boat.name !== "Yot Club" && EXPLORE_REGION[boat.loc])
+    .map((boat) => {
+      const slug = boat.name.toLowerCase().replace(/\s+/g, "-");
+
+      return {
+        slug,
+        name: boat.name,
+        region: EXPLORE_REGION[boat.loc],
+        tier: "Charter",
+        maxGuests: Number(boat.guests.match(/\d+/)?.[0] ?? 0),
+        cabins: 0,
+        priceSignal: "Quote on request",
+        charterPriceSignal: null,
+        operatorId: `operator_${slug.replace(/-/g, "_")}`,
+        operatorName: boat.name,
+        cabinBookable: false,
+        about: boat.sub ?? null,
+        productUrl: null,
+        imageUrl: `${baseUrl}${boat.imgSrc}`,
+        departuresPreview: [] as string[],
+        interests: [] as string[],
+      };
+    });
 }
 
 // Operator-authored listings (self-service, any region - see OperatorListing in schema.prisma)
@@ -1412,11 +1448,6 @@ export async function buildOperatorListingCatalogSnapshot() {
   }));
 }
 
-function buildBluePassProductUrl(slug: string) {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://bluepass.co").replace(/\/$/, "");
-
-  return `${baseUrl}/yachts/${slug}`;
-}
 
 function formatPriceSignal(value: string, label: string) {
   if (!value || /quote/i.test(value)) {
