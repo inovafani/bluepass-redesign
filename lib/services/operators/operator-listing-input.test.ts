@@ -40,6 +40,13 @@ describe("operatorListingInputSchema messages", () => {
     expect(firstMessage({ ...valid, region: "" })).toMatchObject({ field: "region", message: expect.stringContaining("where the trip runs") });
   });
 
+  it("lets a new trip be saved with no price at all, since its price is set on the next step", () => {
+    const { priceFrom: _price, priceSignal: _signal, ...withoutPrice } = { ...valid, priceSignal: "" };
+    const parsed = operatorListingInputSchema.parse(withoutPrice);
+    expect(parsed.priceFrom).toBeUndefined();
+    expect(parsed.priceSignal).toBeUndefined();
+  });
+
   it("treats an empty optional field as not given", () => {
     const parsed = operatorListingInputSchema.parse({ ...valid, priceFrom: "", maxGuests: "" });
     expect(parsed.priceFrom).toBeUndefined();

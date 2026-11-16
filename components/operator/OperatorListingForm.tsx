@@ -132,31 +132,36 @@ export default function OperatorListingForm({
             disabled={pending}
           />
         </div>
-        <div className={`adm-form__row ${invalid("priceFrom")}`}>
-          <Field
-            label="Price per guest (AUD)"
-            name="priceFrom"
-            value={values.priceFrom}
-            onChange={set("priceFrom")}
-            inputMode="numeric"
-            placeholder="189"
-            hint="Required to appear on Discover"
-            autoComplete="off"
-            disabled={pending}
-          />
-        </div>
-        <div className="adm-form__row">
-          <Field
-            label="Custom price text"
-            name="priceSignal"
-            value={values.priceSignal}
-            onChange={set("priceSignal")}
-            placeholder="From AUD 189"
-            hint={`Optional — defaults to "From AUD ${values.priceFrom || "…"}"`}
-            autoComplete="off"
-            disabled={pending}
-          />
-        </div>
+        {/* A new trip is priced once, in its own Prices section on the next step, which then sets the "from" price. */}
+        {nextStepIsSetup ? null : (
+          <>
+            <div className={`adm-form__row ${invalid("priceFrom")}`}>
+              <Field
+                label="Price per guest (AUD)"
+                name="priceFrom"
+                value={values.priceFrom}
+                onChange={set("priceFrom")}
+                inputMode="numeric"
+                placeholder="189"
+                hint="Required to appear on Discover"
+                autoComplete="off"
+                disabled={pending}
+              />
+            </div>
+            <div className="adm-form__row">
+              <Field
+                label="Custom price text"
+                name="priceSignal"
+                value={values.priceSignal}
+                onChange={set("priceSignal")}
+                placeholder="From AUD 189"
+                hint={`Optional — defaults to "From AUD ${values.priceFrom || "…"}"`}
+                autoComplete="off"
+                disabled={pending}
+              />
+            </div>
+          </>
+        )}
         <div className="adm-form__row">
           <Field
             label="Max guests"
