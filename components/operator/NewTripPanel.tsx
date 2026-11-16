@@ -1,8 +1,8 @@
 "use client";
 
-import NewTripForm from "@/components/operator/NewTripForm";
+import NewTripForm, { type CalendarChoices } from "@/components/operator/NewTripForm";
 
-/** The whole of a new trip on one page: what it is, when it runs, what it costs, where guests meet. */
-export default function NewTripPanel({ defaultTimezone }: { defaultTimezone: string }) {
-  return <NewTripForm defaultTimezone={defaultTimezone} />;
+/** The whole of a new trip on one page, with everything the trip's own page can change afterwards. */
+export default function NewTripPanel({ defaultTimezone, calendar }: { defaultTimezone: string; calendar: CalendarChoices }) {
+  return <NewTripForm defaultTimezone={defaultTimezone} calendar={calendar} />;
 }

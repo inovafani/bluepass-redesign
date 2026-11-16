@@ -16,7 +16,7 @@ const ENDPOINT = "/api/operator/listing-image";
  * edit. Several files can be chosen or dropped together; they upload one after another, and a file
  * that fails is reported by name without stopping the rest.
  */
-export default function TripGallery({ listingId, initialUrls }: { listingId: string; initialUrls: string[] }) {
+export default function TripGallery({ listingId, initialUrls, onChange }: { listingId?: string; initialUrls: string[]; onChange?: (urls: string[]) => void }) {
   const [urls, setUrls] = useState(initialUrls);
   const [state, setState] = useState<RailsActionState>(IDLE);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -26,7 +26,9 @@ export default function TripGallery({ listingId, initialUrls }: { listingId: str
 
   const save = (next: string[]) => {
     setUrls(next);
-    startSaving(async () => setState(await saveTripGalleryAction(listingId, next)));
+    onChange?.(next);
+    // No listing yet (a trip being made): the form sends the list along with the rest of the trip.
+    if (listingId) startSaving(async () => setState(await saveTripGalleryAction(listingId, next)));
   };
 
   const add = async (files: File[]) => {

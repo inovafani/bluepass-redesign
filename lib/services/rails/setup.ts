@@ -173,6 +173,21 @@ export async function removeSchedule(input: { operatorProfileId: string; listing
  * extra. Stored as a pattern whose season is a single day, so it needs no model of
  * its own and every reader of the rule already understands it.
  */
+export function oneOffSchedule(input: { date: string; time: string; capacity: number; timezone: string }): ScheduleInput {
+  return {
+    label: "One-off departure",
+    weekdays: [],
+    departureTimes: [input.time],
+    capacityPerDeparture: input.capacity,
+    minGuests: 1,
+    cutoffHours: 2,
+    maxAdvanceDays: 730,
+    timezone: input.timezone,
+    seasonStart: input.date,
+    seasonEnd: input.date,
+  };
+}
+
 export async function addOneOffDeparture(input: {
   operatorProfileId: string;
   listingId: string;
@@ -182,22 +197,7 @@ export async function addOneOffDeparture(input: {
   timezone: string;
 }): Promise<SetupResult> {
   if (!DATE.test(input.date)) return no("Pick a date.", "date");
-  return saveSchedule({
-    operatorProfileId: input.operatorProfileId,
-    listingId: input.listingId,
-    values: {
-      label: "One-off departure",
-      weekdays: [],
-      departureTimes: [input.time],
-      capacityPerDeparture: input.capacity,
-      minGuests: 1,
-      cutoffHours: 2,
-      maxAdvanceDays: 730,
-      timezone: input.timezone,
-      seasonStart: input.date,
-      seasonEnd: input.date,
-    },
-  });
+  return saveSchedule({ operatorProfileId: input.operatorProfileId, listingId: input.listingId, values: oneOffSchedule(input) });
 }
 
 // ---------------------------------------------------------------------------

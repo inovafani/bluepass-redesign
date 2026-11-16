@@ -1,6 +1,10 @@
 import Link from "next/link";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import NewTripPanel from "@/components/operator/NewTripPanel";
+import type { CalendarChoices } from "@/components/operator/NewTripForm";
+import { prisma } from "@/lib/db/prisma";
+import { googleCalendarApi } from "@/lib/services/rails/google/api";
+import { operatorCalendars } from "@/lib/services/rails/google/sync";
 import RailsUnavailable from "@/components/rails/RailsUnavailable";
 import { requireRailsOperator } from "@/lib/services/rails/guard";
 import { DEFAULT_ZONE } from "@/lib/services/rails/views";
@@ -11,6 +15,17 @@ export const metadata = { title: "New trip · Bluepass" };
 export default async function NewTripPage() {
   const { profile, rails } = await requireRailsOperator("/operator/trips/new");
   if (!rails.enabled) return <RailsUnavailable title="New trip" reason={rails.reason} />;
+
+  // The operator's own calendars, read live, so the picker shows what is in their account.
+  const connection = await prisma.operatorGoogleConnection.findUnique({ where: { operatorProfileId: profile.id }, select: { status: true } });
+  const google = googleCalendarApi();
+  let calendar: CalendarChoices = { state: "not_connected", calendars: null };
+  if (connection?.status === "CONNECTED" && google) {
+    const calendars = await operatorCalendars(profile.id, google).catch(() => null);
+    calendar = { state: calendars ? "connected" : "unreadable", calendars };
+  } else if (connection) {
+    calendar = { state: "unreadable", calendars: null };
+  }
 
   return (
     <>
@@ -29,7 +44,7 @@ export default async function NewTripPage() {
           </p>
         </div>
       ) : (
-        <NewTripPanel defaultTimezone={DEFAULT_ZONE} />
+        <NewTripPanel defaultTimezone={DEFAULT_ZONE} calendar={calendar} />
       )}
     </>
   );

@@ -113,9 +113,10 @@ function refreshConsole() {
 // ---------------------------------------------------------------------------
 
 /**
- * Makes a whole trip from one form: its words, when it runs, its price and where guests meet, and
- * publishes it if the operator pressed Publish. Everything is checked before anything is created, and
- * if a later step still fails the half-made trip is removed, so nobody is left with a stray draft.
+ * Makes a whole trip from one form: its words and photos, every schedule, every price, closed dates,
+ * what guests need on the day and the calendar that closes it, then publishes it if the operator
+ * pressed Publish. Everything is checked before anything is created, and if a later step still fails
+ * the half-made trip is removed, so nobody is left with a stray draft.
  */
 export async function createTripAction(_prev: RailsActionState, form: FormData): Promise<RailsActionState> {
   const { access, failure } = await operator();
@@ -124,20 +125,33 @@ export async function createTripAction(_prev: RailsActionState, form: FormData):
 
   const parsed = parseNewTrip(form);
   if (!parsed.ok) return { status: "error", message: parsed.message, field: parsed.field };
-  const { listing: listingInput, schedule, rate, meetingPoint, publish } = parsed.values;
+  const v = parsed.values;
+
+  if (!v.gallery.every(isListingImageUrl)) return { status: "error", message: "One of the gallery photos was not uploaded here. Choose the file again.", field: "gallery" };
+  const api = googleCalendarApi();
+  if (v.busyCalendarId) {
+    const calendars = api ? await operatorCalendars(access.profile.id, api).catch(() => null) : null;
+    if (!calendars?.some((c) => c.id === v.busyCalendarId)) return { status: "error", message: "That calendar is not in your Google account any more." };
+  }
 
   let listingId: string;
   try {
-    listingId = (await createDraftListing({ ...listingInput, accountId: access.account.id })).id;
+    listingId = (await createDraftListing({ ...v.listing, accountId: access.account.id })).id;
   } catch (err) {
     return { status: "error", message: err instanceof Error ? err.message : "Could not create the trip." };
   }
 
   const operatorProfileId = access.profile.id;
-  const steps = [
-    () => saveSchedule({ operatorProfileId, listingId, values: schedule }),
-    () => saveRate({ operatorProfileId, listingId, values: rate }),
-    () => saveLogistics({ operatorProfileId, listingId, durationMinutes: null, meetingPoint, confirmationNote: null }),
+  const done = (): SetupResult => ({ ok: true, message: "" });
+  const steps: (() => Promise<SetupResult>)[] = [
+    ...v.schedules.map((values) => () => saveSchedule({ operatorProfileId, listingId, values })),
+    ...v.rates.map((values) => () => saveRate({ operatorProfileId, listingId, values })),
+    ...v.closedDates.map((c) => () => addBlackout({ operatorProfileId, listingId, ...c })),
+    () => saveLogistics({ operatorProfileId, listingId, durationMinutes: v.durationMinutes, meetingPoint: v.meetingPoint, confirmationNote: v.confirmationNote }),
+    async () => {
+      await prisma.operatorListing.update({ where: { id: listingId }, data: { galleryUrls: v.gallery, busyCalendarId: v.busyCalendarId } });
+      return done();
+    },
   ];
   for (const step of steps) {
     const result = await step().catch((): SetupResult => ({ ok: false, message: "Something went wrong saving the trip. Nothing was created; try again." }));
@@ -147,8 +161,9 @@ export async function createTripAction(_prev: RailsActionState, form: FormData):
     }
   }
 
+  if (v.busyCalendarId && api) await refreshBusyBlocks(access.profile.id, { api }).catch(() => undefined);
   // If publishing fails the trip is still complete as a draft, and its own page has the Publish button.
-  if (publish) await publishListing({ listingId, accountId: access.account.id }).catch(() => undefined);
+  if (v.publish) await publishListing({ listingId, accountId: access.account.id }).catch(() => undefined);
   refreshConsole();
   redirect(`/operator/trips/${listingId}`);
 }
