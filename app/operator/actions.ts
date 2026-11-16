@@ -2,7 +2,6 @@
 
 import "@/lib/validation/zod-messages";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { currentOperatorAccess } from "@/lib/services/operator/guard";
 import {
   updateOperatorCancellationPolicy,
@@ -192,17 +191,13 @@ export async function createListingAction(
     };
   }
 
-  let created: Awaited<ReturnType<typeof createDraftListing>>;
   try {
-    created = await createDraftListing({ ...parsed.data, accountId: access.account.id });
+    await createDraftListing({ ...parsed.data, accountId: access.account.id });
   } catch (err) {
     return { status: "error", message: err instanceof Error ? err.message : "Could not create the listing." };
   }
 
   revalidatePath("/operator", "layout");
-  /* Started from the Trips page, the next thing an operator needs is that trip's schedule and price:
-     take them straight there rather than leaving them on a "created" card to find their own way. */
-  if (formData.get("next") === "trip-setup") redirect(`/operator/trips/${created.id}`);
   return { status: "done", message: "Draft listing created. Publish it when you're ready for travellers to see it." };
 }
 

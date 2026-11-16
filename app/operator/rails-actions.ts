@@ -6,6 +6,8 @@ import { isListingImageUrl } from "@/lib/services/storage/listing-images";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { currentOperatorAccess } from "@/lib/services/operator/guard";
+import { parseNewTrip } from "@/lib/services/operators/new-trip";
+import { createDraftListing, publishListing } from "@/lib/services/operators/operator-listing-service";
 import { railsAccess } from "@/lib/services/rails/access";
 import {
   cancelBooking,
@@ -109,6 +111,47 @@ function refreshConsole() {
 // ---------------------------------------------------------------------------
 // Trip setup
 // ---------------------------------------------------------------------------
+
+/**
+ * Makes a whole trip from one form: its words, when it runs, its price and where guests meet, and
+ * publishes it if the operator pressed Publish. Everything is checked before anything is created, and
+ * if a later step still fails the half-made trip is removed, so nobody is left with a stray draft.
+ */
+export async function createTripAction(_prev: RailsActionState, form: FormData): Promise<RailsActionState> {
+  const { access, failure } = await operator();
+  if (failure) return failure;
+  if (access.profile.rezdySupplierId) return { status: "error", message: "Your trips come from Rezdy. Add or change them there." };
+
+  const parsed = parseNewTrip(form);
+  if (!parsed.ok) return { status: "error", message: parsed.message, field: parsed.field };
+  const { listing: listingInput, schedule, rate, meetingPoint, publish } = parsed.values;
+
+  let listingId: string;
+  try {
+    listingId = (await createDraftListing({ ...listingInput, accountId: access.account.id })).id;
+  } catch (err) {
+    return { status: "error", message: err instanceof Error ? err.message : "Could not create the trip." };
+  }
+
+  const operatorProfileId = access.profile.id;
+  const steps = [
+    () => saveSchedule({ operatorProfileId, listingId, values: schedule }),
+    () => saveRate({ operatorProfileId, listingId, values: rate }),
+    () => saveLogistics({ operatorProfileId, listingId, durationMinutes: null, meetingPoint, confirmationNote: null }),
+  ];
+  for (const step of steps) {
+    const result = await step().catch((): SetupResult => ({ ok: false, message: "Something went wrong saving the trip. Nothing was created; try again." }));
+    if (!result.ok) {
+      await prisma.operatorListing.delete({ where: { id: listingId } }).catch(() => undefined);
+      return toState(result);
+    }
+  }
+
+  // If publishing fails the trip is still complete as a draft, and its own page has the Publish button.
+  if (publish) await publishListing({ listingId, accountId: access.account.id }).catch(() => undefined);
+  refreshConsole();
+  redirect(`/operator/trips/${listingId}`);
+}
 
 export async function saveScheduleAction(listingId: string, scheduleId: string | null, _prev: RailsActionState, form: FormData): Promise<RailsActionState> {
   const { access, failure } = await operator();
