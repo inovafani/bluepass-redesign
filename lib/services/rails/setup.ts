@@ -285,6 +285,51 @@ export async function saveRate(input: {
   return ok("Price saved. It applies to bookings from now on.");
 }
 
+/**
+ * Stops a trip selling without touching anyone already booked: their bookings, seats and payouts carry on.
+ * The trip goes back to a draft, which is also what makes its title and description editable again.
+ */
+export async function takeDownTrip(input: { operatorProfileId: string; listingId: string; now?: Date }): Promise<SetupResult> {
+  const listing = await ownedListing(input.listingId, input.operatorProfileId);
+  if (!listing) return no("That trip is not one of yours.");
+  if (listing.channel !== "NATIVE") return no("This trip comes from your booking system. Hide it from the Trips page instead.");
+  if (listing.status === "ARCHIVED") return no("Bluepass has taken this trip down. Reply to the email about it to bring it back.");
+  if (listing.status !== "LIVE") return no("This trip is not on sale.");
+
+  const upcoming = await prisma.listingBooking.count({
+    where: { listingId: listing.id, status: { in: ["CONFIRMED", "PENDING_PAYMENT"] }, departsAt: { gt: input.now ?? new Date() } },
+  });
+  await prisma.operatorListing.update({ where: { id: listing.id }, data: { status: "DRAFT" } });
+  return ok(
+    upcoming
+      ? `Taken down. ${upcoming} upcoming booking${upcoming === 1 ? "" : "s"} stand as they are. Publish it again whenever you like.`
+      : "Taken down. Nobody can book it until you publish it again.",
+  );
+}
+
+/**
+ * Deletes a trip nobody has ever booked. A trip with any booking on record, even an unpaid one that lapsed,
+ * is kept: the booking's history belongs to the guest and to the payout, so the way out for those is taking it down.
+ */
+export async function deleteTrip(input: { operatorProfileId: string; listingId: string }): Promise<SetupResult> {
+  const listing = await ownedListing(input.listingId, input.operatorProfileId);
+  if (!listing) return no("That trip is not one of yours.");
+  if (listing.channel !== "NATIVE") return no("This trip comes from your booking system, so it can only be hidden from Bluepass, not deleted here.");
+  if (listing.status === "LIVE") return no("Take this trip down before deleting it.");
+  if (listing.status === "ARCHIVED") return no("Bluepass has taken this trip down. Reply to the email about it to bring it back.");
+
+  const bookings = await prisma.listingBooking.count({ where: { listingId: listing.id } });
+  if (bookings > 0) return no(`This trip has ${bookings} booking${bookings === 1 ? "" : "s"} on record, so it cannot be deleted. They stay as they are.`);
+
+  try {
+    await prisma.operatorListing.delete({ where: { id: listing.id } });
+  } catch {
+    // A booking landing between the count and the delete is stopped by the database; say so rather than fail blind.
+    return no("This trip cannot be deleted right now. Reload the page and try again.");
+  }
+  return ok("Trip deleted.");
+}
+
 export async function removeRate(input: { operatorProfileId: string; listingId: string; rateId: string }): Promise<SetupResult> {
   const listing = await ownedListing(input.listingId, input.operatorProfileId);
   if (!listing) return no("That trip is not one of yours.");

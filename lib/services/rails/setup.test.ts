@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
 import { createOperatorBooking } from "@/lib/services/rails/bookings";
-import { addBlackout, removeRate, removeSchedule, saveRate, saveSchedule, type ScheduleInput } from "@/lib/services/rails/setup";
+import { addBlackout, deleteTrip, removeRate, removeSchedule, saveRate, saveSchedule, takeDownTrip, type ScheduleInput } from "@/lib/services/rails/setup";
 import { resetRailsTables, seedOperator, THURSDAY_8AM } from "@/lib/services/rails/test-fixtures";
 
 const NOW = new Date("2026-07-01T00:00:00Z");
@@ -106,5 +106,35 @@ describe("prices", () => {
       values: { label: "Sunset", amount: 189.95, perGuest: true, minAge: null, maxAge: null, seasonStart: null, seasonEnd: null, isDefault: false },
     });
     expect((await prisma.listingRate.findFirstOrThrow({ where: { label: "Sunset" } })).amountCents).toBe(18995);
+  });
+});
+
+describe("an operator can stop selling a trip, or delete one nobody booked", () => {
+  it("takes a live trip back to a draft and leaves its bookings alone", async () => {
+    const { profile, listing } = await withThursdayBooking();
+    const r = await takeDownTrip({ operatorProfileId: profile.id, listingId: listing.id, now: NOW });
+    expect(r).toMatchObject({ ok: true, message: expect.stringMatching(/1 upcoming booking stand as they are/) });
+    expect(await prisma.operatorListing.findUniqueOrThrow({ where: { id: listing.id } })).toMatchObject({ status: "DRAFT" });
+    expect(await prisma.listingBooking.count({ where: { listingId: listing.id, status: "CONFIRMED" } })).toBe(1);
+    expect((await takeDownTrip({ operatorProfileId: profile.id, listingId: listing.id, now: NOW })).ok).toBe(false);
+  });
+
+  it("will not delete a trip that has a booking, or one that is still on sale", async () => {
+    const { profile, listing } = await withThursdayBooking();
+    expect((await deleteTrip({ operatorProfileId: profile.id, listingId: listing.id })).ok).toBe(false);
+    await takeDownTrip({ operatorProfileId: profile.id, listingId: listing.id, now: NOW });
+    const r = await deleteTrip({ operatorProfileId: profile.id, listingId: listing.id });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toMatch(/1 booking on record/);
+    expect(await prisma.operatorListing.count({ where: { id: listing.id } })).toBe(1);
+  });
+
+  it("deletes a taken-down trip with no bookings, along with its schedule and prices", async () => {
+    const { profile, listing } = await seedOperator();
+    expect((await deleteTrip({ operatorProfileId: profile.id, listingId: listing.id })).ok).toBe(false);
+    await takeDownTrip({ operatorProfileId: profile.id, listingId: listing.id, now: NOW });
+    expect((await deleteTrip({ operatorProfileId: profile.id, listingId: listing.id })).ok).toBe(true);
+    expect(await prisma.operatorListing.count({ where: { id: listing.id } })).toBe(0);
+    expect(await prisma.listingSchedule.count({ where: { listingId: listing.id } })).toBe(0);
   });
 });

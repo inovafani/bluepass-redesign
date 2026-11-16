@@ -32,12 +32,14 @@ import { connectRezdy, disconnectRezdy, setRezdyAutoPublish, syncOperatorRezdy, 
 import {
   addBlackout,
   addOneOffDeparture,
+  deleteTrip,
   removeBlackout,
   removeRate,
   removeSchedule,
   saveLogistics,
   saveRate,
   saveSchedule,
+  takeDownTrip,
   type SetupResult,
 } from "@/lib/services/rails/setup";
 
@@ -594,6 +596,26 @@ export async function setChannelTripLiveAction(listingId: string, live: boolean,
  * is not the kind of change the draft-only rule exists to stop. The address must be https, and the
  * trip must be this operator's.
  */
+/** Stops a native trip selling; bookings already made are untouched. See takeDownTrip. */
+export async function takeDownTripAction(listingId: string, _prev: RailsActionState, _form: FormData): Promise<RailsActionState> {
+  const { access, failure } = await operator();
+  if (failure) return failure;
+  const result = await takeDownTrip({ operatorProfileId: access.profile.id, listingId });
+  refreshConsole();
+  return toState(result);
+}
+
+/** Deletes a trip that has never been booked, then leaves its page, which no longer exists. */
+export async function deleteTripAction(listingId: string, _prev: RailsActionState, form: FormData): Promise<RailsActionState> {
+  const { access, failure } = await operator();
+  if (failure) return failure;
+  if (form.get("confirm") !== "on") return { status: "error", message: "Tick the box to confirm." };
+  const result = await deleteTrip({ operatorProfileId: access.profile.id, listingId });
+  if (!result.ok) return toState(result);
+  refreshConsole();
+  redirect("/operator/trips");
+}
+
 export async function saveTripPhotoAction(listingId: string, url: string | null): Promise<RailsActionState> {
   const { access, failure } = await operator();
   if (failure) return failure;

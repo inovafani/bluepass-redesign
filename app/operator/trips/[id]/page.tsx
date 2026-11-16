@@ -11,6 +11,7 @@ import LogisticsForm from "@/components/rails/LogisticsForm";
 import RailsUnavailable from "@/components/rails/RailsUnavailable";
 import RateEditor from "@/components/rails/RateEditor";
 import ScheduleEditor from "@/components/rails/ScheduleEditor";
+import ManageTrip from "@/components/operator/ManageTrip";
 import PublishTripButton from "@/components/operator/PublishTripButton";
 import TripGallery from "@/components/operator/TripGallery";
 import TripPhoto from "@/components/operator/TripPhoto";
@@ -55,6 +56,8 @@ export default async function TripSetupPage({ params }: { params: Promise<{ id: 
         select: { status: true },
       })
     : null;
+
+  const bookingCount = await prisma.listingBooking.count({ where: { listingId: listing.id } });
 
   // The operator's own calendars, read live so the picker always shows what is in their account.
   const connection = await prisma.operatorGoogleConnection.findUnique({ where: { operatorProfileId: profile.id }, select: { status: true } });
@@ -234,6 +237,12 @@ export default async function TripSetupPage({ params }: { params: Promise<{ id: 
             <CopyField label="Widget for your website" value={embed} multiline />
           </div>
         ) : null}
+      </section>
+      <section className="adm-block">
+        <header className="adm-block__head">
+          <h2 className="ds-headline adm-block__title">Manage this trip</h2>
+        </header>
+        <ManageTrip listingId={listing.id} live={readiness.live} bookings={bookingCount} />
       </section>
     </>
   );
