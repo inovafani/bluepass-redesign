@@ -51,7 +51,7 @@ export default async function PreviewPage({ searchParams }: { searchParams: Prom
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
       <form action={unlock} style={{ display: "grid", gap: 12, width: "min(100%, 360px)" }}>
         <label htmlFor="code" style={{ fontWeight: 600 }}>Preview code</label>
-        <input id="code" name="code" type="password" autoComplete="off" autoFocus required style={{ padding: "12px 14px", borderRadius: 12, border: "1px solid #bbb", font: "inherit" }} />
+        <input id="code" name="code" type="text" autoComplete="off" autoCapitalize="off" autoCorrect="off" spellCheck={false} autoFocus required style={{ padding: "12px 14px", borderRadius: 12, border: "1px solid #bbb", font: "inherit" }} />
         {wrong ? <p role="alert" style={{ margin: 0, color: "#b00020" }}>That code is not right.</p> : null}
         <button type="submit" style={{ padding: "12px 14px", borderRadius: 999, border: 0, background: "#111", color: "#fff", font: "inherit", cursor: "pointer" }}>
           Open
