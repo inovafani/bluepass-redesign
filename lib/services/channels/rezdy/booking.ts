@@ -175,6 +175,8 @@ export type RezdyReserveInput = {
   answers?: ChannelAnswers | null;
   whatsappOptIn?: boolean;
   referralCode?: string | null;
+  /** The signed-in traveller, when there is one: what "Your trips" lists by. */
+  accountId?: string | null;
   source: "ONLINE" | "KAI";
   /** Automated payments: the card, tokenised on Rezdy's Stripe account in the traveller's browser. */
   cardToken?: string | null;
@@ -336,6 +338,7 @@ export async function reserveRezdy(input: RezdyReserveInput, trip: RezdyTrip, de
       leadPhone: phone,
       notes,
       referralCode: input.referralCode?.trim().slice(0, 64) || null,
+      accountId: input.accountId ?? null,
       whatsappOptIn: Boolean(input.whatsappOptIn && whatsappDigits(phone)),
       guestToken: newGuestToken(),
       channel: "REZDY",

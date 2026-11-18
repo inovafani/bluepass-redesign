@@ -3,6 +3,7 @@ import { z } from "zod";
 import { rezdyApi } from "@/lib/services/channels/rezdy/api";
 import { reserveRezdy } from "@/lib/services/channels/rezdy/booking";
 import { bookableTrip } from "@/lib/services/channels/trips";
+import { getCurrentTraveller } from "@/lib/services/auth/session";
 import { reserveAndCheckout } from "@/lib/services/rails/bookings";
 import { googleCalendarApi } from "@/lib/services/rails/google/api";
 import { liveBusyCheck } from "@/lib/services/rails/google/sync";
@@ -99,6 +100,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
 
   const agent = isAgent(request);
   const attribution = agent ? undefined : await getReferralAttributionFromCookies().catch(() => undefined);
+  // A traveller who is signed in owns the booking, whatever contact email they typed; a guest has none.
+  const accountId = agent ? null : (await getCurrentTraveller().catch(() => undefined))?.accountId ?? null;
   const site = siteUrl(request);
   const back = parsed.data.returnTo === "embed" ? `${site}/embed/book/${slug}` : `${site}/book/${slug}`;
   const urls = {
@@ -130,6 +133,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
         answers: parsed.data.answers ?? null,
         whatsappOptIn: parsed.data.whatsappOptIn,
         referralCode: attribution?.code ?? null,
+        accountId,
         source: agent ? "KAI" : "ONLINE",
         cardToken: parsed.data.cardToken ?? null,
         expectedTotalCents: parsed.data.expectedTotalCents ?? null,
@@ -168,6 +172,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       notes: parsed.data.notes,
       whatsappOptIn: parsed.data.whatsappOptIn,
       referralCode: attribution?.code ?? null,
+      accountId,
       source: agent ? "KAI" : "ONLINE",
     },
     railsPayments(),
