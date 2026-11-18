@@ -3,6 +3,7 @@ type SendEmailInput = {
   subject: string;
   text: string;
   html: string;
+  replyTo?: string;
 };
 
 type EmailDeliveryResult =
@@ -39,6 +40,7 @@ export async function sendAuthEmail(input: SendEmailInput): Promise<EmailDeliver
       subject: input.subject,
       text: input.text,
       html: input.html,
+      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
     }),
   });
 
