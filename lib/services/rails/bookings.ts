@@ -219,6 +219,8 @@ export type ReserveInput = {
   lead: LeadGuest;
   notes?: string | null;
   referralCode?: string | null;
+  /** The signed-in traveller, when there is one: what "Your trips" lists by. */
+  accountId?: string | null;
   /** The guest ticked "send my booking on WhatsApp". Kept only with a number WhatsApp can reach. */
   whatsappOptIn?: boolean;
   source: "ONLINE" | "KAI";
@@ -276,6 +278,7 @@ export async function reserveSeats(input: ReserveInput): Promise<{ ok: true; boo
         leadPhone: normalisePhone(lead.lead.phone),
         notes: cleanNotes(input.notes),
         referralCode: input.referralCode?.trim().slice(0, 64) || null,
+        accountId: input.accountId ?? null,
         whatsappOptIn: Boolean(input.whatsappOptIn && whatsappDigits(lead.lead.phone)),
         guestToken: newGuestToken(),
         expiresAt,

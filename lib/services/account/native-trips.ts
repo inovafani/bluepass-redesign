@@ -7,10 +7,9 @@ import type { TravellerTrip } from "./traveller-bookings";
  * database rather than in Kai. `/account` used to read Kai only, so a traveller who had really
  * paid on bluepass.co saw "No trips yet".
  *
- * Matched on the account's email, case-insensitively, because a booking carries no account id.
- * That is only safe for a verified address: anyone can register with someone else's email, so an
- * unverified account must see none of the bookings made under it. The session already refuses
- * unverified accounts, but this reads the flag itself rather than lean on that.
+ * Matched on the booking's `accountId`, the signed-in traveller who made it. Never on the contact
+ * email: a traveller can type any address there, and anyone can register with someone else's.
+ * A guest booking (no one signed in) belongs to no account and is not listed here.
  */
 export type NativeTrips = {
   trips: TravellerTrip[];
@@ -78,15 +77,9 @@ export function nativeTripsFrom(rows: NativeBookingRow[]): NativeTrips {
 }
 
 export async function loadNativeTrips(accountId: string): Promise<NativeTrips> {
-  const account = await prisma.bluePassAccount.findUnique({
-    where: { id: accountId },
-    select: { email: true, emailVerifiedAt: true },
-  });
-  if (!account?.emailVerifiedAt) return NO_NATIVE_TRIPS;
-
   const rows = await prisma.listingBooking.findMany({
     where: {
-      leadEmail: { equals: account.email, mode: "insensitive" },
+      accountId,
       // Abandoned checkouts (unpaid, expired) are not trips the traveller made.
       paymentStatus: { not: "UNPAID" },
       status: { in: ["CONFIRMED", "REQUESTED", "CANCELLED"] },

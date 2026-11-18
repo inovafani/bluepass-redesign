@@ -359,6 +359,7 @@ model BluePassAccount {
   operatorClaims          OperatorClaim[]
   commissionEntries       CommissionLedgerEntry[]
   savedTrips              SavedTrip[]
+  listingBookings         ListingBooking[]
   creatorCampaigns        CreatorCampaign[]
   creditEntries           OperatorCreditEntry[]
 
@@ -1569,6 +1570,10 @@ model ListingBooking {
 
   referralCode String?
 
+  /// The signed-in traveller who made the booking. "Your trips" lists by this, never by the contact
+  /// email, which a traveller may type as anything. Null for a guest, an operator's own entry or Kai.
+  accountId String?
+
   /// The guest agreed to messages about this booking on WhatsApp, from this operator and
   /// Bluepass. Recorded per booking because consent belongs to the person who gave it.
   whatsappOptIn Boolean @default(false)
@@ -1614,6 +1619,7 @@ model ListingBooking {
   /// the operator behind a paid booking has to be a deliberate act, never a side effect.
   listing         OperatorListing       @relation(fields: [listingId], references: [id], onDelete: Restrict)
   operatorProfile OperatorProfile       @relation(fields: [operatorProfileId], references: [id], onDelete: Restrict)
+  account         BluePassAccount?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
   events          ListingBookingEvent[]
   notifications   RailsNotification[]
 
@@ -1621,6 +1627,7 @@ model ListingBooking {
   @@index([operatorProfileId, departsAt])
   @@index([status, expiresAt])
   @@index([leadEmail])
+  @@index([accountId, createdAt])
 }
 
 /// What happened to a booking and who did it, in order. The operator's answer to
