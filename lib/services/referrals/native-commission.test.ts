@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PARTNER_COMMISSION_PCT } from "@/lib/constants/economics";
-import { partnerCommissionCents } from "@/lib/services/referrals/commission-ledger";
+import { partnerCommissionCents } from "@/lib/services/referrals/native-commission";
 
 // Pure maths only: the rails suites that touch the database run through vitest.rails.config.ts.
 describe("partnerCommissionCents", () => {

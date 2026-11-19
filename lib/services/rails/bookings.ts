@@ -30,7 +30,7 @@ import {
 import { splitOnlineBooking } from "@/lib/services/rails/money";
 import type { RailsPayments } from "@/lib/services/rails/payments";
 import { newBookingReference } from "@/lib/services/rails/reference";
-import { recordNativeBookingPartnerCommission, voidNativeBookingPartnerCommission } from "@/lib/services/referrals/commission-ledger";
+import { recordNativeBookingPartnerCommission, voidNativeBookingPartnerCommission } from "@/lib/services/referrals/native-commission";
 
 /**
  * The write side of the native rails: taking seats, confirming them once paid,
