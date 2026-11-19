@@ -30,6 +30,7 @@ import {
 import { splitOnlineBooking } from "@/lib/services/rails/money";
 import type { RailsPayments } from "@/lib/services/rails/payments";
 import { newBookingReference } from "@/lib/services/rails/reference";
+import { recordNativeBookingPartnerCommission, voidNativeBookingPartnerCommission } from "@/lib/services/referrals/commission-ledger";
 
 /**
  * The write side of the native rails: taking seats, confirming them once paid,
@@ -463,6 +464,10 @@ export async function confirmPayment(input: PaymentConfirmation, payments: Rails
     }
   }
 
+  // The booking is paid and seated; a failure writing the partner's line must never undo that.
+  await recordNativeBookingPartnerCommission(booking).catch((error) =>
+    console.error("rails.partner_commission_failed", { reference: booking.reference, error: error instanceof Error ? error.message : String(error) }));
+
   await markDepartureChanged(booking.operatorProfileId, booking.listingId, booking.departsAt);
   await notifyBookingConfirmed(booking.id);
   return "confirmed";
@@ -746,6 +751,11 @@ export async function cancelBooking(
     if (refundId) await event(tx, booking.id, "refunded", input.actor, undefined, { refundId, amountCents: refundable });
     if (refundedByChannel) await event(tx, booking.id, "refunded", "rezdy", "Refunded to the card by Rezdy", { amountCents: refundedByChannel });
   });
+
+  if (refundable + refundedByChannel > 0) {
+    await voidNativeBookingPartnerCommission(booking.id).catch((error) =>
+      console.error("rails.partner_commission_void_failed", { reference: booking.reference, error: error instanceof Error ? error.message : String(error) }));
+  }
 
   await markDepartureChanged(booking.operatorProfileId, booking.listingId, booking.departsAt);
   if (booking.status === "CONFIRMED" || booking.status === "REQUESTED") {
