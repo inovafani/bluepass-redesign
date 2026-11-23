@@ -6796,7 +6796,22 @@ html.is-scroll-locked body {
 }
 
 .ptr-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
   color: var(--color-ink-muted);
+}
+.ptr-empty__title {
+  color: var(--color-ink);
+}
+/* The faint drawing sits in the corner; the empty-state copy stays clear of it. */
+.ptr-earnings .ptr-empty {
+  padding-right: 104px;
+}
+@media (max-width: 560px) {
+  .ptr-earnings .ptr-empty {
+    padding-right: 72px;
+  }
 }
 
 .ptr-new-link {
@@ -6824,26 +6839,133 @@ html.is-scroll-locked body {
   color: var(--color-ink-muted);
 }
 
-.ptr-totals {
-  display: flex;
-  gap: var(--space-xl);
-  flex-wrap: wrap;
-  padding-bottom: var(--space-md);
-  margin-bottom: var(--space-md);
-  border-bottom: 1px solid var(--color-hairline);
+/* Dashboard top row: earnings and the referral link side by side, one column on a phone. */
+.ptr-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-xxl);
 }
-.ptr-totals__item {
+.ptr-top > .adm-block {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+.ptr-top > .adm-block > .adm-card {
+  flex: 1;
+}
+@media (max-width: 900px) {
+  .ptr-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The money card: green is the colour of money here and nowhere else on the page. */
+.ptr-earnings {
+  --ptr-money: #4ade80;
+  --ptr-card-bg: color-mix(in srgb, var(--ptr-money) 9%, var(--color-surface-1));
+  background: var(--ptr-card-bg);
+  border-color: color-mix(in srgb, var(--ptr-money) 32%, var(--color-hairline));
+}
+.theme-light .ptr-earnings {
+  --ptr-money: #15803d;
+}
+/* The two top cards: a big faint drawing in the top-right corner, title and note kept clear of it. */
+.ptr-earnings,
+.ptr-referral {
+  position: relative;
+  overflow: hidden;
+}
+.ptr-referral {
+  --ptr-card-bg: var(--color-surface-1);
+}
+.ptr-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  padding-right: 104px;
+}
+.ptr-watermark {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 128px;
+  height: 128px;
+  pointer-events: none;
+  opacity: 0.32;
+}
+.ptr-watermark__fill {
+  fill: var(--ptr-card-bg);
+}
+.ptr-watermark--money {
+  color: var(--ptr-money);
+}
+.ptr-watermark--link {
+  color: var(--color-accent-blue);
+}
+@media (max-width: 560px) {
+  .ptr-watermark {
+    width: 88px;
+    height: 88px;
+  }
+  .ptr-card__head {
+    padding-right: 72px;
+  }
+}
+
+.ptr-earn + .ptr-earn {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-hairline);
+}
+.ptr-earn__total {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-.ptr-totals__amount {
-  color: var(--color-ink);
+.ptr-earn__amount {
+  color: var(--ptr-money);
+  font-variant-numeric: tabular-nums;
 }
-.ptr-totals__label {
+.ptr-earn__label {
   color: var(--color-ink-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+}
+.ptr-earn__split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin: var(--space-md) 0 0;
+}
+.ptr-earn__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+}
+.ptr-earn__stat dt {
+  color: var(--color-ink-muted);
+}
+.ptr-earn__stat dd {
+  margin: 0;
+}
+.ptr-earn__stat-amount {
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ptr-earn__stat-note {
+  color: var(--color-ink-muted);
+}
+.ptr-earnings .ptr-payout-row {
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  border: 0;
+}
+.ptr-copy:focus-visible {
+  outline: 2px solid var(--color-accent-blue);
+  outline-offset: 2px;
 }
 
 .ptr-entries {

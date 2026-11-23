@@ -11,6 +11,18 @@ import type { PartnerProfileView } from "@/lib/services/partner/guard";
 
 const IDLE: CreateReferralLinkState = { status: "idle" };
 
+/** A person with a plus badge: invite someone. Drawn large and faint in the card's top-right corner. */
+function InvitePerson() {
+  return (
+    <svg className="ptr-watermark ptr-watermark--link" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle className="ptr-watermark__fill" cx="26" cy="19" r="10" />
+      <path className="ptr-watermark__fill" d="M6 54c0-12 8.5-19 20-19s20 7 20 19z" />
+      <circle className="ptr-watermark__fill" cx="47" cy="45" r="12" />
+      <path d="M47 38.5v13M40.5 45h13" />
+    </svg>
+  );
+}
+
 const STATUS_COPY: Record<string, { tone: PillTone; label: string; text: string }> = {
   PENDING_REVIEW: {
     tone: "warn",
@@ -46,15 +58,16 @@ export default function PartnerReferralLinks({
 
   return (
     <section className="adm-block">
-      <header className="adm-block__head">
-        <h2 className="ds-headline adm-block__title">Your referral link</h2>
-        <p className="ds-caption adm-block__note">
-          Share it anywhere your audience already is. Anyone who books through it — Bluepass, an
-          operator, a traveller — earns a commission on that trip, so this works the same way for you.
-        </p>
-      </header>
+      <div className="adm-card ptr-referral">
+        <InvitePerson />
+        <header className="ptr-card__head">
+          <h2 className="ds-headline adm-block__title">Your referral link</h2>
+          <p className="ds-caption adm-block__note">
+            Share it anywhere your audience already is. Anyone who books through it — Bluepass, an
+            operator, a traveller — earns a commission on that trip, so this works the same way for you.
+          </p>
+        </header>
 
-      <div className="adm-card">
         <div className="ptr-status-row">
           <StatusPill tone={copy.tone}>{copy.label}</StatusPill>
           <p className="ds-body-sm">{copy.text}</p>

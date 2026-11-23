@@ -21,6 +21,8 @@ export type PartnerPayoutBalance = {
   availableCents: number;
   /** Commission on bookings whose trip has not happened yet: counted in accrued, not yet withdrawable. */
   heldCents: number;
+  /** The smallest balance a payout can be requested for, so the page can say how far away it is. */
+  minPayoutCents: number;
   canRequest: boolean;
   /** Set when a request for this currency is already awaiting a decision. */
   pendingRequestedAt: Date | null;
@@ -67,6 +69,7 @@ export async function getRequestablePartnerBalance(
       accruedCents,
       availableCents,
       heldCents,
+      minPayoutCents: MIN_PAYOUT_REQUEST_CENTS,
       canRequest: !pending && availableCents >= MIN_PAYOUT_REQUEST_CENTS,
       pendingRequestedAt: pending?.createdAt ?? null,
     };

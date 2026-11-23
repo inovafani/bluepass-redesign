@@ -1,5 +1,5 @@
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import PartnerCommissionStats from "@/components/partner/PartnerCommissionStats";
+import PartnerCommissionStats, { PartnerCommissionEntries } from "@/components/partner/PartnerCommissionStats";
 import PartnerPayoutSettings from "@/components/partner/PartnerPayoutSettings";
 import PartnerProfileSettings from "@/components/partner/PartnerProfileSettings";
 import PartnerReferralLinks from "@/components/partner/PartnerReferralLinks";
@@ -38,8 +38,11 @@ export default async function PartnerDashboardPage() {
       />
 
       <CreatorRequests requests={requests as CreatorRequest[]} actions={{ respond: respondToPickAction, featured: markFeaturedAction }} />
-      <PartnerReferralLinks status={profile.status} links={links} />
-      <PartnerCommissionStats summary={commissionSummary} balances={balances} />
+      <div className="ptr-top">
+        <PartnerCommissionStats summary={commissionSummary} balances={balances} />
+        <PartnerReferralLinks status={profile.status} links={links} />
+      </div>
+      <PartnerCommissionEntries summary={commissionSummary} />
       <PartnerPayoutSettings hasDetailsOnFile={hasPayoutDetails} />
       <PartnerProfileSettings profile={profile} />
     </>
