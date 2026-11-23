@@ -66,3 +66,32 @@ export async function voidNativeBookingPartnerCommission(bookingId: string) {
     where: { kind: partnerCommissionLedgerKind(), status: "PENDING", metadata: { path: ["listingBookingId"], equals: bookingId } },
   });
 }
+
+/**
+ * Commission on bookings whose trip has not happened yet (or was refunded). It is already in the
+ * partner's total, but not yet theirs to withdraw: a trip can still be cancelled and refunded, and
+ * a payout made before that cannot be taken back. A line counts as earned once its booking is
+ * confirmed, still paid, and departed before `earnedBefore`. Returns the held cents per currency.
+ */
+export async function heldNativeCommissionCents(referralPartnerId: string, earnedBefore: Date) {
+  const lines = await prisma.commissionLedgerEntry.findMany({
+    where: { referralPartnerId, kind: partnerCommissionLedgerKind(), metadata: { path: ["source"], equals: "native_booking" } },
+    select: { amountCents: true, currency: true, metadata: true },
+  });
+  const bookingId = (metadata: unknown) => (metadata as { listingBookingId?: string } | null)?.listingBookingId;
+  const ids = lines.map((line) => bookingId(line.metadata)).filter((id): id is string => Boolean(id));
+  const earned = new Set(
+    (await prisma.listingBooking.findMany({
+      where: { id: { in: ids }, status: "CONFIRMED", paymentStatus: "PAID", departsAt: { lt: earnedBefore } },
+      select: { id: true },
+    })).map((booking) => booking.id),
+  );
+
+  const held: Record<string, number> = {};
+  for (const line of lines) {
+    const id = bookingId(line.metadata);
+    if (id && earned.has(id)) continue;
+    held[line.currency] = (held[line.currency] ?? 0) + line.amountCents;
+  }
+  return held;
+}

@@ -108,6 +108,12 @@ function PayoutRequestRow({ balance }: { balance: PartnerPayoutBalance }) {
           earning to unlock a payout request.
         </span>
       )}
+      {balance.heldCents > 0 ? (
+        <span className="ds-micro ptr-payout-row__note">
+          {formatMoneyFromCents(balance.heldCents, balance.currency)} more is on its way: it becomes available a day
+          after each referred trip takes place.
+        </span>
+      ) : null}
     </form>
   );
 }

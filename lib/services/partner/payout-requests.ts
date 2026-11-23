@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db/prisma";
 import { loadPartnerCommissionSummary, type AuLedgerLoader } from "@/lib/services/partner/dashboard";
 import { listKaiCorePmsBookingLedgerForReferralPartner } from "@/lib/services/kai-core/client";
 import { creatorCampaignEarnings } from "@/lib/services/onboarding/creator-campaigns";
+import { heldNativeCommissionCents } from "@/lib/services/referrals/native-commission";
+import { SETTLE_AFTER_HOURS } from "@/lib/services/rails/settlement";
 
 /**
  * A partner minting a real request has no obvious "right" amount to require - $50 is generous
@@ -15,8 +17,10 @@ export type PartnerPayoutBalance = {
   currency: string;
   /** Total ever accrued (PARTNER_COMMISSION_ESTIMATE lines only), before subtracting requests. */
   accruedCents: number;
-  /** What's left to request: accrued minus this partner's own PENDING/PAID requests so far. */
+  /** What's left to request: accrued, minus commission still waiting on a trip to happen, minus this partner's own PENDING/PAID requests so far. */
   availableCents: number;
+  /** Commission on bookings whose trip has not happened yet: counted in accrued, not yet withdrawable. */
+  heldCents: number;
   canRequest: boolean;
   /** Set when a request for this currency is already awaiting a decision. */
   pendingRequestedAt: Date | null;
@@ -35,7 +39,7 @@ export async function getRequestablePartnerBalance(
   referralPartnerId: string,
   listAuLedger: AuLedgerLoader = listKaiCorePmsBookingLedgerForReferralPartner,
 ): Promise<PartnerPayoutBalance[]> {
-  const [summary, requests, features] = await Promise.all([
+  const [summary, requests, features, held] = await Promise.all([
     loadPartnerCommissionSummary(referralPartnerId, listAuLedger),
     prisma.partnerPayoutRequest.findMany({
       where: { referralPartnerId, status: { in: ["PENDING", "PAID"] } },
@@ -44,6 +48,7 @@ export async function getRequestablePartnerBalance(
     // A creator also earns the credit an operator set aside for them, once they have featured
     // the operator and the operator's review window has passed (onboarding/creator-campaigns.ts).
     creatorCampaignEarnings(referralPartnerId),
+    heldNativeCommissionCents(referralPartnerId, new Date(Date.now() - SETTLE_AFTER_HOURS * 3_600_000)),
   ]);
 
   const accrued = { ...summary.totalCentsByCurrency };
@@ -53,13 +58,15 @@ export async function getRequestablePartnerBalance(
     const requestedCents = requests
       .filter((request) => request.currency === currency)
       .reduce((sum, request) => sum + request.amountCents, 0);
-    const availableCents = Math.max(0, accruedCents - requestedCents);
+    const heldCents = held[currency] ?? 0;
+    const availableCents = Math.max(0, accruedCents - heldCents - requestedCents);
     const pending = requests.find((request) => request.currency === currency && request.status === "PENDING");
 
     return {
       currency,
       accruedCents,
       availableCents,
+      heldCents,
       canRequest: !pending && availableCents >= MIN_PAYOUT_REQUEST_CENTS,
       pendingRequestedAt: pending?.createdAt ?? null,
     };
