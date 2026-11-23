@@ -107,7 +107,7 @@ function PayoutRequestRow({ balance }: { balance: PartnerPayoutBalance }) {
           {formatMoneyFromCents(balance.availableCents, balance.currency)} available in {balance.currency} — keep
           earning to unlock a payout request.
         </span>
-      )}
+      )}{" "}
       {balance.heldCents > 0 ? (
         <span className="ds-micro ptr-payout-row__note">
           {formatMoneyFromCents(balance.heldCents, balance.currency)} more is on its way: it becomes available a day
